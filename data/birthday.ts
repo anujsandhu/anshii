@@ -9,7 +9,12 @@ export interface BirthdayConfig {
   intro: {
     terminalCommand: string;
     bootLines: string[];
-    readyPrompt: string;
+    importantPersonDetected: string;
+    investigatePrompt: string;
+    buttonYes: string;
+    buttonObviously: string;
+    responseYes: string;
+    responseObviously: string;
     enterButtonText: string;
   };
   hero: {
@@ -23,6 +28,28 @@ export interface BirthdayConfig {
     title: string;
     artist: string;
     src: string; // Local path e.g. "/music/song.mp3" or remote URL
+  };
+  birthdayMode: {
+    title: string;
+    subtitle: string;
+    options: Array<{
+      id: "chaos" | "peace" | "cake";
+      label: string;
+      emoji: string;
+      response: string;
+      reactionDetail: string;
+    }>;
+  };
+  starCatcher: {
+    title: string;
+    subtitle: string;
+    targetStars: number;
+    winMessage: string;
+  };
+  interstitials: {
+    break1: { main: string; followUp: string };
+    break2: { main: string; followUp: string };
+    preFinal: { main: string; followUp: string };
   };
   photos: Array<{
     id: number;
@@ -124,7 +151,12 @@ export const birthdayData: BirthdayConfig = {
       "> Loading surprise...",
       "> System ready.",
     ],
-    readyPrompt: "Ready?",
+    importantPersonDetected: "System detected an important person.",
+    investigatePrompt: "Would you like to investigate?",
+    buttonYes: "YES",
+    buttonObviously: "Obviously",
+    responseYes: "Good choice.",
+    responseObviously: "I knew you'd click that.",
     enterButtonText: "ENTER EXPERIENCE",
   },
 
@@ -143,6 +175,59 @@ export const birthdayData: BirthdayConfig = {
     // Replace with your own audio file placed in /public/music/ (e.g. "/music/song.mp3")
     // When no file is found, the built-in ambient Web Audio synth engine plays automatically!
     src: "/music/song.mp3",
+  },
+
+  // Interactive Choice: Choose Your Birthday Mode
+  birthdayMode: {
+    title: "Choose your birthday mode.",
+    subtitle: "Select the runtime configuration for Year 19:",
+    options: [
+      {
+        id: "chaos",
+        label: "CHAOS",
+        emoji: "⚡",
+        response: "Expected.",
+        reactionDetail: "Chaos mode initiated: High energy, spontaneous plans, and debugging at 2 AM.",
+      },
+      {
+        id: "peace",
+        label: "PEACE",
+        emoji: "🌿",
+        response: "Suspicious.",
+        reactionDetail: "Peace mode requested: Plenty of naps, quiet coffee, and zero drama allowed.",
+      },
+      {
+        id: "cake",
+        label: "CAKE",
+        emoji: "🍰",
+        response: "Correct answer.",
+        reactionDetail: "Cake mode confirmed: Maximum sugar, sweet memories, and zero caloric accountability.",
+      },
+    ],
+  },
+
+  // Mini-Game: Catch 5 Birthday Sparks / Stars
+  starCatcher: {
+    title: "Catch 5 Birthday Sparks ✨",
+    subtitle: "Tap or click the floating sparks to calibrate reflex metrics:",
+    targetStars: 5,
+    winMessage: "Reflex calibration 100%! All 5 sparks captured.",
+  },
+
+  // Conversational Pacing Interstitials between major areas
+  interstitials: {
+    break1: {
+      main: "Okay, enough scrolling.",
+      followUp: "...actually keep going.",
+    },
+    break2: {
+      main: "You thought that was the end?",
+      followUp: "Not even close.",
+    },
+    preFinal: {
+      main: "Okay, enough playing.",
+      followUp: "There's one thing I actually wanted to say...",
+    },
   },
 
   // Replace photo1.jpg through photo5.jpg in /public/photos/ with real pictures of Anshika or moments together.

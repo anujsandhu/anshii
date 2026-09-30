@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RotateCcw, Sparkles, Terminal, Cpu, CheckCircle2 } from "lucide-react";
+import { RotateCcw, Sparkles, Terminal, Cpu, CheckCircle2, Heart } from "lucide-react";
 import confetti from "canvas-confetti";
 import { birthdayData } from "@/data/birthday";
 
@@ -15,6 +15,7 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
   const [compilingStep, setCompilingStep] = useState(0);
   const [isCompiled, setIsCompiled] = useState(false);
   const [hasTriggeredCompilation, setHasTriggeredCompilation] = useState(false);
+  const [showPersonalTransition, setShowPersonalTransition] = useState(false);
 
   const steps = birthdayData.final.compilingSteps;
 
@@ -28,6 +29,7 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
         if (idx === steps.length - 1) {
           setTimeout(() => {
             setIsCompiled(true);
+            setShowPersonalTransition(true);
             try {
               confetti({
                 particleCount: 75,
@@ -54,7 +56,7 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
   };
 
   return (
-    <footer className="relative min-h-[92vh] flex flex-col justify-center items-center px-4 sm:px-6 py-24 overflow-hidden text-center select-none">
+    <footer className="relative min-h-[94vh] flex flex-col justify-center items-center px-4 sm:px-6 py-24 overflow-hidden text-center select-none">
       {/* Background ambient lighting */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[680px] h-[340px] sm:h-[680px] bg-gradient-to-b from-amber-500/10 via-cyan-500/10 to-violet-500/10 rounded-full blur-[140px] pointer-events-none" />
 
@@ -93,38 +95,44 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
             </div>
           </motion.div>
         ) : (
-          /* Compiled Final Surprise Reveal */
+          /* Compiled Final Surprise Reveal: Transitioning from Playful to Sincere */
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-center"
           >
+            {/* Playful-to-Personal Pause Text */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-8 p-4 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm max-w-md mx-auto"
+            >
+              <div className="text-xs font-mono text-zinc-400">
+                &ldquo;{birthdayData.interstitials.preFinal.main}&rdquo;
+              </div>
+              <div className="text-xs font-mono text-amber-300 font-semibold mt-1">
+                &ldquo;{birthdayData.interstitials.preFinal.followUp}&rdquo;
+              </div>
+            </motion.div>
+
             {/* Status indicator */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
               className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-950/40 text-emerald-300 font-mono text-xs mb-6"
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
               <span>COMPILATION SUCCESSFUL // ZERO ERRORS</span>
             </motion.div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="font-mono text-xs sm:text-sm text-cyan-400 tracking-wider uppercase mb-4 flex items-center gap-2"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-              {birthdayData.final.introText}
-            </motion.p>
-
             {/* Big Birthday Headline */}
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.35 }}
+              transition={{ duration: 0.8, delay: 0.45 }}
               className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white leading-tight"
             >
               {birthdayData.final.headline}
@@ -134,7 +142,7 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
             <motion.p
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.55 }}
+              transition={{ duration: 0.7, delay: 0.65 }}
               className="mt-6 text-2xl sm:text-3xl font-semibold bg-gradient-to-r from-amber-300 via-rose-300 to-cyan-300 bg-clip-text text-transparent"
             >
               {birthdayData.final.celebrateLine}
@@ -144,7 +152,7 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.75 }}
+              transition={{ duration: 0.6, delay: 0.85 }}
               className="mt-8 font-mono text-sm sm:text-base text-zinc-400 flex items-center gap-2"
             >
               <span>{birthdayData.final.signature}</span>
@@ -156,7 +164,7 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.95 }}
+              transition={{ duration: 0.7, delay: 1.05 }}
               className="mt-12 flex flex-wrap items-center justify-center gap-4"
             >
               <button

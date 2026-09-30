@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, Sparkles, ChevronRight, Play, Cpu, CheckCircle2 } from "lucide-react";
+import { Terminal, Sparkles, ChevronRight, Play, Cpu, CheckCircle2, UserCheck } from "lucide-react";
 import confetti from "canvas-confetti";
 import { birthdayData } from "@/data/birthday";
 
@@ -15,6 +15,7 @@ export default function Intro({ onEnter }: IntroProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [bootComplete, setBootComplete] = useState(false);
+  const [investigateAnswer, setInvestigateAnswer] = useState<"yes" | "obviously" | null>(null);
   const [isEntering, setIsEntering] = useState(false);
 
   const bootLines = birthdayData.intro.bootLines;
@@ -36,13 +37,13 @@ export default function Intro({ onEnter }: IntroProps) {
       osc.start();
       osc.stop(ctx.currentTime + 0.08);
     } catch {
-      // Audio not allowed yet or not supported
+      // Audio fallback
     }
   }, []);
 
   useEffect(() => {
     if (currentIndex < bootLines.length) {
-      const delay = currentIndex === 0 ? 350 : currentIndex === 4 ? 600 : 380;
+      const delay = currentIndex === 0 ? 320 : currentIndex === 4 ? 500 : 350;
       const timer = setTimeout(() => {
         setLines((prev) => [...prev, bootLines[currentIndex]]);
         const nextProgress = Math.round(((currentIndex + 1) / bootLines.length) * 100);
@@ -55,18 +56,17 @@ export default function Intro({ onEnter }: IntroProps) {
       const readyTimer = setTimeout(() => {
         setBootComplete(true);
         playTerminalBeep(880);
-      }, 400);
+      }, 350);
       return () => clearTimeout(readyTimer);
     }
   }, [currentIndex, bootLines, playTerminalBeep]);
 
   const handleEnterClick = () => {
     setIsEntering(true);
-    // Subtle particle burst upon enter
     try {
       confetti({
-        particleCount: 45,
-        spread: 70,
+        particleCount: 50,
+        spread: 75,
         origin: { y: 0.5 },
         colors: ["#06b6d4", "#f59e0b", "#8b5cf6", "#10b981"],
       });
@@ -81,6 +81,11 @@ export default function Intro({ onEnter }: IntroProps) {
     setLines(bootLines);
     setProgress(100);
     setBootComplete(true);
+  };
+
+  const handleInvestigate = (choice: "yes" | "obviously") => {
+    setInvestigateAnswer(choice);
+    playTerminalBeep(choice === "yes" ? 660 : 780);
   };
 
   return (
@@ -125,7 +130,7 @@ export default function Intro({ onEnter }: IntroProps) {
           </div>
 
           {/* Terminal Body */}
-          <div className="p-6 font-mono text-xs sm:text-sm min-h-[340px] flex flex-col justify-between">
+          <div className="p-6 font-mono text-xs sm:text-sm min-h-[360px] flex flex-col justify-between">
             <div className="space-y-2.5">
               <div className="text-zinc-500 text-xs flex items-center gap-1.5 pb-2 border-b border-white/5">
                 <span className="text-emerald-400">anuj@workstation</span>
@@ -164,10 +169,10 @@ export default function Intro({ onEnter }: IntroProps) {
                       key={idx}
                       initial={{ opacity: 0, x: -6 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.25 }}
+                      transition={{ duration: 0.2 }}
                       className={`flex items-start gap-2 ${
                         isStatus
-                          ? "text-amber-400 font-semibold py-1 text-sm sm:text-base"
+                          ? "text-amber-400 font-semibold py-0.5 text-xs sm:text-sm"
                           : isReady
                           ? "text-emerald-400 font-semibold"
                           : isSurprise
@@ -190,19 +195,67 @@ export default function Intro({ onEnter }: IntroProps) {
               </div>
             </div>
 
-            {/* Ready & Enter Button Sequence */}
-            <AnimatePresence>
-              {bootComplete && (
+            {/* Playful Interactive Choice: "System detected an important person. Would you like to investigate?" */}
+            <AnimatePresence mode="wait">
+              {bootComplete && !investigateAnswer && (
                 <motion.div
+                  key="investigate-prompt"
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="mt-6 pt-5 border-t border-white/10 flex flex-col items-center justify-center text-center space-y-3"
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4 }}
+                  className="mt-6 pt-5 border-t border-white/10 flex flex-col items-center justify-center text-center space-y-3.5"
                 >
-                  <div className="text-zinc-400 text-xs sm:text-sm flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    <span>{birthdayData.intro.readyPrompt}</span>
+                  <div className="flex items-center gap-2 text-amber-300 text-xs sm:text-sm font-semibold">
+                    <UserCheck className="w-4 h-4 text-amber-400" />
+                    <span>{birthdayData.intro.importantPersonDetected}</span>
                   </div>
+
+                  <p className="text-zinc-300 text-xs sm:text-sm">
+                    {birthdayData.intro.investigatePrompt}
+                  </p>
+
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <button
+                      onClick={() => handleInvestigate("yes")}
+                      className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl border border-cyan-500/40 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 text-xs sm:text-sm font-mono font-medium transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+                    >
+                      [ {birthdayData.intro.buttonYes} ]
+                    </button>
+
+                    <button
+                      onClick={() => handleInvestigate("obviously")}
+                      className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 text-xs sm:text-sm font-mono font-medium transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+                    >
+                      [ {birthdayData.intro.buttonObviously} ]
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* After choice is clicked: show playful reaction + ENTER EXPERIENCE button */}
+              {bootComplete && investigateAnswer && (
+                <motion.div
+                  key="enter-step"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4 }}
+                  className="mt-6 pt-5 border-t border-white/10 flex flex-col items-center justify-center text-center space-y-3.5"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs sm:text-sm font-mono text-emerald-400 flex items-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>
+                      &ldquo;
+                      {investigateAnswer === "yes"
+                        ? birthdayData.intro.responseYes
+                        : birthdayData.intro.responseObviously}
+                      &rdquo;
+                    </span>
+                  </motion.div>
 
                   <motion.button
                     onClick={handleEnterClick}
@@ -211,7 +264,6 @@ export default function Intro({ onEnter }: IntroProps) {
                     whileTap={{ scale: 0.97 }}
                     className="relative group w-full sm:w-auto px-8 py-3.5 rounded-xl font-mono text-sm font-medium text-white overflow-hidden shadow-xl transition-all duration-300 cursor-pointer"
                   >
-                    {/* Glowing button gradient */}
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 via-indigo-600 to-amber-600 opacity-90 group-hover:opacity-100 transition-opacity" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.3),transparent_70%)]" />
                     <div className="absolute inset-0 border border-white/20 rounded-xl" />
