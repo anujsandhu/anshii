@@ -69,7 +69,10 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[#080b11] text-zinc-100 relative selection:bg-cyan-500/25 selection:text-cyan-200">
+    <main className="min-h-screen bg-[#090d18] text-zinc-100 relative selection:bg-amber-500/30 selection:text-amber-200">
+      {/* Rare Twinkling Shooting Star */}
+      <div className="fixed top-16 left-0 w-2.5 h-2.5 rounded-full bg-amber-300 pointer-events-none shadow-[0_0_15px_#fde047] animate-shooting-star z-20 opacity-0" />
+
       <AnimatePresence mode="wait">
         {!entered ? (
           <Intro key="intro" onEnter={handleEnter} />
@@ -91,126 +94,169 @@ export default function Home() {
             {/* Birthday Quest Floating Checklist */}
             <QuestTracker completedTasks={completedTasks} />
 
-            {/* Main Interactive Journey */}
-            <div className="flex-1 space-y-16 sm:space-y-24">
-              {/* Task 01: Start the Birthday */}
-              <StartBirthdayTask
-                onComplete={() => markTaskCompleted("start_bday")}
-                isCompleted={completedTasks.includes("start_bday")}
-              />
+            {/* Main Interactive Journey: Seamless Storytelling Progression */}
+            <div className="flex-1">
+              {/* ==================================================
+                  1. HERO SECTION (Dark cinematic navy)
+                  ================================================== */}
+              <div className="bg-gradient-to-b from-[#090d18] via-[#0d1424] to-[#12162d] pb-8">
+                {/* Task 01: Start the Birthday */}
+                <StartBirthdayTask
+                  onComplete={() => markTaskCompleted("start_bday")}
+                  isCompleted={completedTasks.includes("start_bday")}
+                />
 
-              {/* 1. Hero with Staggered Word Reveals and Version 18->19 Upgrade */}
-              <Hero />
+                {/* Hero with dynamic particles and subtle CS pill accents */}
+                <Hero />
+              </div>
 
-              {/* Task 03: Important Birthday Decision (Cake / Sleep / Chaos) */}
-              <BirthdayModeChoice
-                onSelectMode={() => markTaskCompleted("make_choice")}
-              />
-
-              {/* Task 02: Hidden Star Challenge */}
-              <HiddenStarTask
-                onFound={() => markTaskCompleted("find_star")}
-                isFound={completedTasks.includes("find_star")}
-              />
-
-              {/* Personality Break 1 */}
-              <ScrollInterstitial
-                mainText={birthdayData.interstitials.break1.main}
-                followUpText={birthdayData.interstitials.break1.followUp}
-              />
-
-              {/* 2. Photo Gallery with Discoverable Hidden Cards & Lightbox */}
-              <PhotoGallery />
-
-              {/* Task 04: Fix the Birthday Code */}
-              <FixTheCodeTask
-                onComplete={() => markTaskCompleted("fix_code")}
-                isCompleted={completedTasks.includes("fix_code")}
-              />
-
-              {/* Task 05: Soundtrack Selection */}
-              <SoundtrackSelector
-                onSelectTrack={(track) => setActiveTrack(track)}
-                onComplete={() => markTaskCompleted("choose_music")}
-                isCompleted={completedTasks.includes("choose_music")}
-              />
-
-              {/* 3. Personal Message formatted as code editor file */}
-              <MessageSection />
-
-              {/* Task 06: Mini Reaction Test */}
-              <ReactionSpeedTask
-                onComplete={() => markTaskCompleted("reaction_test")}
-                isCompleted={completedTasks.includes("reaction_test")}
-              />
-
-              {/* Task 07: Complete the Sentence */}
-              <CompleteSentenceTask
-                onComplete={() => markTaskCompleted("complete_sentence")}
-                isCompleted={completedTasks.includes("complete_sentence")}
-              />
-
-              {/* Bonus Mini-Game: 3-Pair Memory Match */}
-              <MemoryMatchGame />
-
-              {/* Mini-Game: Catch 5 Birthday Sparks */}
-              <StarCatcherMiniGame />
-
-              {/* Tasteful CS Animation Break */}
-              <div className="max-w-md mx-auto px-4">
-                <AnimatedGif
-                  src={birthdayData.gifs.coding}
-                  alt="CS Student Coding Mood"
-                  type="coding"
-                  caption="Compiling memories & surviving engineering labs together"
+              {/* Scroll Surprise 1: Gentle Pause */}
+              <div className="bg-gradient-to-b from-[#12162d] to-[#171833] py-4">
+                <ScrollInterstitial
+                  mainText="Wait..."
+                  followUpText="Here is something I wanted to share with you."
                 />
               </div>
 
-              {/* 4. CS Developer Mini-Game: Debugging Anshika's Birthday */}
-              <CsMiniGame />
+              {/* ==================================================
+                  2. BIRTHDAY MESSAGE (Soft lavender / blue)
+                  ================================================== */}
+              <div className="bg-gradient-to-b from-[#171833] via-[#1c1735] to-[#221a2f] py-12 sm:py-16">
+                <MessageSection />
+              </div>
 
-              {/* 5. Developer Section: Diagnostics & Live Test Suite */}
-              <DeveloperSection />
-
-              {/* 6. Playful Secret Micro-Interaction (DO NOT PRESS button) */}
-              <InteractiveSecretButton />
-
-              {/* Personality Break 2 */}
-              <ScrollInterstitial
-                mainText={birthdayData.interstitials.break2.main}
-                followUpText={birthdayData.interstitials.break2.followUp}
-              />
-
-              {/* 7. Qualities: Things That Make You, You */}
-              <Qualities />
-
-              {/* 8. Memory Timeline: Interactive Lock & Decrypt Stack */}
-              <Timeline />
-
-              {/* Celebration Animation Break */}
-              <div className="max-w-md mx-auto px-4">
-                <AnimatedGif
-                  src={birthdayData.gifs.celebrate}
-                  alt="Birthday Celebration"
-                  type="celebrate"
-                  caption="Here's to a phenomenal 19th year ahead!"
+              {/* Scroll Surprise 2: Gentle Pause */}
+              <div className="bg-gradient-to-b from-[#221a2f] to-[#251b2c] py-4">
+                <ScrollInterstitial
+                  mainText={birthdayData.interstitials.break1.main}
+                  followUpText={birthdayData.interstitials.break1.followUp}
                 />
               </div>
 
-              {/* 9. Cinematic Final Surprise & Replay (Transition from Playful to Sincere with [READY] task) */}
-              <FinalSection
-                onReplay={handleReplay}
-                onOpenEasterEgg={() => setEasterEggOpen(true)}
-              />
+              {/* ==================================================
+                  3. PHOTOS / DIGITAL SCRAPBOOK (Warm cream / peach)
+                  ================================================== */}
+              <div className="bg-gradient-to-b from-[#251b2c] via-[#281b28] to-[#201828] py-12 sm:py-16">
+                <PhotoGallery />
+              </div>
+
+              {/* ==================================================
+                  4. INTERACTIVE MOMENTS (Bright, tasteful colors)
+                  ================================================== */}
+              <div className="bg-gradient-to-b from-[#201828] via-[#161f33] to-[#131d2e] py-16 sm:py-20 space-y-12">
+                {/* Qualities: Things That Make You, You */}
+                <Qualities />
+
+                {/* Mood Choice: Cake / Chaos / Peace */}
+                <BirthdayModeChoice
+                  onSelectMode={() => markTaskCompleted("make_choice")}
+                />
+
+                {/* Soundtrack Selector */}
+                <SoundtrackSelector
+                  onSelectTrack={(track) => setActiveTrack(track)}
+                  onComplete={() => markTaskCompleted("choose_music")}
+                  isCompleted={completedTasks.includes("choose_music")}
+                />
+              </div>
+
+              {/* ==================================================
+                  5. MEMORIES / TIMELINE (Soft warm tones)
+                  ================================================== */}
+              <div className="bg-gradient-to-b from-[#131d2e] via-[#241a27] to-[#1d1525] py-16 sm:py-20">
+                <Timeline />
+              </div>
+
+              {/* Scroll Surprise 3: Halfway Mark */}
+              <div className="bg-gradient-to-b from-[#1d1525] to-[#171426] py-4">
+                <ScrollInterstitial
+                  mainText={birthdayData.interstitials.break2.main}
+                  followUpText={birthdayData.interstitials.break2.followUp}
+                />
+              </div>
+
+              {/* ==================================================
+                  6. SMALL GAMES & THE ONE DEDICATED CS SECTION
+                  ================================================== */}
+              <div className="bg-gradient-to-b from-[#171426] via-[#101826] to-[#0c121e] py-16 sm:py-20 space-y-14">
+                {/* Task 02: Hidden Star Challenge */}
+                <HiddenStarTask
+                  onFound={() => markTaskCompleted("find_star")}
+                  isFound={completedTasks.includes("find_star")}
+                />
+
+                {/* Task 04: Verify the New Age */}
+                <FixTheCodeTask
+                  onComplete={() => markTaskCompleted("fix_code")}
+                  isCompleted={completedTasks.includes("fix_code")}
+                />
+
+                {/* Task 06: Mini Reaction Test */}
+                <ReactionSpeedTask
+                  onComplete={() => markTaskCompleted("reaction_test")}
+                  isCompleted={completedTasks.includes("reaction_test")}
+                />
+
+                {/* Task 07: Complete the Sentence */}
+                <CompleteSentenceTask
+                  onComplete={() => markTaskCompleted("complete_sentence")}
+                  isCompleted={completedTasks.includes("complete_sentence")}
+                />
+
+                {/* Bonus Mini-Game: 3-Pair Memory Match */}
+                <MemoryMatchGame />
+
+                {/* Mini-Game: Catch 5 Birthday Sparks */}
+                <StarCatcherMiniGame />
+
+                {/* Playful Animation Break */}
+                <div className="max-w-md mx-auto px-4">
+                  <AnimatedGif
+                    src={birthdayData.gifs.coding}
+                    alt="CS Student Coding Mood"
+                    type="coding"
+                    caption="Late night coding sessions & shared engineering memories"
+                  />
+                </div>
+
+                {/* Playful CS Mini-Game */}
+                <CsMiniGame />
+
+                {/* THE ONE DEDICATED CS SECTION: "Birthday Build v19.0" */}
+                <DeveloperSection />
+
+                {/* Playful Secret Button: DO NOT PRESS */}
+                <InteractiveSecretButton />
+
+                {/* Celebration GIF Break */}
+                <div className="max-w-md mx-auto px-4">
+                  <AnimatedGif
+                    src={birthdayData.gifs.celebrate}
+                    alt="Birthday Celebration"
+                    type="celebrate"
+                    caption="Here's to an incredible year 19 ahead!"
+                  />
+                </div>
+              </div>
+
+              {/* ==================================================
+                  7. FINAL BIRTHDAY SURPRISE (Dark cinematic + golden glow)
+                  ================================================== */}
+              <div className="bg-gradient-to-b from-[#0c121e] via-[#180f24] to-[#07090f]">
+                <FinalSection
+                  onReplay={handleReplay}
+                  onOpenEasterEgg={() => setEasterEggOpen(true)}
+                />
+              </div>
             </div>
 
-            {/* Persistent Floating Music Player with Dancing Waveform Equalizer */}
+            {/* Persistent Floating Music Player with Cover Thumbnail & Glassmorphism */}
             <MusicPlayer
               autoPlayTriggered={musicTriggered}
               currentTrack={activeTrack}
             />
 
-            {/* Hidden Developer Easter Egg Modal (Supports Konami Code + Terminal clicks) */}
+            {/* Hidden Developer Easter Egg Modal */}
             <EasterEgg
               isOpen={easterEggOpen}
               onOpen={() => setEasterEggOpen(true)}

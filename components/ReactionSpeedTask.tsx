@@ -47,10 +47,10 @@ export default function ReactionSpeedTask({
       onComplete();
       try {
         confetti({
-          particleCount: 35,
-          spread: 60,
+          particleCount: 45,
+          spread: 70,
           origin: { y: 0.65 },
-          colors: ["#38bdf8", "#f59e0b", "#10b981"],
+          colors: ["#38bdf8", "#f59e0b", "#10b981", "#fda4af"],
         });
       } catch {}
     }
@@ -68,19 +68,19 @@ export default function ReactionSpeedTask({
         initial={{ opacity: 0, y: 15 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="glass-panel p-5 sm:p-6 rounded-3xl border border-emerald-500/25 shadow-xl relative overflow-hidden flex flex-col items-center justify-center space-y-3"
+        className="playful-birthday-card p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden flex flex-col items-center justify-center space-y-3.5 border border-emerald-400/25"
       >
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 font-mono text-[11px]">
-          <Timer className="w-3 h-3 text-emerald-400" />
-          <span>TASK 06 // REFLEX_TEST</span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-400/30 bg-emerald-500/15 text-emerald-200 font-sans text-xs">
+          <Zap className="w-3.5 h-3.5 text-emerald-300" />
+          <span>Quick Reaction Test</span>
         </div>
 
         <div>
-          <h4 className="text-base sm:text-lg font-bold text-white font-sans">
-            Mini Reaction Test
+          <h4 className="text-lg sm:text-xl font-bold text-white font-sans">
+            Test Your Reflexes
           </h4>
-          <p className="text-xs sm:text-sm text-zinc-400 font-sans mt-0.5">
-            Tap the button as fast as you can the moment it turns green!
+          <p className="text-xs sm:text-sm text-zinc-300 font-sans mt-1">
+            Tap the button as fast as you can the moment it flashes green!
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export default function ReactionSpeedTask({
         {gameState === "idle" && (
           <button
             onClick={startTest}
-            className="px-6 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono text-xs sm:text-sm font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+            className="px-7 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-sans text-sm font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
           >
             [ Start Reflex Test ]
           </button>
@@ -97,9 +97,9 @@ export default function ReactionSpeedTask({
         {gameState === "waiting" && (
           <motion.button
             onClick={handleClickButton}
-            className="w-full max-w-xs py-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 text-rose-300 font-mono text-sm font-bold animate-pulse cursor-pointer shadow-lg"
+            className="w-full max-w-xs py-4 rounded-2xl bg-rose-950/40 border border-rose-400/40 text-rose-200 font-sans text-sm font-bold animate-pulse cursor-pointer shadow-lg"
           >
-            Don&apos;t click yet...
+            Wait for green... Don&apos;t click!
           </motion.button>
         )}
 
@@ -108,34 +108,34 @@ export default function ReactionSpeedTask({
             onClick={handleClickButton}
             initial={{ scale: 0.95 }}
             animate={{ scale: 1.05 }}
-            className="w-full max-w-xs py-4 rounded-2xl bg-emerald-500 text-black font-mono text-lg font-extrabold shadow-xl shadow-emerald-500/40 cursor-pointer animate-bounce"
+            className="w-full max-w-xs py-4 rounded-2xl bg-emerald-400 text-zinc-950 font-sans text-lg font-black shadow-xl shadow-emerald-500/50 cursor-pointer animate-bounce"
           >
-            ⚡ NOW! TAP! ⚡
+            ⚡ TAP NOW! ⚡
           </motion.button>
         )}
 
         {gameState === "clicked" && reactionTime !== null && (
           <div className="space-y-2 pt-1">
-            <div className="font-mono text-sm font-bold text-emerald-400 flex items-center justify-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Reaction time: {reactionTime.toFixed(3)}s</span>
+            <div className="font-sans text-sm font-bold text-emerald-300 flex items-center justify-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span>Reaction speed: {reactionTime.toFixed(3)}s</span>
             </div>
             <p className="font-sans text-xs text-zinc-300 italic">
               &ldquo;{getResponse(reactionTime)}&rdquo;
             </p>
             <button
               onClick={startTest}
-              className="mt-2 inline-flex items-center gap-1 text-[11px] font-mono text-zinc-400 hover:text-white cursor-pointer"
+              className="mt-2 inline-flex items-center gap-1 text-xs font-sans text-zinc-400 hover:text-white cursor-pointer"
             >
-              <RotateCcw className="w-3 h-3" />
-              <span>Retry</span>
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Try again</span>
             </button>
           </div>
         )}
 
         {tooEarly && (
-          <p className="text-[11px] font-mono text-amber-300">
-            Too eager! Wait until it flashes green and says NOW!
+          <p className="text-xs font-sans text-amber-300">
+            A bit too eager! Wait until it turns bright green.
           </p>
         )}
       </motion.div>

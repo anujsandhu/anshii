@@ -209,10 +209,10 @@ export default function MusicPlayer({ autoPlayTriggered, currentTrack }: MusicPl
         preload="auto"
       />
 
-      {/* Floating persistent widget */}
-      <div className="fixed bottom-4 right-4 z-40 max-w-[calc(100vw-32px)]">
+      {/* Floating persistent glassmorphism widget */}
+      <div className="fixed bottom-4 right-4 z-40 max-w-[calc(100vw-32px)] select-none">
         <div
-          className={`rounded-2xl border border-white/10 bg-[#0d131f]/95 backdrop-blur-2xl shadow-2xl transition-all duration-300 overflow-hidden ${
+          className={`rounded-3xl border border-white/15 bg-[#0f172a]/85 backdrop-blur-2xl shadow-2xl transition-all duration-300 overflow-hidden ${
             isExpanded ? "w-80 p-4" : "w-auto px-3.5 py-2.5"
           }`}
         >
@@ -220,60 +220,63 @@ export default function MusicPlayer({ autoPlayTriggered, currentTrack }: MusicPl
           <div className="flex items-center justify-between gap-3">
             <div
               onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-2.5 cursor-pointer select-none"
+              className="flex items-center gap-3 cursor-pointer select-none"
             >
-              <div className="relative">
-                <Disc3
-                  className={`w-7 h-7 text-cyan-400 ${
-                    isPlaying ? "animate-spin [animation-duration:4s]" : ""
+              {/* Album Cover Thumbnail */}
+              <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-zinc-800 border border-white/15 shrink-0 shadow-md">
+                <img
+                  src="/photos/photo2.jpg"
+                  alt="Soundtrack cover"
+                  className={`w-full h-full object-cover transition-transform ${
+                    isPlaying ? "scale-105" : "scale-100 opacity-80"
                   }`}
                 />
                 {isPlaying && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 )}
               </div>
 
               <div className="flex flex-col text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-white truncate max-w-[120px] sm:max-w-[160px]">
+                  <span className="text-xs font-semibold text-white truncate max-w-[120px] sm:max-w-[150px] font-sans">
                     {activeTitle}
                   </span>
                   
                   {/* Animated Waveform Equalizer Bars */}
                   <div className="flex items-end gap-[2px] h-3 w-5 shrink-0">
                     <span
-                      className={`w-[3px] bg-cyan-400 rounded-full transition-all ${
-                        isPlaying
-                          ? "animate-[bounce_0.8s_infinite] h-full"
-                          : "h-1 opacity-50"
-                      }`}
-                    />
-                    <span
-                      className={`w-[3px] bg-indigo-400 rounded-full transition-all ${
-                        isPlaying
-                          ? "animate-[bounce_0.6s_infinite_0.2s] h-3/4"
-                          : "h-1 opacity-50"
-                      }`}
-                    />
-                    <span
                       className={`w-[3px] bg-amber-400 rounded-full transition-all ${
                         isPlaying
-                          ? "animate-[bounce_0.9s_infinite_0.4s] h-full"
-                          : "h-1 opacity-50"
+                          ? "animate-[bounce_0.8s_infinite] h-full"
+                          : "h-1 opacity-40"
                       }`}
                     />
                     <span
-                      className={`w-[3px] bg-emerald-400 rounded-full transition-all ${
+                      className={`w-[3px] bg-rose-400 rounded-full transition-all ${
+                        isPlaying
+                          ? "animate-[bounce_0.6s_infinite_0.2s] h-3/4"
+                          : "h-1 opacity-40"
+                      }`}
+                    />
+                    <span
+                      className={`w-[3px] bg-purple-400 rounded-full transition-all ${
+                        isPlaying
+                          ? "animate-[bounce_0.9s_infinite_0.4s] h-full"
+                          : "h-1 opacity-40"
+                      }`}
+                    />
+                    <span
+                      className={`w-[3px] bg-sky-400 rounded-full transition-all ${
                         isPlaying
                           ? "animate-[bounce_0.7s_infinite_0.1s] h-1/2"
-                          : "h-1 opacity-50"
+                          : "h-1 opacity-40"
                       }`}
                     />
                   </div>
                 </div>
 
-                <span className="text-[10px] text-zinc-400 truncate max-w-[130px] font-mono">
-                  {isPlaying ? "Playing • 28 Oct" : "Paused"}
+                <span className="text-[10px] text-zinc-400 truncate max-w-[130px] font-sans">
+                  {isPlaying ? "Playing softly" : "Paused"}
                 </span>
               </div>
             </div>
@@ -284,16 +287,16 @@ export default function MusicPlayer({ autoPlayTriggered, currentTrack }: MusicPl
               <button
                 onClick={togglePlay}
                 aria-label={isPlaying ? "Pause music" : "Play music"}
-                className="w-8 h-8 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 flex items-center justify-center transition-colors cursor-pointer border border-amber-400/30"
               >
                 {isPlaying ? (
-                  <Pause className="w-3.5 h-3.5 fill-cyan-300" />
+                  <Pause className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
                 ) : (
-                  <Play className="w-3.5 h-3.5 fill-cyan-300 translate-x-0.5" />
+                  <Play className="w-3.5 h-3.5 fill-amber-300 text-amber-300 translate-x-0.5" />
                 )}
               </button>
 
-              {/* Expand / Collapse toggle */}
+              {/* Expand / Minimize toggle */}
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 aria-label="Expand player controls"
@@ -310,16 +313,16 @@ export default function MusicPlayer({ autoPlayTriggered, currentTrack }: MusicPl
 
           {/* Expanded Drawer */}
           {isExpanded && (
-            <div className="mt-4 pt-3 border-t border-white/10 space-y-3 font-mono text-xs">
-              <div className="flex items-center justify-between text-[11px] text-zinc-400">
-                <span className="flex items-center gap-1">
-                  <Music2 className="w-3 h-3 text-cyan-400" />
+            <div className="mt-4 pt-3 border-t border-white/10 space-y-3 font-sans text-xs">
+              <div className="flex items-center justify-between text-[11px] text-zinc-300">
+                <span className="flex items-center gap-1 font-medium text-amber-200">
+                  <Music2 className="w-3.5 h-3.5 text-amber-300" />
                   {activeArtist}
                 </span>
-                <span>{useSynthFallback ? "Synth Mode" : "Audio Track"}</span>
+                <span className="text-zinc-400">Background Vibe</span>
               </div>
 
-              {/* Progress bar (if HTML5 audio loaded) */}
+              {/* Progress bar */}
               {!useSynthFallback && duration > 0 && (
                 <div className="space-y-1">
                   <input
@@ -328,9 +331,9 @@ export default function MusicPlayer({ autoPlayTriggered, currentTrack }: MusicPl
                     max={duration || 100}
                     value={currentTime}
                     onChange={handleSeek}
-                    className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                    className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
                   />
-                  <div className="flex justify-between text-[10px] text-zinc-500">
+                  <div className="flex justify-between text-[10px] text-zinc-400 font-mono">
                     <span>{formatTime(currentTime)}</span>
                     <span>{formatTime(duration)}</span>
                   </div>
@@ -347,7 +350,7 @@ export default function MusicPlayer({ autoPlayTriggered, currentTrack }: MusicPl
                   {isMuted || volume === 0 ? (
                     <VolumeX className="w-4 h-4 text-rose-400" />
                   ) : (
-                    <Volume2 className="w-4 h-4 text-cyan-400" />
+                    <Volume2 className="w-4 h-4 text-amber-300" />
                   )}
                 </button>
                 <input
@@ -357,20 +360,11 @@ export default function MusicPlayer({ autoPlayTriggered, currentTrack }: MusicPl
                   step="0.05"
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
-                  className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  className="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
                 />
-                <span className="text-[10px] text-zinc-400 w-8 text-right">
+                <span className="text-[10px] text-zinc-400 w-8 text-right font-mono">
                   {Math.round((isMuted ? 0 : volume) * 100)}%
                 </span>
-              </div>
-
-              {/* Equalizer details */}
-              <div className="text-[10px] text-zinc-400 bg-white/5 p-2 rounded-lg flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isPlaying ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"}`} />
-                  {isPlaying ? "Equalizer active" : "Audio paused"}
-                </span>
-                <span className="text-cyan-400">44.1 kHz</span>
               </div>
             </div>
           )}

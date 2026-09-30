@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { MessageSquareText, Terminal, Copy, Check, Heart, Sparkles } from "lucide-react";
+import { Copy, Check, Sparkles, Heart } from "lucide-react";
 import { birthdayData } from "@/data/birthday";
 
 export default function MessageSection() {
@@ -17,21 +17,21 @@ export default function MessageSection() {
   };
 
   return (
-    <section id="message" className="relative py-20 px-4 sm:px-6 max-w-4xl mx-auto">
-      {/* Glow backdrop */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none" />
+    <section id="message" className="relative py-20 px-4 sm:px-6 max-w-4xl mx-auto select-none">
+      {/* Soft lavender/blue ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[600px] h-[340px] sm:h-[600px] bg-gradient-to-tr from-purple-600/15 via-indigo-600/15 to-sky-500/10 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Section Header */}
-      <div className="text-center mb-12">
+      <div className="text-center mb-10">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/10 text-cyan-300 font-mono text-xs mb-3"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-purple-400/25 bg-purple-950/30 text-purple-200 font-sans text-xs mb-3 shadow-sm"
         >
-          <MessageSquareText className="w-3.5 h-3.5 text-cyan-400" />
-          <span>MESSAGE // DIRECT_TRANSMISSION</span>
+          <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+          <span>A Note For Your 19th</span>
         </motion.div>
 
         <motion.h2
@@ -39,7 +39,7 @@ export default function MessageSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white"
+          className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-sans"
         >
           {birthdayData.message.title}
         </motion.h2>
@@ -49,102 +49,97 @@ export default function MessageSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-2 text-xs sm:text-sm font-mono text-zinc-400"
+          className="mt-2.5 text-sm sm:text-base text-zinc-300 max-w-md mx-auto font-sans"
         >
-          {birthdayData.message.codeComment}
+          Just a few honest thoughts on your 19th birthday.
         </motion.p>
       </div>
 
-      {/* Code Editor Window Card */}
+      {/* Elegant Frosted Stationery Letter Card */}
       <motion.div
-        initial={{ opacity: 0, y: 25 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 25, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.7 }}
-        className="rounded-2xl border border-white/10 bg-[#0b0f19]/90 backdrop-blur-2xl shadow-2xl overflow-hidden"
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        className="glass-letter rounded-3xl p-7 sm:p-12 relative overflow-hidden shadow-2xl"
       >
-        {/* Editor Title Bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#080c14]/90 select-none">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-rose-500/80" />
-            <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-            <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-            <span className="ml-2 font-mono text-xs text-zinc-400 flex items-center gap-1.5">
-              <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-              letter_to_anshika.ts
-            </span>
+        {/* Subtle decorative gold corner accent */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amber-400/10 via-purple-500/5 to-transparent pointer-events-none rounded-tr-3xl" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-500/10 via-sky-500/5 to-transparent pointer-events-none rounded-bl-3xl" />
+
+        {/* Top Card Bar: Stationery details & copy */}
+        <div className="flex items-center justify-between pb-6 mb-6 border-b border-purple-300/15">
+          <div className="flex items-center gap-2 text-xs font-mono text-purple-300/80">
+            <span>TO: ANSHIKA</span>
+            <span className="text-zinc-500">•</span>
+            <span>OCT 28, 2026</span>
           </div>
 
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-sans text-purple-200 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
           >
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-400">Copied!</span>
+                <span className="text-emerald-300 font-medium">Copied!</span>
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5" />
-                <span>Copy</span>
+                <Copy className="w-3.5 h-3.5 text-purple-300" />
+                <span>Save message</span>
               </>
             )}
           </button>
         </div>
 
-        {/* Editor Body */}
-        <div className="p-6 sm:p-10 font-mono text-xs sm:text-sm leading-relaxed">
-          <div className="text-zinc-500 italic mb-6">
-            /** <br />
-            &nbsp;* Compiled with best wishes for year 19. <br />
-            &nbsp;* From: {birthdayData.recipient.creatorName} <br />
-            &nbsp;* To: {birthdayData.recipient.name} <br />
-            &nbsp;*/
-          </div>
+        {/* Letter Body: Warm, readable, elegant typography */}
+        <div className="space-y-6 text-zinc-100 font-sans text-base sm:text-lg leading-relaxed">
+          {birthdayData.message.content.map((paragraph, idx) => {
+            const isFirst = idx === 0;
+            const isLast = idx === birthdayData.message.content.length - 1;
 
-          <div className="space-y-5 text-zinc-200">
-            {birthdayData.message.content.map((paragraph, idx) => {
-              const isFirst = idx === 0;
-              const isLast = idx === birthdayData.message.content.length - 1;
-              return (
-                <motion.p
-                  key={idx}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.2 + idx * 0.15 }}
-                  className={`font-sans text-sm sm:text-base leading-relaxed ${
-                    isFirst
-                      ? "text-amber-300 font-semibold text-base sm:text-lg"
-                      : isLast
-                      ? "text-cyan-300 font-semibold"
-                      : "text-zinc-300"
-                  }`}
-                >
-                  {paragraph}
-                </motion.p>
-              );
-            })}
-          </div>
-
-          {/* Signoff */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.9 }}
-            className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between text-xs text-zinc-500 font-mono"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>status: 200 OK • message delivered</span>
-            </div>
-            <div className="text-zinc-400 font-medium">
-              — {birthdayData.recipient.creatorName}
-            </div>
-          </motion.div>
+            return (
+              <motion.p
+                key={idx}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.15 + idx * 0.12 }}
+                className={
+                  isFirst
+                    ? "text-xl sm:text-2xl font-bold bg-gradient-to-r from-amber-200 via-rose-200 to-purple-200 bg-clip-text text-transparent pb-1"
+                    : isLast
+                    ? "text-purple-200 font-semibold text-lg sm:text-xl pt-2"
+                    : "text-zinc-200 font-normal leading-relaxed"
+                }
+              >
+                {paragraph}
+              </motion.p>
+            );
+          })}
         </div>
+
+        {/* Elegant Letter Signoff */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.7 }}
+          className="mt-10 pt-6 border-t border-purple-300/15 flex items-center justify-between text-sm text-zinc-400 font-sans"
+        >
+          <div className="flex items-center gap-2 text-xs font-mono text-purple-300/70">
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>Delivered with genuine warm wishes</span>
+          </div>
+
+          <div className="text-right">
+            <span className="text-xs text-zinc-500 font-mono block">From</span>
+            <span className="text-base sm:text-lg font-bold text-zinc-200 font-serif tracking-wide">
+              {birthdayData.recipient.creatorName}
+            </span>
+          </div>
+        </motion.div>
       </motion.div>
     </section>
   );

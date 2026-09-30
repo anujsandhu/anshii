@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, Maximize2, Sparkles, ChevronLeft, ChevronRight, Layers, Lock, Unlock } from "lucide-react";
+import { Camera, X, Maximize2, Sparkles, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { birthdayData } from "@/data/birthday";
 
 interface PhotoGalleryProps {
@@ -12,48 +12,8 @@ interface PhotoGalleryProps {
 
 export default function PhotoGallery({ onPhotoUnlocked }: PhotoGalleryProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
-  const [loadProgress, setLoadProgress] = useState(10);
-  const [memoriesLoaded, setMemoriesLoaded] = useState(false);
-  const [unlockedCards, setUnlockedCards] = useState<Record<number, boolean>>({
-    1: true, // First photo open by default
-  });
 
   const photos = birthdayData.photos;
-
-  // Progressive loading simulation: 10% -> 35% -> 68% -> 100%
-  useEffect(() => {
-    const steps = [
-      { p: 35, delay: 350 },
-      { p: 68, delay: 750 },
-      { p: 100, delay: 1100 },
-    ];
-
-    const timeouts = steps.map((step) =>
-      setTimeout(() => {
-        setLoadProgress(step.p);
-        if (step.p === 100) {
-          setTimeout(() => setMemoriesLoaded(true), 200);
-        }
-      }, step.delay)
-    );
-
-    return () => timeouts.forEach(clearTimeout);
-  }, []);
-
-  const handleUnlockCard = (e: React.MouseEvent, id: number) => {
-    e.stopPropagation();
-    setUnlockedCards((prev) => ({ ...prev, [id]: true }));
-    if (onPhotoUnlocked) onPhotoUnlocked();
-  };
-
-  const handleUnlockAll = () => {
-    const all: Record<number, boolean> = {};
-    photos.forEach((p) => {
-      all[p.id] = true;
-    });
-    setUnlockedCards(all);
-    if (onPhotoUnlocked) onPhotoUnlocked();
-  };
 
   const handleNextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -70,18 +30,21 @@ export default function PhotoGallery({ onPhotoUnlocked }: PhotoGalleryProps) {
   };
 
   return (
-    <section id="moments" className="relative py-20 px-4 sm:px-6 max-w-6xl mx-auto">
-      {/* Section Header */}
-      <div className="text-center mb-12">
+    <section id="moments" className="relative py-24 px-4 sm:px-6 max-w-6xl mx-auto select-none">
+      {/* Warm cream/peach ambient background glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] sm:w-[700px] h-[380px] sm:h-[700px] bg-gradient-to-tr from-amber-500/15 via-rose-500/15 to-purple-500/10 rounded-full blur-[150px] pointer-events-none" />
+
+      {/* Section Header: Warm Scrapbook Styling */}
+      <div className="text-center mb-16">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-300 font-mono text-xs mb-3"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-rose-300/30 bg-rose-950/30 text-rose-200 font-sans text-xs mb-3 shadow-sm"
         >
-          <Camera className="w-3.5 h-3.5 text-amber-400" />
-          <span>GALLERY // INTERACTIVE_WALL</span>
+          <Camera className="w-3.5 h-3.5 text-rose-300" />
+          <span>A Digital Scrapbook</span>
         </motion.div>
 
         <motion.h2
@@ -89,7 +52,7 @@ export default function PhotoGallery({ onPhotoUnlocked }: PhotoGalleryProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white"
+          className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-sans"
         >
           Some Moments
         </motion.h2>
@@ -99,46 +62,16 @@ export default function PhotoGallery({ onPhotoUnlocked }: PhotoGalleryProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-3 text-sm sm:text-base text-zinc-400 max-w-lg mx-auto font-sans"
+          className="mt-3 text-sm sm:text-base text-zinc-300 max-w-lg mx-auto font-sans leading-relaxed"
         >
-          There&apos;s something behind each card. Tap to unlock snapshots and memories.
+          A small collection of snapshots, memories, and moments that made this year special. Tap any photo to expand.
         </motion.p>
-
-        {/* Action button to unlock all */}
-        <div className="mt-4 flex justify-center">
-          <button
-            onClick={handleUnlockAll}
-            className="px-3.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5"
-          >
-            <Unlock className="w-3.5 h-3.5" />
-            <span>[ Unlock All Photos ]</span>
-          </button>
-        </div>
-
-        {/* Progressive Memory Loading Bar (10% -> 35% -> 68% -> 100%) */}
-        <div className="mt-6 max-w-xs mx-auto">
-          <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 mb-1.5">
-            <span className="flex items-center gap-1.5">
-              <Layers className="w-3 h-3 text-amber-400" />
-              {memoriesLoaded ? "Memory stack compiled" : "Loading memories..."}
-            </span>
-            <span className="text-amber-400 font-bold">{loadProgress}%</span>
-          </div>
-          <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-amber-500 to-cyan-400 rounded-full"
-              animate={{ width: `${loadProgress}%` }}
-              transition={{ ease: "easeOut", duration: 0.3 }}
-            />
-          </div>
-        </div>
       </div>
 
-      {/* Grid: Interactive Photo Discover Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
+      {/* Grid: Scrapbook Polaroid & Keepsake Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 items-start">
         {photos.map((item, index) => {
           const isPolaroid = index % 2 === 0;
-          const isUnlocked = !!unlockedCards[item.id];
 
           return (
             <motion.div
@@ -152,91 +85,72 @@ export default function PhotoGallery({ onPhotoUnlocked }: PhotoGalleryProps) {
                 ease: [0.22, 1, 0.36, 1],
               }}
               whileHover={{
-                scale: 1.03,
+                scale: 1.04,
                 rotate: 0,
-                zIndex: 20,
+                zIndex: 25,
+                transition: { duration: 0.25 },
               }}
               style={{
                 transform: `rotate(${item.rotation || 0}deg)`,
               }}
               onClick={() => {
-                if (isUnlocked) {
-                  setSelectedPhoto(index);
-                } else {
-                  setUnlockedCards((prev) => ({ ...prev, [item.id]: true }));
-                  if (onPhotoUnlocked) onPhotoUnlocked();
-                }
+                setSelectedPhoto(index);
+                if (onPhotoUnlocked) onPhotoUnlocked();
               }}
-              className="cursor-pointer transition-shadow duration-300 group"
+              className="cursor-pointer transition-shadow duration-300 group relative"
             >
-              {!isUnlocked ? (
-                /* Hidden/Mystery Card State */
-                <div className="glass-panel p-6 rounded-2xl border border-dashed border-amber-500/40 text-center flex flex-col items-center justify-center min-h-[260px] space-y-3 hover:border-amber-400 transition-colors">
-                  <div className="w-12 h-12 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300 group-hover:scale-110 transition-transform">
-                    <Lock className="w-5 h-5" />
-                  </div>
-                  <div className="font-mono text-xs text-amber-300 font-semibold">
-                    Memory #{item.id} Locked
-                  </div>
-                  <p className="text-xs text-zinc-400 font-sans px-2">
-                    &ldquo;There&apos;s something behind this card...&rdquo;
-                  </p>
-                  <button
-                    onClick={(e) => handleUnlockCard(e, item.id)}
-                    className="px-4 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-mono font-medium transition-all"
-                  >
-                    [ Click to Reveal ]
-                  </button>
-                </div>
-              ) : isPolaroid ? (
-                /* Unlocked Polaroid Style Card */
-                <div className="polaroid-card rounded-xl">
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-zinc-900">
+              {isPolaroid ? (
+                /* Polaroid Keepsake Card with Decorative Tape */
+                <div className="polaroid-card rounded-2xl relative">
+                  {/* Subtle Washi Tape Accent */}
+                  <div className="scrapbook-tape" />
+
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-zinc-900 shadow-inner">
                     <Image
                       src={item.src}
                       alt={item.caption}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                       priority={index < 2}
                     />
-                    <div className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-2.5 right-2.5 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">
                       <Maximize2 className="w-3.5 h-3.5" />
                     </div>
                   </div>
 
-                  <div className="pt-3 pb-1 px-1">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500 mb-1">
-                      <span>{item.tag || `0${item.id}`}</span>
+                  <div className="pt-3.5 pb-1 px-1">
+                    <div className="flex items-center justify-between text-xs font-mono text-zinc-500 mb-1">
+                      <span className="font-semibold text-amber-700/80">{item.tag || `Memory 0${item.id}`}</span>
                       <span>2026</span>
                     </div>
-                    <p className="text-zinc-800 font-sans text-xs sm:text-sm font-medium line-clamp-2">
+                    <p className="text-zinc-800 font-sans text-sm font-medium line-clamp-2 leading-snug">
                       {item.caption}
                     </p>
                   </div>
                 </div>
               ) : (
-                /* Unlocked Modern Glass Card */
-                <div className="glass-panel rounded-2xl p-3 border border-white/10 overflow-hidden group-hover:border-cyan-500/40 transition-colors">
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-zinc-900">
+                /* Modern Warm Frosted Keepsake Card */
+                <div className="glass-panel rounded-3xl p-3.5 border border-white/10 hover:border-amber-400/40 transition-all shadow-xl">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-900">
                     <Image
                       src={item.src}
                       alt={item.caption}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-                    <div className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                    <div className="absolute top-2.5 right-2.5 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">
                       <Maximize2 className="w-3.5 h-3.5" />
                     </div>
-                    <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-500/30 text-[10px] font-mono text-cyan-300">
+                    <div className="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-lg bg-amber-950/80 border border-amber-500/30 text-[11px] font-mono text-amber-200">
                       {item.tag || `Snapshot #${item.id}`}
                     </div>
                   </div>
 
                   <div className="p-3">
-                    <p className="text-zinc-200 font-sans text-xs sm:text-sm font-medium">
+                    <p className="text-zinc-100 font-sans text-sm font-medium leading-snug">
                       {item.caption}
                     </p>
                   </div>
@@ -286,7 +200,7 @@ export default function PhotoGallery({ onPhotoUnlocked }: PhotoGalleryProps) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-3xl w-full rounded-2xl overflow-hidden bg-[#0d131f] border border-white/10 shadow-2xl flex flex-col"
+              className="relative max-w-3xl w-full rounded-3xl overflow-hidden bg-[#101524] border border-white/15 shadow-2xl flex flex-col"
             >
               <div className="relative aspect-[4/3] sm:aspect-[16/10] w-full bg-zinc-950">
                 <Image
@@ -298,19 +212,19 @@ export default function PhotoGallery({ onPhotoUnlocked }: PhotoGalleryProps) {
                 />
               </div>
 
-              <div className="p-4 sm:p-5 border-t border-white/10 flex items-center justify-between gap-4 bg-[#090d16]">
+              <div className="p-5 sm:p-6 border-t border-white/10 flex items-center justify-between gap-4 bg-[#0a0f1c]">
                 <div>
-                  <div className="text-xs font-mono text-cyan-400 mb-1 flex items-center gap-1.5">
+                  <div className="text-xs font-mono text-amber-300 mb-1 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>
                       {photos[selectedPhoto].tag || `Photo ${selectedPhoto + 1} of ${photos.length}`}
                     </span>
                   </div>
-                  <p className="text-sm sm:text-base text-zinc-100 font-medium">
+                  <p className="text-base text-zinc-100 font-medium font-sans">
                     {photos[selectedPhoto].caption}
                   </p>
                 </div>
-                <div className="font-mono text-xs text-zinc-500 whitespace-nowrap">
+                <div className="font-mono text-xs text-zinc-400 whitespace-nowrap bg-white/5 px-2.5 py-1 rounded-lg">
                   {selectedPhoto + 1} / {photos.length}
                 </div>
               </div>
