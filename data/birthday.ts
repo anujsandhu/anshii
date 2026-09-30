@@ -28,12 +28,27 @@ export interface BirthdayConfig {
     title: string;
     artist: string;
     src: string; // Local path e.g. "/music/song.mp3" or remote URL
+    playlist: Array<{
+      id: string;
+      title: string;
+      artist: string;
+      src: string;
+      vibe: string;
+    }>;
+  };
+  quest: {
+    tasks: Array<{
+      id: string;
+      title: string;
+      description: string;
+    }>;
+    allCompletedMessage: string;
   };
   birthdayMode: {
     title: string;
     subtitle: string;
     options: Array<{
-      id: "chaos" | "peace" | "cake";
+      id: "cake" | "sleep" | "chaos";
       label: string;
       emoji: string;
       response: string;
@@ -46,6 +61,23 @@ export interface BirthdayConfig {
     targetStars: number;
     winMessage: string;
   };
+  sentenceCompletion: {
+    prompt: string;
+    options: Array<{
+      text: string;
+      response: string;
+    }>;
+  };
+  reactionTest: {
+    title: string;
+    waitingText: string;
+    triggerText: string;
+    responses: {
+      fast: string;
+      medium: string;
+      slow: string;
+    };
+  };
   interstitials: {
     break1: { main: string; followUp: string };
     break2: { main: string; followUp: string };
@@ -56,7 +88,7 @@ export interface BirthdayConfig {
     src: string;
     caption: string;
     tag?: string;
-    rotation?: number; // degrees for polaroid tilt
+    rotation?: number;
   }>;
   message: {
     title: string;
@@ -172,37 +204,96 @@ export const birthdayData: BirthdayConfig = {
   music: {
     title: "Midnight Coding Lofi",
     artist: "Chilled Synthwave & Coffee",
-    // Replace with your own audio file placed in /public/music/ (e.g. "/music/song.mp3")
-    // When no file is found, the built-in ambient Web Audio synth engine plays automatically!
     src: "/music/song.mp3",
+    playlist: [
+      {
+        id: "track-1",
+        title: "Midnight Coding Lofi",
+        artist: "Chilled Synthwave & Coffee",
+        src: "/music/song.mp3",
+        vibe: "🌙 Warm late-night study session",
+      },
+      {
+        id: "track-2",
+        title: "Campus Morning Acoustic",
+        artist: "Chill Melodic Guitars",
+        src: "/music/song.wav",
+        vibe: "☕ Autumn morning walk to lecture",
+      },
+      {
+        id: "track-3",
+        title: "Celebration Ambient Chimes",
+        artist: "Synthesized Harmony",
+        src: "/music/song.mp3",
+        vibe: "✨ Festive golden sparkler atmosphere",
+      },
+    ],
   },
 
-  // Interactive Choice: Choose Your Birthday Mode
+  // Birthday Quest Task Definitions
+  quest: {
+    tasks: [
+      { id: "start_bday", title: "Start the Birthday", description: "Tap the launch button to kick off Year 19." },
+      { id: "find_star", title: "Find the Hidden Star", description: "Locate the secret glowing star hidden on the page." },
+      { id: "make_choice", title: "Make the Birthday Decision", description: "Choose between Cake, Sleep, or Chaos." },
+      { id: "fix_code", title: "Fix the Birthday Code", description: "Debug the age variable from 18 to 19." },
+      { id: "choose_music", title: "Select a Soundtrack", description: "Choose the ambient tune for your website exploration." },
+      { id: "reaction_test", title: "Test Your Reflexes", description: "Click as soon as the prompt flashes NOW!" },
+      { id: "complete_sentence", title: "Complete the Sentence", description: "Answer what you deserve on your birthday." },
+    ],
+    allCompletedMessage:
+      "🎉 100% BIRTHDAY EXPLORER UNLOCKED!\nYou actually found and completed every single task. That curiosity and attention to detail is why working and laughing with you is always a highlight. Happy 19th, Anshika! — Anuj",
+  },
+
+  // Interactive Choice: What are you choosing today?
   birthdayMode: {
-    title: "Choose your birthday mode.",
-    subtitle: "Select the runtime configuration for Year 19:",
+    title: "Important birthday decision.",
+    subtitle: "What are you choosing today?",
     options: [
-      {
-        id: "chaos",
-        label: "CHAOS",
-        emoji: "⚡",
-        response: "Expected.",
-        reactionDetail: "Chaos mode initiated: High energy, spontaneous plans, and debugging at 2 AM.",
-      },
-      {
-        id: "peace",
-        label: "PEACE",
-        emoji: "🌿",
-        response: "Suspicious.",
-        reactionDetail: "Peace mode requested: Plenty of naps, quiet coffee, and zero drama allowed.",
-      },
       {
         id: "cake",
         label: "CAKE",
         emoji: "🍰",
-        response: "Correct answer.",
+        response: "Correct. Obviously.",
         reactionDetail: "Cake mode confirmed: Maximum sugar, sweet memories, and zero caloric accountability.",
       },
+      {
+        id: "sleep",
+        label: "SLEEP",
+        emoji: "😴",
+        response: "Valid choice.",
+        reactionDetail: "Sleep mode requested: 12 hours minimum, do-not-disturb on, stress strictly forbidden.",
+      },
+      {
+        id: "chaos",
+        label: "CHAOS",
+        emoji: "⚡",
+        response: "I expected this.",
+        reactionDetail: "Chaos mode initiated: Spontaneous adventures, loud laughs, and debugging at 2 AM.",
+      },
+    ],
+  },
+
+  // Reaction Speed Test
+  reactionTest: {
+    title: "Mini Reaction Test",
+    waitingText: "Don't click yet...",
+    triggerText: "NOW!",
+    responses: {
+      fast: "Okay, speed demon. Top-tier CS reflexes.",
+      medium: "Pretty fast! Ready for quick bug hotfixes.",
+      slow: "We'll blame the birthday excitement. Still counts!",
+    },
+  },
+
+  // Complete the Sentence
+  sentenceCompletion: {
+    prompt: "Today I deserve ______.",
+    options: [
+      { text: "Cake", response: "Correct. Infinite slices reserved." },
+      { text: "A Holiday", response: "100% approved by the department." },
+      { text: "Everything", response: "As you should. It's your 19th!" },
+      { text: "All of the above", response: "Correct. All of the above. Unanimous decision." },
     ],
   },
 
@@ -230,7 +321,7 @@ export const birthdayData: BirthdayConfig = {
     },
   },
 
-  // Replace photo1.jpg through photo5.jpg in /public/photos/ with real pictures of Anshika or moments together.
+  // Photos
   photos: [
     {
       id: 1,
@@ -269,7 +360,7 @@ export const birthdayData: BirthdayConfig = {
     },
   ],
 
-  // GIF paths - add custom GIFs to /public/gifs/ or use the embedded vector/animated illustrations
+  // GIF paths
   gifs: {
     celebrate: "/gifs/celebrate.gif",
     coding: "/gifs/coding.gif",
@@ -330,7 +421,7 @@ export const birthdayData: BirthdayConfig = {
 
   // Interactive Playful "Click Me" moment
   secretButton: {
-    initialLabel: "DON'T CLICK THIS ⚠️",
+    initialLabel: "DO NOT PRESS 🛑",
     steps: [
       {
         buttonText: "Why did you click it? 😂",
@@ -341,8 +432,8 @@ export const birthdayData: BirthdayConfig = {
         dialogue: "Are you inspecting the source code right now?",
       },
       {
-        buttonText: "Stop clicking, please! 🛑",
-        dialogue: "You're persistent. Classic CS student debugging mentality.",
+        buttonText: "Okay, undo...",
+        dialogue: "Fine. You're forgiven. Here is your secret reward:",
       },
     ],
     reward:

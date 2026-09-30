@@ -15,9 +15,14 @@ import { birthdayData } from "@/data/birthday";
 
 interface MusicPlayerProps {
   autoPlayTriggered: boolean;
+  currentTrack?: {
+    title: string;
+    artist: string;
+    src: string;
+  };
 }
 
-export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
+export default function MusicPlayer({ autoPlayTriggered, currentTrack }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.7);
@@ -25,6 +30,10 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
   const [duration, setDuration] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [useSynthFallback, setUseSynthFallback] = useState(false);
+
+  const activeTitle = currentTrack?.title || birthdayData.music.title;
+  const activeArtist = currentTrack?.artist || birthdayData.music.artist;
+  const activeSrc = currentTrack?.src || birthdayData.music.src;
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const synthIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -181,11 +190,18 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
+  useEffect(() => {
+    if (audioRef.current && isPlaying) {
+      audioRef.current.load();
+      audioRef.current.play().catch(() => {});
+    }
+  }, [activeSrc, isPlaying]);
+
   return (
     <>
       <audio
         ref={audioRef}
-        src={birthdayData.music.src}
+        src={activeSrc}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleAudioEnded}
         onError={handleAudioError}
@@ -220,7 +236,7 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
               <div className="flex flex-col text-left">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-white truncate max-w-[120px] sm:max-w-[160px]">
-                    {birthdayData.music.title}
+                    {activeTitle}
                   </span>
                   
                   {/* Animated Waveform Equalizer Bars */}
@@ -298,7 +314,7 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
               <div className="flex items-center justify-between text-[11px] text-zinc-400">
                 <span className="flex items-center gap-1">
                   <Music2 className="w-3 h-3 text-cyan-400" />
-                  {birthdayData.music.artist}
+                  {activeArtist}
                 </span>
                 <span>{useSynthFallback ? "Synth Mode" : "Audio Track"}</span>
               </div>

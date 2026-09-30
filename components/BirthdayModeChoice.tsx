@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Sliders, CheckCircle2, Zap, Coffee, Cake } from "lucide-react";
+import { Sparkles, Sliders } from "lucide-react";
 import confetti from "canvas-confetti";
 import { birthdayData } from "@/data/birthday";
 
@@ -11,11 +11,12 @@ interface BirthdayModeChoiceProps {
 }
 
 export default function BirthdayModeChoice({ onSelectMode }: BirthdayModeChoiceProps) {
-  const [selectedMode, setSelectedMode] = useState<"chaos" | "peace" | "cake" | null>(null);
-
   const options = birthdayData.birthdayMode.options;
+  type ModeId = (typeof options)[number]["id"];
 
-  const handleSelect = (modeId: "chaos" | "peace" | "cake") => {
+  const [selectedMode, setSelectedMode] = useState<ModeId | null>(null);
+
+  const handleSelect = (modeId: ModeId) => {
     setSelectedMode(modeId);
     if (onSelectMode) onSelectMode(modeId);
 
@@ -27,7 +28,7 @@ export default function BirthdayModeChoice({ onSelectMode }: BirthdayModeChoiceP
         colors:
           modeId === "chaos"
             ? ["#f59e0b", "#ef4444", "#8b5cf6"]
-            : modeId === "peace"
+            : modeId === "sleep"
             ? ["#10b981", "#06b6d4", "#3b82f6"]
             : ["#ec4899", "#f59e0b", "#fbbf24"],
       });
@@ -47,7 +48,7 @@ export default function BirthdayModeChoice({ onSelectMode }: BirthdayModeChoiceP
       >
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-300 font-mono text-xs mb-3">
           <Sliders className="w-3.5 h-3.5 text-violet-400" />
-          <span>RUNTIME_CONFIG // BIRTHDAY_MODE</span>
+          <span>TASK 03 // BIRTHDAY_DECISION</span>
         </div>
 
         <h3 className="text-xl sm:text-2xl font-bold text-white font-sans mb-1">

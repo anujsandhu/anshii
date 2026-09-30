@@ -12,14 +12,15 @@ interface FinalSectionProps {
 }
 
 export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSectionProps) {
+  const [isReady, setIsReady] = useState(false);
   const [compilingStep, setCompilingStep] = useState(0);
   const [isCompiled, setIsCompiled] = useState(false);
   const [hasTriggeredCompilation, setHasTriggeredCompilation] = useState(false);
-  const [showPersonalTransition, setShowPersonalTransition] = useState(false);
 
   const steps = birthdayData.final.compilingSteps;
 
   const startCompilationSequence = () => {
+    setIsReady(true);
     if (hasTriggeredCompilation) return;
     setHasTriggeredCompilation(true);
 
@@ -29,7 +30,6 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
         if (idx === steps.length - 1) {
           setTimeout(() => {
             setIsCompiled(true);
-            setShowPersonalTransition(true);
             try {
               confetti({
                 particleCount: 75,
@@ -61,15 +61,46 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[680px] h-[340px] sm:h-[680px] bg-gradient-to-b from-amber-500/10 via-cyan-500/10 to-violet-500/10 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
-        {/* Pre-final Cinematic Compiler Box */}
-        {!isCompiled ? (
+        {/* Final Task Step: [ READY ] */}
+        {!isReady ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            onViewportEnter={startCompilationSequence}
+            className="w-full max-w-md p-6 sm:p-8 rounded-3xl bg-[#090d16]/95 border border-cyan-500/30 shadow-2xl backdrop-blur-2xl space-y-4 text-center"
+          >
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/10 text-cyan-300 font-mono text-[11px]">
+              <Sparkles className="w-3 h-3 text-cyan-400" />
+              <span>FINAL TASK // THE_FINALE</span>
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-bold text-white font-sans">
+              One final task.
+            </h3>
+
+            <p className="text-xs sm:text-sm text-zinc-400 font-sans">
+              Before you continue to the final birthday moment...
+            </p>
+
+            <motion.button
+              onClick={startCompilationSequence}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="mt-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-cyan-500 text-white font-mono text-sm font-bold shadow-xl shadow-cyan-500/20 cursor-pointer"
+            >
+              [ READY ]
+            </motion.button>
+          </motion.div>
+        ) : !isCompiled ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-md p-6 sm:p-8 rounded-3xl bg-[#090d16]/95 border border-cyan-500/30 shadow-2xl backdrop-blur-2xl space-y-4"
           >
+            <div className="text-center font-mono text-xs text-amber-300 font-semibold mb-2">
+              &ldquo;Okay. That&apos;s enough playing.&rdquo;
+            </div>
+
             <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
               <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
                 <Cpu className="w-3.5 h-3.5" />

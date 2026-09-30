@@ -16,7 +16,14 @@ import InteractiveSecretButton from "@/components/InteractiveSecretButton";
 import Qualities from "@/components/Qualities";
 import Timeline from "@/components/Timeline";
 import ScrollInterstitial from "@/components/ScrollInterstitial";
-import Achievements from "@/components/Achievements";
+import QuestTracker from "@/components/QuestTracker";
+import StartBirthdayTask from "@/components/StartBirthdayTask";
+import HiddenStarTask from "@/components/HiddenStarTask";
+import FixTheCodeTask from "@/components/FixTheCodeTask";
+import SoundtrackSelector from "@/components/SoundtrackSelector";
+import ReactionSpeedTask from "@/components/ReactionSpeedTask";
+import CompleteSentenceTask from "@/components/CompleteSentenceTask";
+import MemoryMatchGame from "@/components/MemoryMatchGame";
 import EasterEgg from "@/components/EasterEgg";
 import FinalSection from "@/components/FinalSection";
 import AnimatedGif from "@/components/AnimatedGif";
@@ -25,9 +32,18 @@ import { birthdayData } from "@/data/birthday";
 export default function Home() {
   const [entered, setEntered] = useState(false);
   const [musicTriggered, setMusicTriggered] = useState(false);
+  const [activeTrack, setActiveTrack] = useState<{
+    title: string;
+    artist: string;
+    src: string;
+  }>({
+    title: birthdayData.music.title,
+    artist: birthdayData.music.artist,
+    src: birthdayData.music.src,
+  });
   const [terminalClicks, setTerminalClicks] = useState(0);
   const [easterEggOpen, setEasterEggOpen] = useState(false);
-  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
 
   const handleEnter = () => {
     setEntered(true);
@@ -39,17 +55,15 @@ export default function Home() {
     setEntered(false);
   };
 
-  const addAchievement = (id: string) => {
-    setUnlockedAchievements((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  const markTaskCompleted = (taskId: string) => {
+    setCompletedTasks((prev) => (prev.includes(taskId) ? prev : [...prev, taskId]));
   };
 
   const handleTerminalClick = () => {
     const nextCount = terminalClicks + 1;
     setTerminalClicks(nextCount);
-    addAchievement("curious");
     if (nextCount >= 5) {
       setEasterEggOpen(true);
-      addAchievement("easter_egg");
       setTerminalClicks(0);
     }
   };
@@ -74,16 +88,30 @@ export default function Home() {
               terminalClickCount={terminalClicks}
             />
 
-            {/* Surprise / Exploration Badge Tracker */}
-            <Achievements unlockedList={unlockedAchievements} />
+            {/* Birthday Quest Floating Checklist */}
+            <QuestTracker completedTasks={completedTasks} />
 
             {/* Main Interactive Journey */}
             <div className="flex-1 space-y-16 sm:space-y-24">
+              {/* Task 01: Start the Birthday */}
+              <StartBirthdayTask
+                onComplete={() => markTaskCompleted("start_bday")}
+                isCompleted={completedTasks.includes("start_bday")}
+              />
+
               {/* 1. Hero with Staggered Word Reveals and Version 18->19 Upgrade */}
               <Hero />
 
-              {/* 2. Playful Choice: Choose Your Birthday Mode */}
-              <BirthdayModeChoice onSelectMode={() => addAchievement("mode")} />
+              {/* Task 03: Important Birthday Decision (Cake / Sleep / Chaos) */}
+              <BirthdayModeChoice
+                onSelectMode={() => markTaskCompleted("make_choice")}
+              />
+
+              {/* Task 02: Hidden Star Challenge */}
+              <HiddenStarTask
+                onFound={() => markTaskCompleted("find_star")}
+                isFound={completedTasks.includes("find_star")}
+              />
 
               {/* Personality Break 1 */}
               <ScrollInterstitial
@@ -91,14 +119,42 @@ export default function Home() {
                 followUpText={birthdayData.interstitials.break1.followUp}
               />
 
-              {/* 3. Photo Gallery with Discoverable Hidden Cards & Lightbox */}
-              <PhotoGallery onPhotoUnlocked={() => addAchievement("curious")} />
+              {/* 2. Photo Gallery with Discoverable Hidden Cards & Lightbox */}
+              <PhotoGallery />
 
-              {/* 4. Mini-Game: Catch 5 Birthday Sparks */}
-              <StarCatcherMiniGame />
+              {/* Task 04: Fix the Birthday Code */}
+              <FixTheCodeTask
+                onComplete={() => markTaskCompleted("fix_code")}
+                isCompleted={completedTasks.includes("fix_code")}
+              />
 
-              {/* 5. Personal Message formatted as code editor file */}
+              {/* Task 05: Soundtrack Selection */}
+              <SoundtrackSelector
+                onSelectTrack={(track) => setActiveTrack(track)}
+                onComplete={() => markTaskCompleted("choose_music")}
+                isCompleted={completedTasks.includes("choose_music")}
+              />
+
+              {/* 3. Personal Message formatted as code editor file */}
               <MessageSection />
+
+              {/* Task 06: Mini Reaction Test */}
+              <ReactionSpeedTask
+                onComplete={() => markTaskCompleted("reaction_test")}
+                isCompleted={completedTasks.includes("reaction_test")}
+              />
+
+              {/* Task 07: Complete the Sentence */}
+              <CompleteSentenceTask
+                onComplete={() => markTaskCompleted("complete_sentence")}
+                isCompleted={completedTasks.includes("complete_sentence")}
+              />
+
+              {/* Bonus Mini-Game: 3-Pair Memory Match */}
+              <MemoryMatchGame />
+
+              {/* Mini-Game: Catch 5 Birthday Sparks */}
+              <StarCatcherMiniGame />
 
               {/* Tasteful CS Animation Break */}
               <div className="max-w-md mx-auto px-4">
@@ -110,18 +166,14 @@ export default function Home() {
                 />
               </div>
 
-              {/* 6. CS Developer Mini-Game: Debugging Anshika's Birthday */}
-              <div onClick={() => addAchievement("debugger")}>
-                <CsMiniGame />
-              </div>
+              {/* 4. CS Developer Mini-Game: Debugging Anshika's Birthday */}
+              <CsMiniGame />
 
-              {/* 7. Developer Section: Diagnostics & Live Test Suite */}
+              {/* 5. Developer Section: Diagnostics & Live Test Suite */}
               <DeveloperSection />
 
-              {/* 8. Playful Secret Micro-Interaction (Talks-back button) */}
-              <div onClick={() => addAchievement("curious")}>
-                <InteractiveSecretButton />
-              </div>
+              {/* 6. Playful Secret Micro-Interaction (DO NOT PRESS button) */}
+              <InteractiveSecretButton />
 
               {/* Personality Break 2 */}
               <ScrollInterstitial
@@ -129,10 +181,10 @@ export default function Home() {
                 followUpText={birthdayData.interstitials.break2.followUp}
               />
 
-              {/* 9. Qualities: Things That Make You, You */}
+              {/* 7. Qualities: Things That Make You, You */}
               <Qualities />
 
-              {/* 10. Memory Timeline: Interactive Lock & Decrypt Stack */}
+              {/* 8. Memory Timeline: Interactive Lock & Decrypt Stack */}
               <Timeline />
 
               {/* Celebration Animation Break */}
@@ -145,26 +197,23 @@ export default function Home() {
                 />
               </div>
 
-              {/* 11. Cinematic Final Surprise & Replay (Transition from Playful to Sincere) */}
+              {/* 9. Cinematic Final Surprise & Replay (Transition from Playful to Sincere with [READY] task) */}
               <FinalSection
                 onReplay={handleReplay}
-                onOpenEasterEgg={() => {
-                  setEasterEggOpen(true);
-                  addAchievement("easter_egg");
-                }}
+                onOpenEasterEgg={() => setEasterEggOpen(true)}
               />
             </div>
 
             {/* Persistent Floating Music Player with Dancing Waveform Equalizer */}
-            <MusicPlayer autoPlayTriggered={musicTriggered} />
+            <MusicPlayer
+              autoPlayTriggered={musicTriggered}
+              currentTrack={activeTrack}
+            />
 
             {/* Hidden Developer Easter Egg Modal (Supports Konami Code + Terminal clicks) */}
             <EasterEgg
               isOpen={easterEggOpen}
-              onOpen={() => {
-                setEasterEggOpen(true);
-                addAchievement("easter_egg");
-              }}
+              onOpen={() => setEasterEggOpen(true)}
               onClose={() => setEasterEggOpen(false)}
               clickCount={terminalClicks}
               onResetCount={() => setTerminalClicks(0)}
