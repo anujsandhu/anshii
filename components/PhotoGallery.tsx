@@ -1,15 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, Maximize2, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { Camera, X, Maximize2, Sparkles, ChevronLeft, ChevronRight, Layers, Check } from "lucide-react";
 import { birthdayData } from "@/data/birthday";
 
 export default function PhotoGallery() {
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
+  const [loadProgress, setLoadProgress] = useState(10);
+  const [memoriesLoaded, setMemoriesLoaded] = useState(false);
 
   const photos = birthdayData.photos;
+
+  // Progressive loading simulation: 10% -> 35% -> 68% -> 100%
+  useEffect(() => {
+    const steps = [
+      { p: 35, delay: 400 },
+      { p: 68, delay: 850 },
+      { p: 100, delay: 1300 },
+    ];
+
+    const timeouts = steps.map((step) =>
+      setTimeout(() => {
+        setLoadProgress(step.p);
+        if (step.p === 100) {
+          setTimeout(() => setMemoriesLoaded(true), 250);
+        }
+      }, step.delay)
+    );
+
+    return () => timeouts.forEach(clearTimeout);
+  }, []);
 
   const handleNextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -28,7 +50,7 @@ export default function PhotoGallery() {
   return (
     <section id="moments" className="relative py-20 px-4 sm:px-6 max-w-6xl mx-auto">
       {/* Section Header */}
-      <div className="text-center mb-14">
+      <div className="text-center mb-12">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -37,7 +59,7 @@ export default function PhotoGallery() {
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-300 font-mono text-xs mb-3"
         >
           <Camera className="w-3.5 h-3.5 text-amber-400" />
-          <span>GALLERY // SNAPSHOTS</span>
+          <span>GALLERY // PROGRESSIVE_REVEAL</span>
         </motion.div>
 
         <motion.h2
@@ -57,21 +79,43 @@ export default function PhotoGallery() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-3 text-sm sm:text-base text-zinc-400 max-w-lg mx-auto font-sans"
         >
-          A small visual collection of good days, laughs, and memories.
+          A digital memory wall. Tap any photo to expand into high resolution.
         </motion.p>
+
+        {/* Progressive Memory Loading Bar (10% -> 35% -> 68% -> 100%) */}
+        <div className="mt-6 max-w-xs mx-auto">
+          <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 mb-1.5">
+            <span className="flex items-center gap-1.5">
+              <Layers className="w-3 h-3 text-amber-400" />
+              {memoriesLoaded ? "Memory stack compiled" : "Loading memories..."}
+            </span>
+            <span className="text-amber-400 font-bold">{loadProgress}%</span>
+          </div>
+          <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-amber-500 to-cyan-400 rounded-full"
+              animate={{ width: `${loadProgress}%` }}
+              transition={{ ease: "easeOut", duration: 0.3 }}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Grid / Layout: Responsive cards with tilt effects */}
+      {/* Grid: Progressive One-by-One Reveals */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
         {photos.map((item, index) => {
           const isPolaroid = index % 2 === 0;
           return (
             <motion.div
               key={item.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              initial={{ opacity: 0, y: 35, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{
+                duration: 0.6,
+                delay: index * 0.12,
+                ease: [0.22, 1, 0.36, 1],
+              }}
               whileHover={{
                 scale: 1.03,
                 rotate: 0,
@@ -97,12 +141,12 @@ export default function PhotoGallery() {
                       priority={index < 2}
                     />
                     {/* Hover expand badge */}
-                    <div className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">
                       <Maximize2 className="w-3.5 h-3.5" />
                     </div>
                   </div>
 
-                  {/* Polaroid handwritten caption text */}
+                  {/* Polaroid caption text */}
                   <div className="pt-3 pb-1 px-1">
                     <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500 mb-1">
                       <span>{item.tag || `0${item.id}`}</span>
@@ -125,10 +169,10 @@ export default function PhotoGallery() {
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-                    <div className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">
                       <Maximize2 className="w-3.5 h-3.5" />
                     </div>
-                    <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-cyan-950/70 border border-cyan-500/30 text-[10px] font-mono text-cyan-300">
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-500/30 text-[10px] font-mono text-cyan-300">
                       {item.tag || `Snapshot #${item.id}`}
                     </div>
                   </div>

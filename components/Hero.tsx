@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Sparkles, Terminal, ArrowDown, Code2, Calendar } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Terminal, ArrowDown, Code2, Calendar, Check, RefreshCw } from "lucide-react";
 import { birthdayData } from "@/data/birthday";
 
 interface HeroProps {
@@ -11,6 +11,23 @@ interface HeroProps {
 
 export default function Hero({ onScrollClick }: HeroProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [versionState, setVersionState] = useState<"18.0" | "updating" | "19.0">("18.0");
+
+  // Version 18 -> 19 upgrade sequence
+  useEffect(() => {
+    const t1 = setTimeout(() => {
+      setVersionState("updating");
+    }, 1800);
+
+    const t2 = setTimeout(() => {
+      setVersionState("19.0");
+    }, 3200);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
 
   // Subtle interactive particle starfield background
   useEffect(() => {
@@ -99,8 +116,15 @@ export default function Hero({ onScrollClick }: HeroProps) {
     }
   };
 
+  const words = [
+    { text: "Happy", delay: 0.1, color: "text-white" },
+    { text: "19th", delay: 0.35, color: "text-amber-400" },
+    { text: "Birthday,", delay: 0.6, color: "text-white" },
+    { text: birthdayData.recipient.name, delay: 0.85, color: "bg-gradient-to-r from-amber-300 via-rose-300 to-cyan-300 bg-clip-text text-transparent text-glow-gold" },
+  ];
+
   return (
-    <section className="relative min-h-[92vh] flex flex-col justify-center items-center px-4 sm:px-6 pt-16 pb-12 overflow-hidden select-none">
+    <section className="relative min-h-[94vh] flex flex-col justify-center items-center px-4 sm:px-6 pt-16 pb-12 overflow-hidden select-none">
       {/* Background canvas */}
       <canvas
         ref={canvasRef}
@@ -108,40 +132,71 @@ export default function Hero({ onScrollClick }: HeroProps) {
       />
 
       {/* Subtle Ambient Glow Orbs */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[600px] h-[340px] sm:h-[600px] bg-gradient-to-tr from-cyan-600/15 via-violet-600/15 to-amber-500/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[620px] h-[340px] sm:h-[620px] bg-gradient-to-tr from-cyan-600/15 via-violet-600/15 to-amber-500/15 rounded-full blur-[130px] pointer-events-none" />
 
       {/* Main Container */}
       <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
-        {/* Version / Release Badge */}
+        {/* Animated Digital Version Upgrade Banner */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/40 backdrop-blur-md text-cyan-300 font-mono text-xs sm:text-sm mb-6 shadow-lg shadow-cyan-950/50"
+          transition={{ duration: 0.6 }}
+          className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-cyan-500/30 bg-cyan-950/50 backdrop-blur-md font-mono text-xs sm:text-sm mb-8 shadow-xl shadow-cyan-950/40"
         >
           <Code2 className="w-3.5 h-3.5 text-cyan-400" />
-          <span>{birthdayData.hero.badge}</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-400">VERSION</span>
+            <span className="text-zinc-500">|</span>
+            {versionState === "18.0" && (
+              <span className="text-zinc-400 font-bold">18.0</span>
+            )}
+            {versionState === "updating" && (
+              <span className="text-amber-400 font-bold flex items-center gap-1.5 animate-pulse">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                Updating to 19.0...
+              </span>
+            )}
+            {versionState === "19.0" && (
+              <motion.span
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="text-emerald-400 font-bold flex items-center gap-1"
+              >
+                19.0 <Check className="w-3.5 h-3.5" />
+              </motion.span>
+            )}
+          </div>
+          <span className="text-zinc-600">•</span>
+          <span className="text-emerald-400 font-semibold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            STATUS: STABLE
+          </span>
         </motion.div>
 
-        {/* Hero Title */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white leading-[1.15]"
-        >
-          Happy 19th Birthday,{" "}
-          <span className="bg-gradient-to-r from-amber-300 via-rose-300 to-cyan-300 bg-clip-text text-transparent text-glow-gold">
-            {birthdayData.recipient.name}
-          </span>
-        </motion.h1>
+        {/* Hero Title: Cinematic Word-by-Word Reveal */}
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.2] flex flex-wrap justify-center items-center gap-x-3 sm:gap-x-4 gap-y-1">
+          {words.map((w, index) => (
+            <motion.span
+              key={w.text}
+              initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{
+                duration: 0.75,
+                delay: w.delay,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className={`inline-block ${w.color}`}
+            >
+              {w.text}
+            </motion.span>
+          ))}
+        </h1>
 
-        {/* Subtext */}
+        {/* Subtext Reveal */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.45 }}
+          transition={{ duration: 0.8, delay: 1.1 }}
           className="mt-6 text-base sm:text-xl text-zinc-300 max-w-2xl font-normal leading-relaxed font-sans"
         >
           &ldquo;{birthdayData.hero.subtext}&rdquo;
@@ -151,7 +206,7 @@ export default function Hero({ onScrollClick }: HeroProps) {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
+          transition={{ duration: 0.8, delay: 1.3 }}
           className="mt-8 flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-zinc-400"
         >
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900/60 border border-white/5">
@@ -168,11 +223,11 @@ export default function Hero({ onScrollClick }: HeroProps) {
           </div>
         </motion.div>
 
-        {/* Scroll Indicator */}
+        {/* Scroll Indicator with gentle looping animation */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.9 }}
+          transition={{ duration: 1, delay: 1.6 }}
           className="mt-14 sm:mt-16 flex flex-col items-center cursor-pointer group"
           onClick={scrollToNext}
         >
@@ -180,7 +235,7 @@ export default function Hero({ onScrollClick }: HeroProps) {
             {birthdayData.hero.scrollHint}
           </span>
           <motion.div
-            animate={{ y: [0, 6, 0] }}
+            animate={{ y: [0, 8, 0] }}
             transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
             className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:border-cyan-400/40 group-hover:bg-cyan-500/10 transition-colors"
           >

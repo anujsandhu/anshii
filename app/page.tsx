@@ -8,11 +8,15 @@ import Hero from "@/components/Hero";
 import MusicPlayer from "@/components/MusicPlayer";
 import PhotoGallery from "@/components/PhotoGallery";
 import MessageSection from "@/components/MessageSection";
+import CsMiniGame from "@/components/CsMiniGame";
 import DeveloperSection from "@/components/DeveloperSection";
+import InteractiveSecretButton from "@/components/InteractiveSecretButton";
 import Qualities from "@/components/Qualities";
 import Timeline from "@/components/Timeline";
 import EasterEgg from "@/components/EasterEgg";
 import FinalSection from "@/components/FinalSection";
+import AnimatedGif from "@/components/AnimatedGif";
+import { birthdayData } from "@/data/birthday";
 
 export default function Home() {
   const [entered, setEntered] = useState(false);
@@ -61,24 +65,64 @@ export default function Home() {
 
             {/* Main Sections */}
             <div className="flex-1 space-y-16 sm:space-y-24">
+              {/* 1. Hero with Word Reveals and Version Upgrade */}
               <Hero />
+
+              {/* 2. Photo Gallery with Progressive Loading and Lightbox */}
               <PhotoGallery />
+
+              {/* 3. Personal Message */}
               <MessageSection />
+
+              {/* Tasteful CS Animation Break */}
+              <div className="max-w-md mx-auto px-4">
+                <AnimatedGif
+                  src={birthdayData.gifs.coding}
+                  alt="CS Student Coding Mood"
+                  type="coding"
+                  caption="Compiling memories & surviving engineering labs together"
+                />
+              </div>
+
+              {/* 4. CS Developer Mini-Game: Debugging Anshika's Birthday */}
+              <CsMiniGame />
+
+              {/* 5. Developer Section: Diagnostics & Live Test Suite */}
               <DeveloperSection />
+
+              {/* 6. Playful Secret Micro-Interaction */}
+              <InteractiveSecretButton />
+
+              {/* 7. Qualities: Things That Make You, You */}
               <Qualities />
+
+              {/* 8. Memory Timeline: Interactive Lock & Decrypt Stack */}
               <Timeline />
+
+              {/* Celebration Animation Break */}
+              <div className="max-w-md mx-auto px-4">
+                <AnimatedGif
+                  src={birthdayData.gifs.celebrate}
+                  alt="Birthday Celebration"
+                  type="celebrate"
+                  caption="Here's to a phenomenal 19th year ahead!"
+                />
+              </div>
+
+              {/* 9. Cinematic Final Surprise & Replay */}
               <FinalSection
                 onReplay={handleReplay}
                 onOpenEasterEgg={() => setEasterEggOpen(true)}
               />
             </div>
 
-            {/* Persistent Floating Music Player */}
+            {/* Persistent Floating Music Player with Dancing Equalizer */}
             <MusicPlayer autoPlayTriggered={musicTriggered} />
 
-            {/* Hidden Developer Easter Egg Modal */}
+            {/* Hidden Developer Easter Egg Modal (Supports Konami Code + Terminal clicks) */}
             <EasterEgg
               isOpen={easterEggOpen}
+              onOpen={() => setEasterEggOpen(true)}
               onClose={() => setEasterEggOpen(false)}
               clickCount={terminalClicks}
               onResetCount={() => setTerminalClicks(0)}

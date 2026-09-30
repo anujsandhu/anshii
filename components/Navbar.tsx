@@ -15,6 +15,7 @@ export default function Navbar({ onTerminalClick, terminalClickCount }: NavbarPr
   const navLinks = [
     { label: "Moments", href: "#moments" },
     { label: "Message", href: "#message" },
+    { label: "Debugger", href: "#debugger" },
     { label: "Build v19.0", href: "#build" },
     { label: "Traits", href: "#qualities" },
     { label: "Timeline", href: "#timeline" },
@@ -56,7 +57,7 @@ export default function Navbar({ onTerminalClick, terminalClickCount }: NavbarPr
             onClick={onTerminalClick}
             aria-label="Developer console Easter egg"
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 text-zinc-400 hover:text-cyan-300 text-xs font-mono transition-all cursor-pointer group"
-            title="Click multiple times for Easter Egg"
+            title="Click multiple times for Easter Egg (or press ↑↑↓↓←→←→)"
           >
             <Terminal className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-12 transition-transform" />
             <span className="hidden sm:inline">dev.sh</span>

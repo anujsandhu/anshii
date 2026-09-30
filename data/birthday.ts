@@ -47,6 +47,26 @@ export interface BirthdayConfig {
     codeSnippet: string;
     logs: string[];
   };
+  debugMiniGame: {
+    title: string;
+    subtitle: string;
+    bugs: Array<{
+      id: string;
+      bugNumber: string;
+      title: string;
+      fixLabel: string;
+      fixedTitle: string;
+      fixedDetail: string;
+    }>;
+  };
+  secretButton: {
+    initialLabel: string;
+    steps: Array<{
+      buttonText: string;
+      dialogue: string;
+    }>;
+    reward: string;
+  };
   qualities: Array<{
     id: number;
     icon: string;
@@ -66,9 +86,17 @@ export interface BirthdayConfig {
     triggerCount: number;
     secretCommand: string;
     wishOutput: string;
+    konamiSequence: string[];
+  };
+  gifs: {
+    celebrate: string;
+    coding: string;
+    reaction: string;
   };
   final: {
     introText: string;
+    compilingHeadline: string;
+    compilingSteps: Array<{ percent: number; status: string }>;
     headline: string;
     celebrateLine: string;
     signature: string;
@@ -91,8 +119,9 @@ export const birthdayData: BirthdayConfig = {
       "> Initializing Anshika.exe...",
       "> Loading memories...",
       "> Compiling good moments...",
-      "> Checking birthday status...",
+      "> Searching birthday configuration...",
       "> Birthday detected: 19",
+      "> Loading surprise...",
       "> System ready.",
     ],
     readyPrompt: "Ready?",
@@ -105,7 +134,7 @@ export const birthdayData: BirthdayConfig = {
     highlightWord: "Anshika",
     subtext:
       "Someone had to make you a website instead of just sending a birthday text.",
-    scrollHint: "Scroll down to initialize the build",
+    scrollHint: "Scroll down to explore the journey ↓",
   },
 
   music: {
@@ -155,6 +184,13 @@ export const birthdayData: BirthdayConfig = {
     },
   ],
 
+  // GIF paths - add custom GIFs to /public/gifs/ or use the embedded vector/animated illustrations
+  gifs: {
+    celebrate: "/gifs/celebrate.gif",
+    coding: "/gifs/coding.gif",
+    reaction: "/gifs/reaction.gif",
+  },
+
   message: {
     title: "A little message",
     codeComment: "// personal_note.ts (Compiled with care)",
@@ -165,6 +201,67 @@ export const birthdayData: BirthdayConfig = {
       "I hope this year brings you a lot of good memories, good people, good opportunities, and plenty of reasons to smile.",
       "Have an amazing 19th.",
     ],
+  },
+
+  // CS Developer Mini-Game: "Debugging Anshika's Birthday"
+  debugMiniGame: {
+    title: "Debugging Anshika's Birthday",
+    subtitle: "A quick hotfix session before the production release of Year 19.",
+    bugs: [
+      {
+        id: "bug-01",
+        bugNumber: "Bug #001",
+        title: "Birthday girl is getting older.",
+        fixLabel: "FIX BUG",
+        fixedTitle: "Bug fixed.",
+        fixedDetail: "Age updated: 19. (Zero deprecation warnings)",
+      },
+      {
+        id: "bug-02",
+        bugNumber: "Bug #002",
+        title: "Insufficient happiness detected.",
+        fixLabel: "DEBUG",
+        fixedTitle: "Happiness level restored.",
+        fixedDetail: "State: MAX_SAFE_INTEGER joy allocated.",
+      },
+      {
+        id: "bug-03",
+        bugNumber: "Bug #003",
+        title: "Coffee and energy supply running low.",
+        fixLabel: "REFILL CAFFEINE",
+        fixedTitle: "Caffeine replenished.",
+        fixedDetail: "Ready for Semester 4 coding sprints.",
+      },
+      {
+        id: "bug-04",
+        bugNumber: "Bug #004",
+        title: "Infinite loop of good vibes.",
+        fixLabel: "LET IT RUN",
+        fixedTitle: "Feature confirmed.",
+        fixedDetail: "Intentional design: This loop will never terminate.",
+      },
+    ],
+  },
+
+  // Interactive Playful "Click Me" moment
+  secretButton: {
+    initialLabel: "DON'T CLICK THIS ⚠️",
+    steps: [
+      {
+        buttonText: "Why did you click it? 😂",
+        dialogue: "Seriously, this button has zero practical utility.",
+      },
+      {
+        buttonText: "Okay, one more...",
+        dialogue: "Are you inspecting the source code right now?",
+      },
+      {
+        buttonText: "Stop clicking, please! 🛑",
+        dialogue: "You're persistent. Classic CS student debugging mentality.",
+      },
+    ],
+    reward:
+      "🎉 Achievement Unlocked: Unchecked Curiosity! Here's your secret reward: May your 19th year be full of breakthroughs, peace of mind, and zero compile errors. You're awesome, Anshika! ✨",
   },
 
   devDashboard: {
@@ -261,7 +358,7 @@ async function celebrateYear(person = "Anshika") {
     },
   ],
 
-  // Interactive vertical timeline
+  // Interactive vertical timeline with Compile & Lock mechanism
   timeline: [
     {
       id: "mem-01",
@@ -305,13 +402,31 @@ async function celebrateYear(person = "Anshika") {
     triggerCount: 5,
     secretCommand: "sudo birthday --wish",
     wishOutput: "May your code compile on the first try.",
+    konamiSequence: [
+      "ArrowUp",
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowDown",
+      "ArrowLeft",
+      "ArrowRight",
+      "ArrowLeft",
+      "ArrowRight",
+    ],
   },
 
   final: {
     introText: "One last thing...",
-    headline: "Happy Birthday, Anshika.",
+    compilingHeadline: "Compiling final message...",
+    compilingSteps: [
+      { percent: 10, status: "Loading sentiments..." },
+      { percent: 37, status: "Checking memory buffers..." },
+      { percent: 64, status: "Optimizing good wishes..." },
+      { percent: 89, status: "Linking heartfelt assets..." },
+      { percent: 100, status: "Compilation successful." },
+    ],
+    headline: "Happy 19th Birthday, Anshika.",
     celebrateLine: "Here's to 19.",
     signature: "— Anuj",
-    replayText: "Run Again",
+    replayText: "Run the experience again",
   },
 };

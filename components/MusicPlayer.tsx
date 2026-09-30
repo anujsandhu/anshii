@@ -120,7 +120,6 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
   };
 
   const handleAudioError = () => {
-    // If audio element encounters 404 or decoding error, switch gracefully to synth fallback
     setUseSynthFallback(true);
     if (isPlaying) {
       playSynthChime();
@@ -197,7 +196,7 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
       {/* Floating persistent widget */}
       <div className="fixed bottom-4 right-4 z-40 max-w-[calc(100vw-32px)]">
         <div
-          className={`rounded-2xl border border-white/10 bg-[#0d131f]/90 backdrop-blur-2xl shadow-2xl transition-all duration-300 overflow-hidden ${
+          className={`rounded-2xl border border-white/10 bg-[#0d131f]/95 backdrop-blur-2xl shadow-2xl transition-all duration-300 overflow-hidden ${
             isExpanded ? "w-80 p-4" : "w-auto px-3.5 py-2.5"
           }`}
         >
@@ -219,9 +218,44 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
               </div>
 
               <div className="flex flex-col text-left">
-                <span className="text-xs font-medium text-white truncate max-w-[140px] sm:max-w-[170px]">
-                  {birthdayData.music.title}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-white truncate max-w-[120px] sm:max-w-[160px]">
+                    {birthdayData.music.title}
+                  </span>
+                  
+                  {/* Animated Waveform Equalizer Bars */}
+                  <div className="flex items-end gap-[2px] h-3 w-5 shrink-0">
+                    <span
+                      className={`w-[3px] bg-cyan-400 rounded-full transition-all ${
+                        isPlaying
+                          ? "animate-[bounce_0.8s_infinite] h-full"
+                          : "h-1 opacity-50"
+                      }`}
+                    />
+                    <span
+                      className={`w-[3px] bg-indigo-400 rounded-full transition-all ${
+                        isPlaying
+                          ? "animate-[bounce_0.6s_infinite_0.2s] h-3/4"
+                          : "h-1 opacity-50"
+                      }`}
+                    />
+                    <span
+                      className={`w-[3px] bg-amber-400 rounded-full transition-all ${
+                        isPlaying
+                          ? "animate-[bounce_0.9s_infinite_0.4s] h-full"
+                          : "h-1 opacity-50"
+                      }`}
+                    />
+                    <span
+                      className={`w-[3px] bg-emerald-400 rounded-full transition-all ${
+                        isPlaying
+                          ? "animate-[bounce_0.7s_infinite_0.1s] h-1/2"
+                          : "h-1 opacity-50"
+                      }`}
+                    />
+                  </div>
+                </div>
+
                 <span className="text-[10px] text-zinc-400 truncate max-w-[130px] font-mono">
                   {isPlaying ? "Playing • 28 Oct" : "Paused"}
                 </span>
@@ -247,7 +281,7 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 aria-label="Expand player controls"
-                className="w-7 h-7 rounded-full text-zinc-400 hover:text-white flex items-center justify-center transition-colors"
+                className="w-7 h-7 rounded-full text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
               >
                 {isExpanded ? (
                   <ChevronDown className="w-4 h-4" />
@@ -292,7 +326,7 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
                 <button
                   onClick={toggleMute}
                   aria-label={isMuted ? "Unmute" : "Mute"}
-                  className="text-zinc-400 hover:text-white transition-colors"
+                  className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
                   {isMuted || volume === 0 ? (
                     <VolumeX className="w-4 h-4 text-rose-400" />
@@ -314,10 +348,13 @@ export default function MusicPlayer({ autoPlayTriggered }: MusicPlayerProps) {
                 </span>
               </div>
 
-              {/* Status info */}
-              <div className="text-[10px] text-zinc-500 bg-white/5 p-2 rounded-lg flex items-center justify-between">
-                <span>Soundtrack active</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              {/* Equalizer details */}
+              <div className="text-[10px] text-zinc-400 bg-white/5 p-2 rounded-lg flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${isPlaying ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"}`} />
+                  {isPlaying ? "Equalizer active" : "Audio paused"}
+                </span>
+                <span className="text-cyan-400">44.1 kHz</span>
               </div>
             </div>
           )}
