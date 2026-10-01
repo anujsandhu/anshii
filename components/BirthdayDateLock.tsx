@@ -110,8 +110,10 @@ export default function BirthdayDateLock({
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  // Physical Phone Vibration
-  const triggerPhoneVibrate = (pattern: number[] = [250, 100, 250, 100, 500]) => {
+  // High-Intensity Phone Vibration
+  const triggerPhoneVibrate = (
+    pattern: number[] = [450, 40, 450, 40, 600, 60, 500, 40, 500]
+  ) => {
     try {
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(pattern);
@@ -122,7 +124,7 @@ export default function BirthdayDateLock({
   // Step tracker for two-tone alternating siren
   const sirenStepRef = useRef(0);
 
-  // Realistic Alarm Buzzer Sound Synthesizer (Alternating Emergency Two-Tone)
+  // Realistic Alarm Buzzer Sound Synthesizer (FULL VOLUME + Dynamic Compression)
   const playRealisticBuzzer = useCallback(() => {
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -140,44 +142,59 @@ export default function BirthdayDateLock({
       const isHigh = sirenStepRef.current % 2 === 0;
       sirenStepRef.current++;
 
-      // Primary harsh alarm oscillator (Sawtooth with frequency glide)
+      // Compressor Node for maximum perceived loudness without digital distortion
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.setValueAtTime(-6, now);
+      compressor.knee.setValueAtTime(8, now);
+      compressor.ratio.setValueAtTime(12, now);
+      compressor.attack.setValueAtTime(0.002, now);
+      compressor.release.setValueAtTime(0.08, now);
+
+      // Master Gain at FULL 100% MAXIMUM VOLUME (1.0)
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(1.0, now);
+
+      compressor.connect(masterGain);
+      masterGain.connect(ctx.destination);
+
+      // Primary harsh alarm oscillator (Sawtooth with piercing glide at full volume)
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = "sawtooth";
-      osc1.frequency.setValueAtTime(isHigh ? 880 : 640, now);
-      osc1.frequency.exponentialRampToValueAtTime(isHigh ? 640 : 880, now + 0.22);
-      gain1.gain.setValueAtTime(0.18, now);
-      gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.24);
+      osc1.frequency.setValueAtTime(isHigh ? 920 : 660, now);
+      osc1.frequency.exponentialRampToValueAtTime(isHigh ? 660 : 920, now + 0.22);
+      gain1.gain.setValueAtTime(0.75, now);
+      gain1.gain.exponentialRampToValueAtTime(0.02, now + 0.25);
       osc1.connect(gain1);
-      gain1.connect(ctx.destination);
+      gain1.connect(compressor);
       osc1.start(now);
-      osc1.stop(now + 0.24);
+      osc1.stop(now + 0.25);
 
-      // Secondary low-frequency buzzer drone (Square)
+      // Secondary low-frequency buzzer drone (Square, intense acoustic bite)
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = "square";
-      osc2.frequency.setValueAtTime(isHigh ? 220 : 180, now);
-      gain2.gain.setValueAtTime(0.06, now);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      osc2.frequency.setValueAtTime(isHigh ? 240 : 180, now);
+      gain2.gain.setValueAtTime(0.4, now);
+      gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
       osc2.connect(gain2);
-      gain2.connect(ctx.destination);
+      gain2.connect(compressor);
       osc2.start(now);
       osc2.stop(now + 0.22);
     } catch {}
   }, []);
 
-  // Start Repeating Alarm Siren
+  // Start Repeating Alarm Siren at Full Volume & High-Intensity Vibration
   const startSiren = useCallback(() => {
     setSirenActive(true);
-    triggerPhoneVibrate([300, 120, 300, 120, 600]);
+    triggerPhoneVibrate([500, 50, 500, 50, 700, 80, 600]);
     playRealisticBuzzer();
 
     if (sirenIntervalRef.current) clearInterval(sirenIntervalRef.current);
     sirenIntervalRef.current = setInterval(() => {
       playRealisticBuzzer();
-      triggerPhoneVibrate([240, 90, 240]);
-    }, 440);
+      triggerPhoneVibrate([450, 40, 450, 40, 600]);
+    }, 400);
   }, [playRealisticBuzzer]);
 
   // Stop Repeating Alarm Siren
@@ -790,15 +807,15 @@ export default function BirthdayDateLock({
             transition={{ duration: 0.3 }}
             className={`fixed inset-0 z-50 bg-[#070508]/98 backdrop-blur-xl flex flex-col justify-between items-center p-3 sm:p-6 font-mono text-[#f3f4f6] overflow-y-auto ${
               glitchActive ? "translate-x-2 filter invert hue-rotate-180" : ""
-            } ${sirenActive ? "border-4 border-[#ef4444] shadow-[inset_0_0_80px_rgba(239,68,68,0.5)]" : ""}`}
+            } ${sirenActive ? "border-4 border-[#ef4444] shadow-[inset_0_0_80px_rgba(239,68,68,0.5)] animate-high-intensity-vibrate" : ""}`}
             style={{
               backgroundImage: `radial-gradient(circle at 50% 12%, rgba(239, 68, 68, 0.28) 0%, transparent 65%),
                                 repeating-linear-gradient(0deg, rgba(0,0,0,0.6) 0px, rgba(0,0,0,0.6) 1px, transparent 2px, transparent 4px)`,
             }}
           >
-            {/* Full-Screen Flashing Emergency Strobe in Full Brightness */}
-            <div className="pointer-events-none fixed inset-0 z-[65] animate-emergency-strobe mix-blend-screen" />
-            <div className="pointer-events-none fixed inset-0 z-[64] animate-emergency-beacon" />
+            {/* Crisp Red & White Emergency Strobe in Full Brightness */}
+            <div className="pointer-events-none fixed inset-0 z-[70] animate-crisp-red-white-strobe mix-blend-screen" />
+            <div className="pointer-events-none fixed inset-0 z-[69] animate-crisp-beacon" />
 
             {/* Top Red Security Siren Lightbar */}
             <div className="w-full max-w-2xl mx-auto flex items-center justify-between py-2 border-b border-[#3b172a]">
