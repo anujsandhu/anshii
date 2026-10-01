@@ -5,7 +5,6 @@ import ScrapbookPager from "@/components/ScrapbookPager";
 import CustomCursor from "@/components/CustomCursor";
 import SecretGiftGate from "@/components/SecretGiftGate";
 import BirthdayDateLock from "@/components/BirthdayDateLock";
-import PrivacyNoticeBanner from "@/components/PrivacyNoticeBanner";
 import { initAnalytics } from "@/lib/analyticsClient";
 
 interface ClientHomeProps {
@@ -54,14 +53,11 @@ export default function ClientHome({
           initialServerTime={initialServerTime}
         />
       ) : (
-        /* SECOND LAYER (after 28 Oct): Password Verification Gate & Privacy Notice */
-        <>
-          <PrivacyNoticeBanner />
-          <SecretGiftGate>
-            {/* FINAL LAYER (after password): Full Scrapbook Experience */}
-            <ScrapbookPager />
-          </SecretGiftGate>
-        </>
+        /* SECOND LAYER (after 28 Oct): Password Verification Gate */
+        <SecretGiftGate>
+          {/* FINAL LAYER (after password): Full Scrapbook Experience */}
+          <ScrapbookPager />
+        </SecretGiftGate>
       )}
     </main>
   );
