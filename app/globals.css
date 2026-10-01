@@ -428,6 +428,62 @@ canvas {
   animation: shakeError 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
+/* Audio Equalizer bars for Siren Screen */
+@keyframes audioEqBar {
+  0%, 100% { height: 5px; opacity: 0.6; }
+  50% { height: 22px; opacity: 1; }
+}
+
+.animate-audio-bar-1 { animation: audioEqBar 0.32s ease-in-out infinite; }
+.animate-audio-bar-2 { animation: audioEqBar 0.42s ease-in-out infinite 0.08s; }
+.animate-audio-bar-3 { animation: audioEqBar 0.26s ease-in-out infinite 0.14s; }
+.animate-audio-bar-4 { animation: audioEqBar 0.48s ease-in-out infinite 0.04s; }
+
+/* Luxury Shimmer Glow */
+@keyframes luxuryShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-luxury-shimmer {
+  background-size: 200% 100%;
+  animation: luxuryShimmer 5s ease-in-out infinite;
+}
+
+/* Authentic Embossed Wax Seal */
+.vintage-wax-seal {
+  background: radial-gradient(circle at 35% 35%, #fb7185 0%, #e11d48 55%, #881337 100%);
+  box-shadow: 
+    0 6px 18px rgba(136, 19, 55, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.55),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.5);
+}
+
+.vintage-wax-seal-inner {
+  border: 1.5px dashed rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+/* Radar Scanline Sweep for Siren Terminal */
+@keyframes radarSweep {
+  0% { transform: translateY(-100%); opacity: 0; }
+  30% { opacity: 0.7; }
+  70% { opacity: 0.7; }
+  100% { transform: translateY(400%); opacity: 0; }
+}
+
+.animate-radar-sweep {
+  animation: radarSweep 3.2s ease-in-out infinite;
+}
+
+/* Cyber Glow Container */
+.cyber-glow-box {
+  box-shadow: 
+    0 0 45px rgba(244, 63, 94, 0.28),
+    inset 0 0 30px rgba(244, 63, 94, 0.08);
+}
+
+
 /* Custom Cursor: hide default OS pointer on desktop when custom cursor is active */
 @media (pointer: fine) and (hover: hover) {
   body.custom-cursor-active,

@@ -18,6 +18,10 @@ import {
   ShieldCheck,
   CheckCircle2,
   ArrowRight,
+  Heart,
+  Key,
+  Shield,
+  Volume2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -584,6 +588,24 @@ export default function BirthdayDateLock({
     }, 3200);
   };
 
+  // Easter egg interaction when clicking the tulip on the scrapbook card
+  const handleTulipClick = () => {
+    triggerPhoneVibrate([60, 40, 80]);
+    try {
+      confetti({
+        particleCount: 30,
+        spread: 65,
+        origin: { y: 0.4 },
+        colors: ["#fda4af", "#f43f5e", "#fed7aa", "#fbcfe8"],
+      });
+    } catch {}
+    setAttemptMessage("🌷 Locked with care by Anuj! (Opens 28 October ✨)");
+    if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
+    messageTimeoutRef.current = setTimeout(() => {
+      setAttemptMessage(null);
+    }, 3200);
+  };
+
   // Trigger funny hacker crack attempt inside the prank layer
   const handleBypassAttempt = () => {
     startSiren();
@@ -711,35 +733,52 @@ export default function BirthdayDateLock({
         <motion.div
           animate={lockWiggle ? { x: [-6, 6, -5, 5, -2, 2, 0] } : {}}
           transition={{ duration: 0.4 }}
-          className="relative w-full rounded-[32px] bg-gradient-to-b from-[#ffffff] via-[#fffcf9] to-[#fff6f7] border-2 border-[#eeddd3] shadow-[0_25px_70px_-15px_rgba(244,63,94,0.18),0_0_0_1px_rgba(255,255,255,0.95)_inset,0_4px_12px_rgba(120,53,15,0.04)] p-6 sm:p-9 text-center overflow-hidden"
+          className="relative w-full rounded-[36px] bg-gradient-to-b from-[#ffffff] via-[#fffcf9] to-[#fff6f7] border-2 border-[#eeddd3] ring-1 ring-[#f59e0b]/20 shadow-[0_25px_80px_-15px_rgba(244,63,94,0.18),0_0_0_1px_rgba(255,255,255,0.95)_inset,0_10px_35px_rgba(251,113,133,0.12)] p-6 sm:p-9 text-center overflow-hidden"
         >
           {/* Top Decorative Gold-Foil Floral Washi Tape */}
           <div
-            className="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-7 bg-gradient-to-r from-[#fed7aa] via-[#fef08a] to-[#fed7aa] border-b border-[#f59e0b]/30 shadow-xs rotate-[-1.2deg] pointer-events-none rounded-xs flex items-center justify-around px-2 opacity-95"
+            className="absolute -top-3 left-1/2 -translate-x-1/2 w-36 h-7 bg-gradient-to-r from-[#fed7aa] via-[#fef08a] to-[#fed7aa] border-b border-[#f59e0b]/35 shadow-xs rotate-[-1.2deg] pointer-events-none rounded-xs flex items-center justify-around px-2 opacity-95"
             style={{
               clipPath: "polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%, 3% 50%)",
             }}
           >
-            <span className="text-[8px] text-[#92400e]/60">✦ ✦ ✦ ✦ ✦ ✦ ✦</span>
+            <span className="text-[8.5px] text-[#92400e]/70 font-serif tracking-widest">✦ ✦ ✦ ✦ ✦ ✦ ✦</span>
           </div>
 
           {/* Corner Miniature Rose Washi Tape */}
           <div
-            className="absolute -bottom-2 -right-3 w-16 h-5 bg-[#fbcfe8]/80 shadow-2xs rotate-[-12deg] pointer-events-none rounded-xs"
+            className="absolute -bottom-2 -right-3 w-18 h-5.5 bg-[#fbcfe8]/85 shadow-2xs rotate-[-12deg] pointer-events-none rounded-xs"
             style={{ clipPath: "polygon(4% 0, 100% 0, 96% 100%, 0 100%)" }}
           />
 
-          {/* Vintage Postage Stamp Top Right */}
-          <div className="absolute top-4 right-4 sm:top-5 sm:right-5 px-2.5 py-1.5 rounded-lg border-2 border-dashed border-[#f43f5e]/40 bg-[#fff1f2] text-[10px] font-sans font-bold text-[#be185d] rotate-3 tracking-wider shadow-2xs flex flex-col items-center">
-            <span className="text-[8px] uppercase tracking-widest text-[#9f1239]">POSTAGE</span>
-            <span className="font-extrabold text-[11px] text-[#be123c]">OCT 28 &apos;26</span>
+          {/* Delicate Botanical Vine in Top Left */}
+          <div className="absolute top-3 left-3 text-[#fda4af]/35 pointer-events-none select-none text-base">
+            🌿
+          </div>
+          <div className="absolute bottom-3 left-3 text-[#fda4af]/30 pointer-events-none select-none text-sm">
+            🌸
           </div>
 
-          {/* Glowing Tulip Halo */}
-          <div className="relative inline-flex items-center justify-center mb-2">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#ffe4e6] to-[#fef3c7] shadow-[0_0_24px_rgba(253,164,175,0.55)] flex items-center justify-center animate-bounce-gentle">
-              <span className="text-3xl sm:text-4xl select-none">🌷</span>
+          {/* Authentic Vintage Postage Stamp Top Right */}
+          <div className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2 rounded-lg border-2 border-dashed border-[#f43f5e]/45 bg-[#fff5f6] text-[10px] font-sans font-bold text-[#be185d] rotate-3 tracking-wider shadow-xs flex flex-col items-center select-none">
+            <span className="text-[7.5px] uppercase tracking-widest text-[#9f1239] font-mono">PAR AVION</span>
+            <span className="font-serif font-black text-[12px] text-[#be123c] leading-tight my-0.5">OCT 28 &apos;26</span>
+            <div className="flex items-center gap-0.5 text-[7px] text-[#fda4af] leading-none opacity-80">
+              <span>〰️〰️〰️</span>
             </div>
+          </div>
+
+          {/* Glowing Tulip Halo with Easter Egg Click */}
+          <div className="relative inline-flex items-center justify-center mb-2">
+            <motion.button
+              whileHover={{ scale: 1.12, rotate: 6 }}
+              whileTap={{ scale: 0.92 }}
+              onClick={handleTulipClick}
+              title="A sweet little tulip 🌷"
+              className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#ffe4e6] to-[#fef3c7] shadow-[0_0_28px_rgba(253,164,175,0.6)] flex items-center justify-center cursor-pointer border border-[#fbcfe8] active:rotate-12 transition-transform"
+            >
+              <span className="text-3xl sm:text-4xl select-none">🌷</span>
+            </motion.button>
           </div>
 
           {/* Crystal Glassmorphic Badge */}
@@ -759,21 +798,22 @@ export default function BirthdayDateLock({
           </p>
 
           {/* Highlight Badge */}
-          <div className="inline-block my-1 px-3 py-0.5 rounded-full bg-[#fff0f3] border border-[#fda4af]/40">
+          <div className="inline-block my-1 px-3.5 py-0.5 rounded-full bg-[#fff0f3] border border-[#fda4af]/45 shadow-2xs">
             <span className="font-sans text-xs sm:text-sm text-[#be185d] font-bold">
               Come back on 28 October.
             </span>
           </div>
 
-          {/* ── COUNTDOWN TIMER (Luxury Pearl Tiles) ────────────────────────── */}
+          {/* ── COUNTDOWN TIMER (Luxury Pearl Tiles with Specular Glaze) ─────── */}
           <div className="my-4 sm:my-5">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 max-w-md mx-auto">
               {/* DAYS */}
               <div
                 onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-gradient-to-b from-[#ffffff] to-[#faf6f0] border-2 border-[#ebdcd0] hover:border-[#fda4af] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+                className="group relative overflow-hidden cursor-pointer rounded-2xl bg-gradient-to-b from-[#ffffff] via-[#fdfbf9] to-[#faf6f0] border-2 border-[#ebdcd0] hover:border-[#fda4af] transition-all p-3 sm:p-4 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-1 active:scale-95"
               >
-                <span className="font-serif text-2xl sm:text-3xl font-extrabold bg-gradient-to-b from-[#881337] via-[#9f1239] to-[#be123c] bg-clip-text text-transparent tracking-tight leading-none mb-1">
+                <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
+                <span className="font-serif text-2xl sm:text-3xl font-extrabold bg-gradient-to-b from-[#881337] via-[#9f1239] to-[#be123c] bg-clip-text text-transparent tracking-tight leading-none mb-1 drop-shadow-xs">
                   {formatNumber(timeRemaining.days)}
                 </span>
                 <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927e76] uppercase tracking-wider">
@@ -784,9 +824,10 @@ export default function BirthdayDateLock({
               {/* HOURS */}
               <div
                 onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-gradient-to-b from-[#ffffff] to-[#faf6f0] border-2 border-[#ebdcd0] hover:border-[#fda4af] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+                className="group relative overflow-hidden cursor-pointer rounded-2xl bg-gradient-to-b from-[#ffffff] via-[#fdfbf9] to-[#faf6f0] border-2 border-[#ebdcd0] hover:border-[#fda4af] transition-all p-3 sm:p-4 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-1 active:scale-95"
               >
-                <span className="font-serif text-2xl sm:text-3xl font-extrabold bg-gradient-to-b from-[#881337] via-[#9f1239] to-[#be123c] bg-clip-text text-transparent tracking-tight leading-none mb-1">
+                <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
+                <span className="font-serif text-2xl sm:text-3xl font-extrabold bg-gradient-to-b from-[#881337] via-[#9f1239] to-[#be123c] bg-clip-text text-transparent tracking-tight leading-none mb-1 drop-shadow-xs">
                   {formatNumber(timeRemaining.hours)}
                 </span>
                 <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927e76] uppercase tracking-wider">
@@ -797,9 +838,10 @@ export default function BirthdayDateLock({
               {/* MINUTES */}
               <div
                 onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-gradient-to-b from-[#ffffff] to-[#faf6f0] border-2 border-[#ebdcd0] hover:border-[#fda4af] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+                className="group relative overflow-hidden cursor-pointer rounded-2xl bg-gradient-to-b from-[#ffffff] via-[#fdfbf9] to-[#faf6f0] border-2 border-[#ebdcd0] hover:border-[#fda4af] transition-all p-3 sm:p-4 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-1 active:scale-95"
               >
-                <span className="font-serif text-2xl sm:text-3xl font-extrabold bg-gradient-to-b from-[#881337] via-[#9f1239] to-[#be123c] bg-clip-text text-transparent tracking-tight leading-none mb-1">
+                <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
+                <span className="font-serif text-2xl sm:text-3xl font-extrabold bg-gradient-to-b from-[#881337] via-[#9f1239] to-[#be123c] bg-clip-text text-transparent tracking-tight leading-none mb-1 drop-shadow-xs">
                   {formatNumber(timeRemaining.minutes)}
                 </span>
                 <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927e76] uppercase tracking-wider">
@@ -810,14 +852,15 @@ export default function BirthdayDateLock({
               {/* SECONDS (Special radiant blush pulse) */}
               <div
                 onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-gradient-to-b from-[#fff1f2] to-[#ffe4e6] border-2 border-[#fda4af] hover:border-[#f43f5e] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+                className="group relative overflow-hidden cursor-pointer rounded-2xl bg-gradient-to-b from-[#fff1f2] to-[#ffe4e6] border-2 border-[#fda4af] hover:border-[#f43f5e] transition-all p-3 sm:p-4 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(244,63,94,0.18)] hover:shadow-[0_0_25px_rgba(244,63,94,0.3)] hover:-translate-y-1 active:scale-95"
               >
+                <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
                 <motion.span
                   key={timeRemaining.seconds}
                   initial={prefersReducedMotion ? false : { scale: 1.15, opacity: 0.8 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="font-serif text-2xl sm:text-3xl font-extrabold text-[#be123c] tracking-tight leading-none mb-1 drop-shadow-[0_0_8px_rgba(244,63,94,0.35)]"
+                  className="font-serif text-2xl sm:text-3xl font-extrabold text-[#be123c] tracking-tight leading-none mb-1 drop-shadow-[0_0_10px_rgba(244,63,94,0.4)]"
                 >
                   {formatNumber(timeRemaining.seconds)}
                 </motion.span>
@@ -828,31 +871,39 @@ export default function BirthdayDateLock({
             </div>
 
             {/* DATE LABEL */}
-            <div className="mt-4 pt-3 border-t border-[#f2e8df] flex items-center justify-center gap-2 text-xs font-sans text-[#786457]">
+            <div className="mt-3.5 pt-2.5 border-t border-[#f2e8df] flex items-center justify-center gap-2 text-xs font-sans text-[#786457]">
               <span className="font-medium">Unlocks {DATE_DISPLAY}</span>
               <span className="text-[#d1c2b8]">•</span>
               <span className="font-semibold text-[#be185d]">{TIMEZONE_DISPLAY}</span>
             </div>
           </div>
 
-          {/* ── SNOOPER QUOTE ───────────────────────────────────────────────── */}
-          <div className="mt-4 pt-3 border-t border-[#f2e8df] space-y-1">
-            <p className="font-serif italic text-sm sm:text-base font-semibold text-[#3f2e24]">
+          {/* ── SECRET NOTE (Tactile Folded Kraft Paper with Rose Pin) ───────── */}
+          <div className="relative mt-3.5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#fefbf7] via-[#fffdfa] to-[#fbf5ee] border border-[#ebdcd0] shadow-[0_4px_16px_rgba(120,53,15,0.05)] text-center rotate-[-0.6deg]">
+            {/* Rose-Gold Pin Top Left */}
+            <div className="absolute -top-2.5 left-6 w-5 h-5 rounded-full bg-gradient-to-tr from-[#f43f5e] to-[#fecdd3] shadow-xs flex items-center justify-center text-[10px] pointer-events-none border border-white select-none">
+              📌
+            </div>
+
+            <p className="font-serif italic text-sm sm:text-base font-bold text-[#3f2e24]">
               &ldquo;Yes, I actually locked it. 😂&rdquo;
             </p>
-            <p className="font-sans text-xs text-[#786457]">
-              Knowing the password won&apos;t help you yet.
+            <p className="font-sans text-xs text-[#786457] mt-0.5 font-medium">
+              Knowing the password won&apos;t help you yet — see you on 28 October! 🤍
             </p>
+            <div className="mt-1 text-[11px] font-serif italic text-[#be185d] font-semibold text-right pr-2">
+              — Anuj ✨
+            </div>
           </div>
 
-          {/* ── ACTION BUTTONS ─────────────────────────────────────── */}
-          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+          {/* ── ACTION BUTTONS ──────────────────────────────────────────────── */}
+          <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row items-center justify-center gap-2.5">
             {/* Ask Anuj on WhatsApp */}
             <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e] hover:brightness-105 text-xs font-sans font-bold text-white shadow-[0_4px_16px_rgba(244,63,94,0.3)] hover:shadow-[0_6px_20px_rgba(244,63,94,0.4)] hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e] hover:brightness-105 text-xs font-sans font-bold text-white shadow-[0_4px_18px_rgba(244,63,94,0.35)] hover:shadow-[0_6px_24px_rgba(244,63,94,0.45)] hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
             >
               <MessageCircle className="w-4 h-4 text-white" />
               <span>Ask Anuj on WhatsApp</span>
@@ -864,11 +915,32 @@ export default function BirthdayDateLock({
                 setShowHackerLayer(true);
                 startSiren();
               }}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-white/90 hover:bg-[#fff0f3] border border-[#ebdcd0] hover:border-[#fbcfe8] text-xs font-sans font-medium text-[#786457] hover:text-[#be185d] transition-all cursor-pointer shadow-2xs active:scale-95"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-white/95 hover:bg-[#fff0f3] border border-[#ebdcd0] hover:border-[#fbcfe8] text-xs font-sans font-medium text-[#786457] hover:text-[#be185d] transition-all cursor-pointer shadow-2xs active:scale-95"
             >
               <Lock className="w-3.5 h-3.5 text-[#f43f5e]" />
               <span>Check Door</span>
             </button>
+          </div>
+
+          {/* ── AUTHENTIC EMBOSSED CRIMSON WAX SEAL (Bottom Right) ───────────── */}
+          <div className="absolute -bottom-1 right-3 sm:bottom-2 sm:right-4 flex flex-col items-center pointer-events-none select-none z-10">
+            {/* Twin blush-rose satin ribbon tails */}
+            <div className="relative flex justify-center -space-x-1.5 -mb-2 z-0 opacity-85">
+              <div
+                className="w-2.5 h-6 bg-[#be123c] rotate-[15deg] rounded-b-xs shadow-2xs"
+                style={{ clipPath: "polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)" }}
+              />
+              <div
+                className="w-2.5 h-7 bg-[#9f1239] rotate-[-12deg] rounded-b-xs shadow-2xs"
+                style={{ clipPath: "polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)" }}
+              />
+            </div>
+            {/* 3D Wax Seal Stamp */}
+            <div className="vintage-wax-seal relative z-10 w-11 h-11 rounded-full flex items-center justify-center">
+              <div className="vintage-wax-seal-inner w-8.5 h-8.5 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">🌷</span>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -964,34 +1036,52 @@ export default function BirthdayDateLock({
             <div className="pointer-events-none fixed inset-0 z-[69] animate-crisp-beacon" />
 
             {/* Top Red Security Siren Lightbar */}
-            <div className="w-full max-w-2xl mx-auto flex items-center justify-between py-2 border-b border-[#3b172a]">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#ef4444] animate-ping" />
-                <span className="text-[11px] sm:text-xs font-bold text-[#fca5a5] tracking-widest uppercase">
-                  INCIDENT #SEC-9842 // ACCESS_DENIED
-                </span>
+            <div className="w-full max-w-2xl mx-auto flex items-center justify-between py-2 px-3 rounded-2xl bg-black/60 border border-[#3b172a] backdrop-blur-md mb-2">
+              <div className="flex items-center gap-2.5">
+                <div className="relative flex items-center justify-center">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] animate-ping absolute" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] sm:text-xs font-bold text-[#fca5a5] tracking-widest uppercase font-mono">
+                    INCIDENT #SEC-9842 // THREAT LEVEL: MAXIMUM
+                  </span>
+                  <span className="text-[9px] text-[#f87171]/70 font-mono">
+                    TARGET: ANSHIKA // VAULT LOCKDOWN ACTIVE
+                  </span>
+                </div>
               </div>
 
+              {/* Audio Equalizer visualizer */}
               <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-1 h-5 px-2.5 py-0.5 rounded-full bg-black/70 border border-[#ef4444]/40">
+                  <Volume2 className="w-3 h-3 text-[#ef4444] animate-pulse" />
+                  <span className="w-1 h-3 rounded-full bg-[#ef4444] animate-audio-bar-1" />
+                  <span className="w-1 h-4 rounded-full bg-[#f43f5e] animate-audio-bar-2" />
+                  <span className="w-1 h-2 rounded-full bg-[#fb7185] animate-audio-bar-3" />
+                  <span className="w-1 h-5 rounded-full bg-[#ef4444] animate-audio-bar-4" />
+                  <span className="text-[9px] font-mono text-[#fca5a5] font-bold ml-1">SIREN 100%</span>
+                </div>
+
                 <button
                   onClick={() => {
                     disarmSectionRef.current?.scrollIntoView({ behavior: "smooth" });
                     setDisarmShake(true);
                     setTimeout(() => setDisarmShake(false), 500);
                     setDisarmMessage(
-                      "⚠️ To abort lockdown and silence the siren, solve the Identity Verification question below!"
+                      "⚠️ To silence the siren and crack the window, solve the Identity Verification question below!"
                     );
                   }}
-                  className="px-2.5 py-1 rounded-full bg-[#27101c] hover:bg-[#3d182b] border border-[#ef4444]/40 text-[11px] text-[#fca5a5] flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                  className="px-3 py-1 rounded-full bg-[#27101c] hover:bg-[#3d182b] border border-[#ef4444]/60 text-[11px] font-mono text-[#fca5a5] flex items-center gap-1.5 cursor-pointer transition-colors active:scale-95 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
                 >
                   <span>Abort Lockdown</span>
-                  <X className="w-3 h-3 text-[#f87171]" />
+                  <X className="w-3.5 h-3.5 text-[#f87171]" />
                 </button>
               </div>
             </div>
 
             {/* Hacker Card Modal */}
-            <div className="w-full max-w-lg mx-auto my-auto py-3">
+            <div className="w-full max-w-lg mx-auto my-auto py-2">
               {/* Alert Header Strobe Banner */}
               <div className="w-full mb-3 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[#350d18] border-2 border-[#ef4444] text-center shadow-[0_0_30px_rgba(239,68,68,0.4)] animate-pulse">
                 <AlertOctagon className="w-5 h-5 text-[#ef4444] shrink-0 animate-bounce" />
@@ -1001,20 +1091,20 @@ export default function BirthdayDateLock({
               </div>
 
               {/* Realistic Cyber Terminal Snippet */}
-              <div className="w-full mb-4 rounded-2xl bg-[#09060c] border border-[#3b172a] p-3.5 text-[11px] text-[#9ca3af] shadow-inner text-left">
-                <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#210f1c] text-[10px] text-[#6b7280]">
+              <div className="w-full mb-3 rounded-2xl bg-[#09060c] border border-[#3b172a] p-3 text-[11px] text-[#9ca3af] shadow-inner text-left">
+                <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-[#210f1c] text-[10px] text-[#6b7280]">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-[#ef4444]" />
                     <div className="w-2 h-2 rounded-full bg-[#f59e0b]" />
                     <div className="w-2 h-2 rounded-full bg-[#10b981]" />
-                    <span className="ml-1 text-[#f43f5e] font-semibold">
+                    <span className="ml-1 text-[#f43f5e] font-semibold font-mono">
                       sec-monitor@anuj-vault:~# ./quarantine_device
                     </span>
                   </div>
-                  <span className="text-[#ef4444] font-bold">DEFENSE: {hackProgress}%</span>
+                  <span className="text-[#ef4444] font-bold font-mono">DEFENSE: {hackProgress}%</span>
                 </div>
 
-                <div className="space-y-1 leading-relaxed">
+                <div className="space-y-1 leading-relaxed font-mono">
                   {terminalLogs
                     .filter((log): log is string => typeof log === "string" && Boolean(log))
                     .map((log, index) => {
@@ -1057,43 +1147,112 @@ export default function BirthdayDateLock({
               {/* ── THE DISARM GAME: FIRST TALK DATE CHALLENGE (4 OPTIONS, 2 ATTEMPTS) ── */}
               <div
                 ref={disarmSectionRef}
-                className={`rounded-3xl bg-[#130b18] border-2 ${
+                className={`relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#1b0a1d]/95 via-[#120514]/95 to-[#09020b]/95 border-2 ${
                   disarmSuccess
-                    ? "border-[#10b981] shadow-[0_0_50px_rgba(16,185,129,0.35)]"
+                    ? "border-[#10b981] shadow-[0_0_60px_rgba(16,185,129,0.45)]"
                     : disarmShake
-                    ? "border-[#ef4444] animate-shake-error shadow-[0_0_40px_rgba(239,68,68,0.6)]"
-                    : "border-[#4a1c32] shadow-2xl"
+                    ? "border-[#ef4444] animate-shake-error shadow-[0_0_50px_rgba(239,68,68,0.7)]"
+                    : "border-[#6b2149] shadow-[0_0_40px_rgba(244,63,94,0.3)]"
                 } p-4 sm:p-6 text-center transition-all`}
               >
+                {/* Glowing neon top accent line */}
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#f43f5e] to-transparent opacity-80" />
+
                 {disarmSuccess ? (
                   /* ── SUCCESS STATE: SIREN DISARMED ── */
                   <div className="space-y-3">
-                    <div className="w-14 h-14 rounded-full bg-[#10b981]/20 border border-[#34d399] mx-auto flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(16,185,129,0.5)]">
+                    <div className="w-14 h-14 rounded-full bg-[#10b981]/20 border border-[#34d399] mx-auto flex items-center justify-center text-3xl shadow-[0_0_24px_rgba(16,185,129,0.6)]">
                       ❤️
                     </div>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10b981]/20 border border-[#10b981]/40 text-[#34d399] text-xs font-bold uppercase tracking-wider">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10b981]/20 border border-[#10b981]/50 text-[#34d399] text-xs font-bold uppercase tracking-wider font-mono">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Identity Confirmed // 100% Match</span>
+                      <span>DECLASSIFIED // IDENTITY 100% CONFIRMED</span>
                     </div>
                     <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                       YOU REMEMBERED! 🥹
                     </h2>
                     <p className="font-sans text-xs sm:text-sm text-[#a7f3d0] leading-relaxed max-w-sm mx-auto">
                       Yes! We talked for the very first time on{" "}
-                      <span className="font-bold text-white underline decoration-[#34d399]">
+                      <span className="font-bold text-white underline decoration-[#34d399] decoration-2">
                         14 August 2026
                       </span>
                       .
                     </p>
 
-                    <div className="p-3 rounded-2xl bg-black/50 border border-[#10b981]/40 text-[11px] font-mono text-[#a7f3d0] text-left max-w-sm mx-auto space-y-1">
-                      <div>&gt; Aug 14, 5:47 AM — Anuj: &quot;Heyy&quot;</div>
-                      <div>&gt; Aug 14, 9:56 AM — Anshika: &quot;Hlo&quot;</div>
-                      <div>&gt; Aug 14, 11:06 AM — Anuj: &quot;aap mere classmate the na? 😅&quot;</div>
-                      <div>&gt; Aug 14, 11:06 AM — Anshika: &quot;Haan ,Right&quot;</div>
+                    {/* Styled authentic WhatsApp memory transcript snippet */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0c1317] border border-[#10b981]/50 text-left max-w-sm mx-auto mb-3 space-y-2.5 shadow-2xl relative overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500" />
+                      
+                      <div className="text-[10px] font-sans font-semibold text-[#8696a0] flex items-center justify-between pb-2 border-b border-[#202c33]">
+                        <span className="flex items-center gap-1.5 text-[#25d366]">
+                          <Lock className="w-3 h-3 text-[#25d366]" />
+                          WhatsApp Archive • 14 Aug 2026
+                        </span>
+                        <span className="text-[#8696a0] font-mono text-[9px]">Verified Memory</span>
+                      </div>
+
+                      {/* Anuj Bubble 1 */}
+                      <div className="flex items-start gap-2">
+                        <div className="w-6 h-6 rounded-full bg-[#202c33] border border-[#3b4a54] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
+                          A
+                        </div>
+                        <div className="flex flex-col items-start max-w-[82%]">
+                          <div className="px-3 py-1.5 rounded-2xl rounded-tl-xs bg-[#202c33] text-[#e9edef] text-xs font-sans shadow-xs">
+                            Heyy
+                          </div>
+                          <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 ml-1 flex items-center gap-1">
+                            Anuj • 5:47 AM <span className="text-[#53bdeb] text-[10px]">✓✓</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Anshika Bubble 1 */}
+                      <div className="flex items-start justify-end gap-2">
+                        <div className="flex flex-col items-end max-w-[82%]">
+                          <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
+                            Hlo
+                          </div>
+                          <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
+                            Anshika • 9:56 AM
+                          </span>
+                        </div>
+                        <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
+                          A
+                        </div>
+                      </div>
+
+                      {/* Anuj Bubble 2 */}
+                      <div className="flex items-start gap-2">
+                        <div className="w-6 h-6 rounded-full bg-[#202c33] border border-[#3b4a54] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
+                          A
+                        </div>
+                        <div className="flex flex-col items-start max-w-[82%]">
+                          <div className="px-3 py-1.5 rounded-2xl rounded-tl-xs bg-[#202c33] text-[#e9edef] text-xs font-sans shadow-xs">
+                            ek random question thaa 😅 aap mere classmate the na?
+                          </div>
+                          <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 ml-1 flex items-center gap-1">
+                            Anuj • 11:06 AM <span className="text-[#53bdeb] text-[10px]">✓✓</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Anshika Bubble 2 */}
+                      <div className="flex items-start justify-end gap-2">
+                        <div className="flex flex-col items-end max-w-[82%]">
+                          <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
+                            Haan ,Right
+                          </div>
+                          <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
+                            Anshika • 11:06 AM
+                          </span>
+                        </div>
+                        <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
+                          A
+                        </div>
+                      </div>
                     </div>
 
-                    <p className="font-sans text-xs text-[#fecdd3] pt-1">
+                    <p className="font-sans text-xs text-[#fecdd3] pt-1 leading-relaxed">
                       Siren permanently silenced! It was all just a little prank by Anuj! 😂🌷
                     </p>
 
@@ -1103,7 +1262,7 @@ export default function BirthdayDateLock({
                           stopSiren();
                           setShowHackerLayer(false);
                         }}
-                        className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-[#10b981] to-[#059669] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_20px_rgba(16,185,129,0.35)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                        className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-gradient-to-r from-[#10b981] via-[#059669] to-[#047857] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_24px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 hover:shadow-[0_6px_28px_rgba(16,185,129,0.55)]"
                       >
                         <span>🌷 Open Countdown Card</span>
                         <ArrowRight className="w-4 h-4" />
@@ -1121,42 +1280,44 @@ export default function BirthdayDateLock({
                       EMERGENCY OVERRIDE PROTOCOL 🚨
                     </h2>
 
-                    <p className="font-sans text-xs font-bold text-[#f43f5e] mb-1">
+                    <p className="font-sans text-xs font-bold text-[#f43f5e] mb-1 font-mono">
                       TO STOP THE SIREN: IDENTITY VERIFICATION REQUIRED
                     </p>
 
-                    <p className="font-sans text-xs text-[#9ca3af] leading-relaxed max-w-sm mx-auto mb-4">
+                    <p className="font-sans text-xs text-[#9ca3af] leading-relaxed max-w-sm mx-auto mb-3">
                       Answer the passkey question to prove you are really Anshika:
                     </p>
 
-                    {/* Question Card with Attempts Counter */}
-                    <div className="p-3 sm:p-4 rounded-2xl bg-[#1b0a15] border border-[#5c1c39] mb-4 text-left">
+                    {/* Question Card with Holographic Keys HUD */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-[#180816] border border-[#5c1c39] mb-3 text-left shadow-inner">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] font-mono font-bold text-[#f43f5e] uppercase tracking-wider flex items-center gap-1">
-                          <Radio className="w-3 h-3 animate-ping" />
+                          <Radio className="w-3 h-3 animate-ping text-[#ef4444]" />
                           SECURITY QUESTION:
                         </span>
-                        <div className="flex items-center gap-1.5 bg-black/40 px-2.5 py-1 rounded-full border border-[#ef4444]/30">
-                          <span className="text-[10px] font-mono font-bold text-[#fca5a5]">
-                            ATTEMPTS:
+
+                        {/* Holographic Keys Counter */}
+                        <div className="flex items-center gap-1.5 bg-black/60 px-2.5 py-1 rounded-full border border-[#ef4444]/40">
+                          <span className="text-[9.5px] font-mono font-bold text-[#fca5a5] flex items-center gap-0.5">
+                            <Shield className="w-3 h-3 text-[#f43f5e]" /> KEYS:
                           </span>
                           <div className="flex items-center gap-1">
-                            {[1, 2].map((att) => (
-                              <span
-                                key={att}
-                                className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
-                                  att <= disarmAttemptsLeft
-                                    ? "bg-[#ef4444] text-white shadow-[0_0_6px_rgba(239,68,68,0.8)]"
-                                    : "bg-[#27101c] text-[#6b7280] border border-[#3b172a]"
-                                }`}
-                              >
-                                {att <= disarmAttemptsLeft ? "●" : "✕"}
-                              </span>
-                            ))}
+                            {[1, 2].map((att) => {
+                              const active = att <= disarmAttemptsLeft;
+                              return (
+                                <span
+                                  key={att}
+                                  className={`px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold tracking-wider ${
+                                    active
+                                      ? "bg-[#ef4444]/30 text-[#fecaca] border border-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.8)] animate-pulse"
+                                      : "bg-black text-[#6b7280] border border-[#374151] line-through opacity-40"
+                                  }`}
+                                >
+                                  {active ? "🔑 ACTIVE" : "💥 LOST"}
+                                </span>
+                              );
+                            })}
                           </div>
-                          <span className="text-[10px] font-mono text-[#f87171] font-bold ml-1">
-                            {disarmAttemptsLeft}/2
-                          </span>
                         </div>
                       </div>
 
@@ -1189,8 +1350,8 @@ export default function BirthdayDateLock({
                       )}
                     </AnimatePresence>
 
-                    {/* 4 Date Options Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
+                    {/* 4 Date Options Grid (Holographic Cyber Tiles) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3.5">
                       {FIRST_TALK_OPTIONS.map((opt, idx) => {
                         const isWrong = disarmWrongSelected.includes(opt.id);
                         const letters = ["A", "B", "C", "D"];
@@ -1199,26 +1360,27 @@ export default function BirthdayDateLock({
                             key={opt.id}
                             disabled={isWrong || disarmAttemptsLeft <= 0}
                             onClick={() => handleSelectFirstTalkDate(opt.id)}
-                            className={`group relative p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between active:scale-95 ${
+                            className={`group relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between active:scale-95 ${
                               isWrong
-                                ? "bg-[#200a12] border-[#ef4444]/40 opacity-50 cursor-not-allowed text-[#9ca3af]"
+                                ? "bg-[#250b13]/80 border-[#ef4444]/45 opacity-55 cursor-not-allowed text-[#9ca3af]"
                                 : disarmAttemptsLeft <= 0
-                                ? "bg-[#150a18] border-[#3b172a] opacity-50 cursor-not-allowed text-[#6b7280]"
-                                : "bg-[#1d0e1f] hover:bg-[#321434] border-[#5c1c39] hover:border-[#f43f5e] text-white shadow-sm hover:shadow-md"
+                                ? "bg-[#140816]/60 border-[#3b172a] opacity-50 cursor-not-allowed text-[#6b7280]"
+                                : "bg-gradient-to-r from-[#210c22] via-[#2c112f] to-[#1c081e] hover:from-[#351538] hover:to-[#280c2b] border-[#5c1c39] hover:border-[#f43f5e] text-white shadow-sm hover:shadow-[0_0_18px_rgba(244,63,94,0.3)] hover:-translate-y-0.5"
                             }`}
                           >
+                            <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                             <div className="flex items-center gap-2.5">
                               <span
-                                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                                className={`w-6.5 h-6.5 rounded-xl flex items-center justify-center text-xs font-bold font-mono transition-all ${
                                   isWrong
-                                    ? "bg-[#ef4444]/30 text-[#fca5a5]"
-                                    : "bg-[#f43f5e]/20 text-[#fda4af] border border-[#f43f5e]/40 group-hover:bg-[#f43f5e] group-hover:text-white transition-colors"
+                                    ? "bg-[#ef4444]/30 text-[#fca5a5] border border-[#ef4444]/50"
+                                    : "bg-[#f43f5e]/20 text-[#fda4af] border border-[#f43f5e]/40 group-hover:bg-[#f43f5e] group-hover:text-white group-hover:shadow-[0_0_10px_rgba(244,63,94,0.8)]"
                                 }`}
                               >
                                 {letters[idx]}
                               </span>
                               <div>
-                                <div className="text-sm font-bold font-sans tracking-wide">
+                                <div className="text-sm font-bold font-sans tracking-wide text-white group-hover:text-[#ffe4e6]">
                                   {opt.date}
                                 </div>
                                 <div className="text-[10px] text-[#9ca3af] font-mono">
@@ -1228,8 +1390,8 @@ export default function BirthdayDateLock({
                             </div>
 
                             {isWrong ? (
-                              <span className="text-[11px] font-bold text-[#ef4444] flex items-center gap-1 font-mono">
-                                <X className="w-3.5 h-3.5" /> WRONG
+                              <span className="text-[10px] font-bold text-[#ef4444] flex items-center gap-1 font-mono bg-red-950/60 px-2 py-0.5 rounded-full border border-red-500/40">
+                                <X className="w-3 h-3" /> WRONG
                               </span>
                             ) : (
                               <span className="text-[10px] font-mono text-[#fda4af]/60 group-hover:text-white transition-colors">
@@ -1337,6 +1499,16 @@ export default function BirthdayDateLock({
                   <span>🌷 Continue to Countdown Card</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
+
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-[#fecdd3] font-sans font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-[#22c55e]" />
+                  <span>Send Anuj a reaction on WhatsApp 😂</span>
+                </a>
               </div>
             </motion.div>
           </motion.div>
