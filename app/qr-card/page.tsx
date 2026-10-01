@@ -27,6 +27,18 @@ export default function QrCardPrintPage() {
   const [copiedUrl, setCopiedUrl] = useState(false);
 
   useEffect(() => {
+    // If before unlock date, redirect to root date lock
+    if (typeof window !== "undefined") {
+      fetch("/api/date-lock")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.isLocked) {
+            window.location.replace("/");
+          }
+        })
+        .catch(() => {});
+    }
+
     // Automatically detect origin in browser if deployed or local
     if (typeof window !== "undefined" && window.location.origin) {
       if (PHYSICAL_GIFT_CONFIG.websiteUrl.includes("vercel.app")) {

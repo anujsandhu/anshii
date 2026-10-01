@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { isServerDateLocked } from "@/lib/dateLock";
 
 const SITE_PASSWORD = process.env.SITE_PASSWORD || "ANSHII19";
 const SESSION_SECRET =
@@ -50,6 +51,17 @@ function verifySessionToken(token: string): {
 
 // ── GET: Check if current session is active and not expired ────────────────────
 export async function GET(req: NextRequest) {
+  if (isServerDateLocked()) {
+    return NextResponse.json(
+      {
+        authenticated: false,
+        dateLocked: true,
+        reason: "The birthday website is locked until 28 October 2026.",
+      },
+      { status: 200 }
+    );
+  }
+
   const cookieToken = req.cookies.get(COOKIE_NAME)?.value;
   const headerToken = req.headers
     .get("authorization")
@@ -84,6 +96,18 @@ export async function GET(req: NextRequest) {
 
 // ── POST: Authenticate password on server & establish session ──────────────────
 export async function POST(req: NextRequest) {
+  if (isServerDateLocked()) {
+    return NextResponse.json(
+      {
+        success: false,
+        dateLocked: true,
+        error:
+          "The birthday website is locked until 28 October 2026. Password verification is unavailable.",
+      },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
     const { password } = body;

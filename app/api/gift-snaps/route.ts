@@ -2,11 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminFirestore } from "@/lib/firebaseAdmin";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { FieldValue } from "firebase-admin/firestore";
+import { isServerDateLocked } from "@/lib/dateLock";
 
 const COLLECTION_NAME = "gift_snaps";
 
 // ── GET: Fetch all saved gift snaps from Firestore ─────────────────────────────
 export async function GET() {
+  if (isServerDateLocked()) {
+    return NextResponse.json({
+      success: false,
+      dateLocked: true,
+      message: "Locked until 28 October 2026",
+      snaps: {},
+    });
+  }
+
   try {
     const db = getAdminFirestore();
     if (!db) {
