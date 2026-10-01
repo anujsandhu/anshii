@@ -150,10 +150,13 @@ export default function BirthdayDateLock({
 
     let i = 0;
     const interval = setInterval(() => {
-      if (i < stream.length) {
-        setTerminalLogs((prev) => [...prev.slice(-4), stream[i]]);
+      if (i < stream.length && stream[i]) {
+        const nextLog = stream[i];
+        setTerminalLogs((prev) => [...prev.slice(-4), nextLog]);
         setHackProgress((p) => Math.min(99, p + 13));
         i++;
+      } else {
+        clearInterval(interval);
       }
     }, 2800);
 
@@ -293,21 +296,27 @@ export default function BirthdayDateLock({
             </div>
 
             <div className="space-y-1 font-mono leading-relaxed">
-              {terminalLogs.map((log, index) => (
-                <div
-                  key={index}
-                  className={
-                    log.includes("REJECTED") || log.includes("FAILED")
-                      ? "text-[#f87171] font-bold"
-                      : log.includes("verified") || log.includes("SUCCESS")
-                      ? "text-[#34d399]"
-                      : "text-[#d1d5db]"
-                  }
-                >
-                  <span className="text-[#f43f5e] mr-1.5">&gt;</span>
-                  {log}
-                </div>
-              ))}
+              {terminalLogs
+                .filter((log): log is string => typeof log === "string" && Boolean(log))
+                .map((log, index) => {
+                  const isFailed = log.includes("REJECTED") || log.includes("FAILED");
+                  const isSuccess = log.includes("verified") || log.includes("SUCCESS");
+                  return (
+                    <div
+                      key={index}
+                      className={
+                        isFailed
+                          ? "text-[#f87171] font-bold"
+                          : isSuccess
+                          ? "text-[#34d399]"
+                          : "text-[#d1d5db]"
+                      }
+                    >
+                      <span className="text-[#f43f5e] mr-1.5">&gt;</span>
+                      {log}
+                    </div>
+                  );
+                })}
             </div>
 
             {/* Simulated extraction progress */}
