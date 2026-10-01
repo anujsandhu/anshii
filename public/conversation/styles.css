@@ -1790,22 +1790,25 @@ body.dark-mode .intro-ss-img {
 /* Video Wrapper & Portrait 9:16 Aspect Ratio */
 .memory-video-wrapper {
   position: relative;
-  max-width: 300px;
+  max-width: 420px;
   margin: 0 auto 14px auto;
   border-radius: 18px;
   overflow: hidden;
   background: #000000;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
-  aspect-ratio: 9 / 16;
-  max-height: 480px;
+  aspect-ratio: 16 / 9;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .memory-video {
-  width: 100%;
-  height: 100%;
+  width: 56.25%;
+  height: 177.78%;
   object-fit: cover;
   display: block;
+  transform: rotate(-90deg);
 }
 
 /* Video Overlay Controls */
@@ -1938,14 +1941,16 @@ body.dark-mode .intro-ss-img {
 /* Ending Video in Summary Card */
 .ending-video-frame {
   margin: 20px auto 20px auto;
-  max-width: 290px;
+  max-width: 420px;
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  aspect-ratio: 9 / 16;
-  max-height: 460px;
+  aspect-ratio: 16 / 9;
   position: relative;
   background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ending-badge {
