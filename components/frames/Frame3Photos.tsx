@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -67,10 +68,24 @@ export default function Frame3Photos({
   const [zoomPhoto, setZoomPhoto] = useState<(typeof SCRAPBOOK_PREVIEWS)[0] | null>(null);
   const [activeMobileIdx, setActiveMobileIdx] = useState(0);
   const activeMobileItem = SCRAPBOOK_PREVIEWS[activeMobileIdx];
+  const [mounted, setMounted] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     setTaskDone(isCompleted);
   }, [isCompleted]);
+
+  useEffect(() => {
+    if (!zoomPhoto) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setZoomPhoto(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [zoomPhoto]);
 
   const handleHeartClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -354,64 +369,104 @@ export default function Frame3Photos({
 
 
 
-      {/* Full Photo Lightbox */}
-      <AnimatePresence>
-        {zoomPhoto && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setZoomPhoto(null)}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
-            style={{ backgroundColor: "rgba(30, 18, 12, 0.75)", backdropFilter: "blur(12px)" }}
-          >
-            <motion.div
-              initial={{ scale: 0.88, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 10, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm sm:max-w-md bg-[#fffdfa] rounded-3xl border-2 border-[#ebdcd0] shadow-2xl p-4 sm:p-5 flex flex-col text-center cursor-default"
-            >
-              {/* Close button */}
-              <button
+      {/* Full Photo Lightbox Portaled to document.body */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {zoomPhoto && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 onClick={() => setZoomPhoto(null)}
-                className="absolute top-3 right-3 p-1.5 rounded-full text-[#8c7465] hover:text-[#3f2e24] hover:bg-[#f5ece3] transition-colors cursor-pointer z-10"
-                title="Close"
+                className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6"
+                style={{
+                  backgroundColor: "rgba(20, 12, 8, 0.82)",
+                  backdropFilter: "blur(14px)",
+                  WebkitBackdropFilter: "blur(14px)",
+                }}
               >
-                <X className="w-4 h-4" />
-              </button>
+                <motion.div
+                  initial={{ scale: 0.86, y: 24, opacity: 0 }}
+                  animate={{ scale: 1, y: 0, opacity: 1 }}
+                  exit={{ scale: 0.9, y: 12, opacity: 0 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="relative w-full max-w-sm sm:max-w-md bg-[#fffdfa] rounded-3xl border-2 border-[#ebdcd0] shadow-2xl p-4 sm:p-5 flex flex-col text-center cursor-default select-none"
+                >
+                  {/* Polaroid Washi Tape Accent */}
+                  <div
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-5 bg-[#fed7aa]/80 border-t border-b border-[#fdba74]/50 shadow-xs rotate-[-1deg]"
+                    style={{ clipPath: "polygon(4% 0%, 96% 0%, 100% 100%, 0% 100%)" }}
+                  />
 
-              {/* Photo */}
-              <div className="relative w-full overflow-hidden rounded-2xl bg-[#eee7de] shadow-inner mt-2 mb-3" style={{ aspectRatio: "4/3" }}>
-                <Image
-                  src={zoomPhoto.src}
-                  alt={zoomPhoto.caption}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 90vw, 420px"
-                  priority
-                />
-              </div>
+                  {/* Close button */}
+                  <button
+                    onClick={() => setZoomPhoto(null)}
+                    className="absolute top-3 right-3 p-2 rounded-full text-[#8c7465] hover:text-[#3f2e24] bg-white/80 hover:bg-[#f5ece3] shadow-xs transition-colors cursor-pointer z-10"
+                    title="Close (Esc)"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
 
-              <p className="font-handwriting text-2xl text-[#3f2e24] font-bold leading-tight">
-                &ldquo;{zoomPhoto.caption}&rdquo;
-              </p>
-              <span className="text-xs text-[#8c7465] font-sans mt-0.5 mb-4">
-                {zoomPhoto.sub}
-              </span>
+                  {/* Photo Frame */}
+                  <div
+                    className="relative w-full overflow-hidden rounded-2xl bg-[#eee7de] shadow-inner mt-2 mb-3"
+                    style={{ aspectRatio: "4/3" }}
+                  >
+                    <Image
+                      src={zoomPhoto.src}
+                      alt={zoomPhoto.caption}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 92vw, 440px"
+                      priority
+                    />
 
-              <button
-                type="button"
-                onClick={() => setZoomPhoto(null)}
-                className="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm cursor-pointer transition-all shadow-md"
-              >
-                Close ✕
-              </button>
-            </motion.div>
-          </motion.div>
+                    {/* Secret Heart Sticker inside modal */}
+                    {zoomPhoto.hasHeart && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleHeartClick(e);
+                        }}
+                        className={`absolute bottom-2.5 right-2.5 p-2 rounded-full transition-all cursor-pointer z-20 min-w-[44px] min-h-[44px] flex items-center justify-center ${
+                          taskDone
+                            ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-sm"
+                            : "bg-white/95 hover:bg-white text-[#fda4af] shadow-md animate-bounce ring-2 ring-[#fda4af]"
+                        }`}
+                        title="Tap the secret heart sticker!"
+                      >
+                        <Heart
+                          className={`w-5 h-5 ${
+                            taskDone ? "fill-[#be185d]" : "fill-[#fda4af]"
+                          }`}
+                        />
+                      </button>
+                    )}
+                  </div>
+
+                  <p className="font-handwriting text-2xl sm:text-3xl text-[#3f2e24] font-bold leading-tight">
+                    &ldquo;{zoomPhoto.caption}&rdquo;
+                  </p>
+                  <span className="text-xs sm:text-sm text-[#8c7465] font-sans mt-1 mb-4">
+                    {zoomPhoto.sub}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setZoomPhoto(null)}
+                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm cursor-pointer transition-all shadow-md active:scale-95"
+                  >
+                    Close ✕
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
 
     </div>
   );
