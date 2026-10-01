@@ -528,16 +528,7 @@ export default function BirthdayDateLock({
     } catch {}
 
     const handlePopState = () => {
-      stopSiren();
       setShowPrankRevealModal(true);
-      try {
-        confetti({
-          particleCount: 45,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#fda4af", "#f43f5e", "#fed7aa", "#fbcfe8"],
-        });
-      } catch {}
       try {
         window.history.pushState({ prankActive: true }, "", window.location.href);
       } catch {}
@@ -545,26 +536,16 @@ export default function BirthdayDateLock({
 
     // 2. BeforeUnload (when closing tab / browser window)
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      stopSiren();
       setShowPrankRevealModal(true);
       e.preventDefault();
-      e.returnValue = "Wait! It's just a little prank by Anuj! 😂";
-      return "Wait! It's just a little prank by Anuj! 😂";
+      e.returnValue = "Wait! It's just a little prank by Anuj! 😂 Answer the question to stop the siren!";
+      return "Wait! It's just a little prank by Anuj! 😂 Answer the question to stop the siren!";
     };
 
     // 3. Desktop exit intent (mouse moves up toward tabs / close button)
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 15) {
-        stopSiren();
         setShowPrankRevealModal(true);
-        try {
-          confetti({
-            particleCount: 40,
-            spread: 60,
-            origin: { y: 0.5 },
-            colors: ["#fda4af", "#f43f5e", "#fed7aa"],
-          });
-        } catch {}
       }
     };
 
@@ -573,8 +554,10 @@ export default function BirthdayDateLock({
       if (document.visibilityState === "hidden") {
         stopSiren();
       } else if (document.visibilityState === "visible") {
-        stopSiren();
-        setShowPrankRevealModal(true);
+        if (!disarmSuccess) {
+          startSiren();
+          setShowPrankRevealModal(true);
+        }
       }
     };
 
@@ -582,6 +565,7 @@ export default function BirthdayDateLock({
     window.addEventListener("beforeunload", handleBeforeUnload);
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("visibilitychange", handleVisibilityChange);
+
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
@@ -1263,8 +1247,9 @@ export default function BirthdayDateLock({
               </div>
 
               {/* Audio Equalizer visualizer */}
+              {/* Audio Equalizer visualizer */}
               <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-1 h-5 px-2.5 py-0.5 rounded-full bg-black/70 border border-[#ef4444]/40">
+                <div className="flex items-center gap-1 h-5 px-2.5 py-0.5 rounded-full bg-black/70 border border-[#ef4444]/40">
                   <Volume2 className="w-3 h-3 text-[#ef4444] animate-pulse" />
                   <span className="w-1 h-3 rounded-full bg-[#ef4444] animate-audio-bar-1" />
                   <span className="w-1 h-4 rounded-full bg-[#f43f5e] animate-audio-bar-2" />
@@ -1272,21 +1257,6 @@ export default function BirthdayDateLock({
                   <span className="w-1 h-5 rounded-full bg-[#ef4444] animate-audio-bar-4" />
                   <span className="text-[9px] font-mono text-[#fca5a5] font-bold ml-1">SIREN 100%</span>
                 </div>
-
-                <button
-                  onClick={() => {
-                    disarmSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-                    setDisarmShake(true);
-                    setTimeout(() => setDisarmShake(false), 500);
-                    setDisarmMessage(
-                      "⚠️ To silence the siren and crack the window, solve the Identity Verification question below!"
-                    );
-                  }}
-                  className="px-3 py-1 rounded-full bg-[#27101c] hover:bg-[#3d182b] border border-[#ef4444]/60 text-[11px] font-mono text-[#fca5a5] flex items-center gap-1.5 cursor-pointer transition-colors active:scale-95 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
-                >
-                  <span>Abort Lockdown</span>
-                  <X className="w-3.5 h-3.5 text-[#f87171]" />
-                </button>
               </div>
             </div>
 
@@ -1354,289 +1324,42 @@ export default function BirthdayDateLock({
                 )}
               </AnimatePresence>
 
-              {/* ── THE DISARM GAME: FIRST TALK DATE CHALLENGE (4 OPTIONS, 2 ATTEMPTS) ── */}
-              <div
-                ref={disarmSectionRef}
-                className={`relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#1b0a1d]/95 via-[#120514]/95 to-[#09020b]/95 border-2 ${
-                  disarmSuccess
-                    ? "border-[#10b981] shadow-[0_0_60px_rgba(16,185,129,0.45)]"
-                    : disarmShake
-                    ? "border-[#ef4444] animate-shake-error shadow-[0_0_50px_rgba(239,68,68,0.7)]"
-                    : "border-[#6b2149] shadow-[0_0_40px_rgba(244,63,94,0.3)]"
-                } p-4 sm:p-6 text-center transition-all`}
-              >
+              {/* ── QUARANTINE CONTAINMENT CARD (NO QUESTION & NO REDIRECT HERE) ── */}
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#1b0a1d]/95 via-[#120514]/95 to-[#09020b]/95 border-2 border-[#ef4444] shadow-[0_0_50px_rgba(239,68,68,0.4)] p-6 sm:p-8 text-center transition-all">
                 {/* Glowing neon top accent line */}
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#f43f5e] to-transparent opacity-80" />
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#ef4444] to-transparent opacity-90 animate-pulse" />
 
-                {disarmSuccess ? (
-                  /* ── SUCCESS STATE: SIREN DISARMED ── */
-                  <div className="space-y-3">
-                    <div className="w-14 h-14 rounded-full bg-[#10b981]/20 border border-[#34d399] mx-auto flex items-center justify-center text-3xl shadow-[0_0_24px_rgba(16,185,129,0.6)]">
-                      ❤️
-                    </div>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10b981]/20 border border-[#10b981]/50 text-[#34d399] text-xs font-bold uppercase tracking-wider font-mono">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>DECLASSIFIED // IDENTITY 100% CONFIRMED</span>
-                    </div>
-                    <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                      YOU REMEMBERED! 🥹
-                    </h2>
-                    <p className="font-sans text-xs sm:text-sm text-[#a7f3d0] leading-relaxed max-w-sm mx-auto">
-                      Yes! We talked for the very first time on{" "}
-                      <span className="font-bold text-white underline decoration-[#34d399] decoration-2">
-                        14 August 2026
-                      </span>
-                      .
-                    </p>
+                <div className="w-16 h-16 rounded-full bg-[#350d18] border-2 border-[#ef4444] mx-auto flex items-center justify-center text-3xl mb-3 shadow-[0_0_30px_rgba(239,68,68,0.6)] animate-pulse">
+                  🔒
+                </div>
 
-                    {/* Styled authentic WhatsApp memory transcript snippet */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0c1317] border border-[#10b981]/50 text-left max-w-sm mx-auto mb-3 space-y-2.5 shadow-2xl relative overflow-hidden">
-                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500" />
-                      
-                      <div className="text-[10px] font-sans font-semibold text-[#8696a0] flex items-center justify-between pb-2 border-b border-[#202c33]">
-                        <span className="flex items-center gap-1.5 text-[#25d366]">
-                          <Lock className="w-3 h-3 text-[#25d366]" />
-                          WhatsApp Archive • 14 Aug 2026
-                        </span>
-                        <span className="text-[#8696a0] font-mono text-[9px]">Verified Memory</span>
-                      </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ef4444]/20 border border-[#ef4444]/60 text-[#fca5a5] text-xs font-bold uppercase tracking-wider font-mono mb-2">
+                  <Skull className="w-3.5 h-3.5 text-[#ef4444]" />
+                  <span>TOTAL QUARANTINE // INESCAPABLE CONTAINMENT</span>
+                </div>
 
-                      {/* Anuj Bubble 1 */}
-                      <div className="flex items-start gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#202c33] border border-[#3b4a54] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
-                          A
-                        </div>
-                        <div className="flex flex-col items-start max-w-[82%]">
-                          <div className="px-3 py-1.5 rounded-2xl rounded-tl-xs bg-[#202c33] text-[#e9edef] text-xs font-sans shadow-xs">
-                            Heyy
-                          </div>
-                          <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 ml-1 flex items-center gap-1">
-                            Anuj • 5:47 AM <span className="text-[#53bdeb] text-[10px]">✓✓</span>
-                          </span>
-                        </div>
-                      </div>
+                <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+                  SYSTEM LOCKED BY ANUJ 🚨
+                </h2>
 
-                      {/* Anshika Bubble 1 */}
-                      <div className="flex items-start justify-end gap-2">
-                        <div className="flex flex-col items-end max-w-[82%]">
-                          <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
-                            Hlo
-                          </div>
-                          <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
-                            Anshika • 9:56 AM
-                          </span>
-                        </div>
-                        <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
-                          A
-                        </div>
-                      </div>
+                <p className="font-sans text-xs sm:text-sm text-[#fca5a5] leading-relaxed max-w-sm mx-auto mb-4 font-mono">
+                  Siren is locked on 100% volume. Root access is blocked until 28 October 2026.
+                </p>
 
-                      {/* Anuj Bubble 2 */}
-                      <div className="flex items-start gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#202c33] border border-[#3b4a54] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
-                          A
-                        </div>
-                        <div className="flex flex-col items-start max-w-[82%]">
-                          <div className="px-3 py-1.5 rounded-2xl rounded-tl-xs bg-[#202c33] text-[#e9edef] text-xs font-sans shadow-xs">
-                            ek random question thaa 😅 aap mere classmate the na?
-                          </div>
-                          <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 ml-1 flex items-center gap-1">
-                            Anuj • 11:06 AM <span className="text-[#53bdeb] text-[10px]">✓✓</span>
-                          </span>
-                        </div>
-                      </div>
+                <div className="p-3 rounded-2xl bg-black/60 border border-[#ef4444]/40 max-w-sm mx-auto mb-5 text-left font-mono text-[11px] text-[#9ca3af] space-y-1">
+                  <div className="text-[#f87171] font-bold">&gt; BYPASS ATTEMPTS: REJECTED ❌</div>
+                  <div className="text-[#fbbf24]">&gt; AUDIO SIREN: UNMUTABLE 🔊</div>
+                  <div className="text-[#d1d5db]">&gt; TARGET: ANSHIKA // 0 PRIVILEGES</div>
+                </div>
 
-                      {/* Anshika Bubble 2 */}
-                      <div className="flex items-start justify-end gap-2">
-                        <div className="flex flex-col items-end max-w-[82%]">
-                          <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
-                            Haan ,Right
-                          </div>
-                          <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
-                            Anshika • 11:06 AM
-                          </span>
-                        </div>
-                        <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
-                          A
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="font-sans text-xs text-[#fecdd3] pt-1 leading-relaxed">
-                      Siren permanently silenced! It was all just a little prank by Anuj! 😂🌷
-                    </p>
-
-                    <div className="flex items-center justify-center pt-2">
-                      <button
-                        onClick={() => {
-                          stopSiren();
-                          setShowHackerLayer(false);
-                        }}
-                        className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-gradient-to-r from-[#10b981] via-[#059669] to-[#047857] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_24px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 hover:shadow-[0_6px_28px_rgba(16,185,129,0.55)]"
-                      >
-                        <span>🌷 Open Countdown Card</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* ── ACTIVE GAME: 4 OPTIONS, 2 ATTEMPTS ONLY ── */
-                  <div>
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#2b101c] border border-[#ef4444]/60 text-xl mb-2 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse">
-                      <Skull className="w-6 h-6 text-[#f87171]" />
-                    </div>
-
-                    <h2 className="font-serif text-xl sm:text-2xl font-extrabold text-white tracking-tight mb-1">
-                      EMERGENCY OVERRIDE PROTOCOL 🚨
-                    </h2>
-
-                    <p className="font-sans text-xs font-bold text-[#f43f5e] mb-1 font-mono">
-                      TO STOP THE SIREN: IDENTITY VERIFICATION REQUIRED
-                    </p>
-
-                    <p className="font-sans text-xs text-[#9ca3af] leading-relaxed max-w-sm mx-auto mb-3">
-                      Answer the passkey question to prove you are really Anshika:
-                    </p>
-
-                    {/* Question Card with Holographic Keys HUD */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-[#180816] border border-[#5c1c39] mb-3 text-left shadow-inner">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-mono font-bold text-[#f43f5e] uppercase tracking-wider flex items-center gap-1">
-                          <Radio className="w-3 h-3 animate-ping text-[#ef4444]" />
-                          SECURITY QUESTION:
-                        </span>
-
-                        {/* Holographic Keys Counter */}
-                        <div className="flex items-center gap-1.5 bg-black/60 px-2.5 py-1 rounded-full border border-[#ef4444]/40">
-                          <span className="text-[9.5px] font-mono font-bold text-[#fca5a5] flex items-center gap-0.5">
-                            <Shield className="w-3 h-3 text-[#f43f5e]" /> KEYS:
-                          </span>
-                          <div className="flex items-center gap-1">
-                            {[1, 2].map((att) => {
-                              const active = att <= disarmAttemptsLeft;
-                              return (
-                                <span
-                                  key={att}
-                                  className={`px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold tracking-wider ${
-                                    active
-                                      ? "bg-[#ef4444]/30 text-[#fecaca] border border-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.8)] animate-pulse"
-                                      : "bg-black text-[#6b7280] border border-[#374151] line-through opacity-40"
-                                  }`}
-                                >
-                                  {active ? "🔑 ACTIVE" : "💥 LOST"}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-
-                      <p className="font-serif text-sm sm:text-base font-bold text-white mb-1">
-                        When did we talk for the first time? 💬
-                      </p>
-                      <p className="font-sans text-[11px] text-[#fda4af]/80 italic">
-                        Humne pehli baar kis date ko baat ki thi? (Sirf 2 attempts hai!)
-                      </p>
-                    </div>
-
-                    {/* Feedback Toast / Warning */}
-                    <AnimatePresence>
-                      {disarmMessage && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -6 }}
-                          className={`mb-3 p-2.5 rounded-xl border text-xs font-sans font-bold flex items-center gap-2 text-left leading-snug ${
-                            disarmAttemptsLeft === 0
-                              ? "bg-[#450a0a] border-[#ef4444] text-[#fecaca]"
-                              : disarmAttemptsLeft === 1
-                              ? "bg-[#451a03] border-[#f59e0b] text-[#fef3c7]"
-                              : "bg-[#18181b] border-[#52525b] text-[#e4e4e7]"
-                          }`}
-                        >
-                          <Flame className="w-4 h-4 shrink-0 text-[#f87171] animate-bounce" />
-                          <span>{disarmMessage}</span>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* 4 Date Options Grid (Holographic Cyber Tiles) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3.5">
-                      {FIRST_TALK_OPTIONS.map((opt, idx) => {
-                        const isWrong = disarmWrongSelected.includes(opt.id);
-                        const letters = ["A", "B", "C", "D"];
-                        return (
-                          <button
-                            key={opt.id}
-                            disabled={isWrong || disarmAttemptsLeft <= 0}
-                            onClick={() => handleSelectFirstTalkDate(opt.id)}
-                            className={`group relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between active:scale-95 ${
-                              isWrong
-                                ? "bg-[#250b13]/80 border-[#ef4444]/45 opacity-55 cursor-not-allowed text-[#9ca3af]"
-                                : disarmAttemptsLeft <= 0
-                                ? "bg-[#140816]/60 border-[#3b172a] opacity-50 cursor-not-allowed text-[#6b7280]"
-                                : "bg-gradient-to-r from-[#210c22] via-[#2c112f] to-[#1c081e] hover:from-[#351538] hover:to-[#280c2b] border-[#5c1c39] hover:border-[#f43f5e] text-white shadow-sm hover:shadow-[0_0_18px_rgba(244,63,94,0.3)] hover:-translate-y-0.5"
-                            }`}
-                          >
-                            <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                            <div className="flex items-center gap-2.5">
-                              <span
-                                className={`w-6.5 h-6.5 rounded-xl flex items-center justify-center text-xs font-bold font-mono transition-all ${
-                                  isWrong
-                                    ? "bg-[#ef4444]/30 text-[#fca5a5] border border-[#ef4444]/50"
-                                    : "bg-[#f43f5e]/20 text-[#fda4af] border border-[#f43f5e]/40 group-hover:bg-[#f43f5e] group-hover:text-white group-hover:shadow-[0_0_10px_rgba(244,63,94,0.8)]"
-                                }`}
-                              >
-                                {letters[idx]}
-                              </span>
-                              <div>
-                                <div className="text-sm font-bold font-sans tracking-wide text-white group-hover:text-[#ffe4e6]">
-                                  {opt.date}
-                                </div>
-                                <div className="text-[10px] text-[#9ca3af] font-mono">
-                                  {opt.fullDate}
-                                </div>
-                              </div>
-                            </div>
-
-                            {isWrong ? (
-                              <span className="text-[10px] font-bold text-[#ef4444] flex items-center gap-1 font-mono bg-red-950/60 px-2 py-0.5 rounded-full border border-red-500/40">
-                                <X className="w-3 h-3" /> WRONG
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-mono text-[#fda4af]/60 group-hover:text-white transition-colors">
-                                SELECT &gt;
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* If 2 attempts failed (Lockout state with WhatsApp hint & countdown) */}
-                    {disarmAttemptsLeft <= 0 && (
-                      <div className="p-3.5 rounded-2xl bg-[#3f080e] border-2 border-[#ef4444] text-center mb-3">
-                        <p className="font-sans text-xs text-[#fca5a5] font-bold mb-2.5 leading-relaxed">
-                          🚨 2 failed attempts! Siren will NOT stop! How could you forget?! 😭
-                        </p>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                          <a
-                            href="https://wa.me/918278710552?text=Anuj%20please%20siren%20band%20karo%20%F0%9F%98%AD%20Mujhe%20pehli%20baar%20baat%20karne%20ki%20date%20yaad%20nahi%20aa%20rahi%2C%20hint%20do!%20%F0%9F%98%82"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-bold font-sans flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            <span>Ask Anuj for a hint on WhatsApp 💬</span>
-                          </a>
-                          <div className="w-full sm:w-auto px-3 py-2 rounded-xl bg-black/40 border border-[#ef4444]/40 text-xs text-[#fca5a5] font-mono">
-                            Retry in: <strong className="text-white">{disarmCooldown}s</strong>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Mobile / Direct Escape Attempt Button (triggers question modal) */}
+                <button
+                  onClick={() => setShowPrankRevealModal(true)}
+                  className="w-full sm:w-auto px-6 py-3 rounded-full bg-gradient-to-r from-[#2c0b16] to-[#1c081e] hover:from-[#3d1222] hover:to-[#280c2b] border border-[#ef4444]/60 text-xs font-mono font-bold text-[#fca5a5] hover:text-white flex items-center justify-center gap-2 mx-auto cursor-pointer transition-all active:scale-95 shadow-[0_0_15px_rgba(239,68,68,0.25)]"
+                >
+                  <X className="w-3.5 h-3.5 text-[#f87171]" />
+                  <span>Try to Exit / Close Tab</span>
+                </button>
               </div>
             </div>
 
@@ -1662,64 +1385,312 @@ export default function BirthdayDateLock({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 15 }}
               transition={{ type: "spring", stiffness: 380, damping: 25 }}
-              className="w-full max-w-md rounded-3xl bg-[#1b0d18] border-2 border-[#fda4af]/60 p-6 sm:p-8 text-center shadow-[0_0_50px_rgba(253,164,175,0.35)] relative overflow-hidden"
+              className={`w-full max-w-lg rounded-3xl bg-[#140816]/95 border-2 ${
+                disarmSuccess
+                  ? "border-[#10b981] shadow-[0_0_60px_rgba(16,185,129,0.45)]"
+                  : disarmShake
+                  ? "border-[#ef4444] animate-shake-error shadow-[0_0_50px_rgba(239,68,68,0.7)]"
+                  : "border-[#fda4af]/60 shadow-[0_0_50px_rgba(253,164,175,0.35)]"
+              } p-5 sm:p-7 text-center relative overflow-hidden my-auto`}
             >
               {/* Cute glowing background orbs */}
               <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-[#f43f5e]/25 blur-2xl pointer-events-none" />
               <div className="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-[#fda4af]/20 blur-2xl pointer-events-none" />
 
-              {/* Animated Floating Emojis */}
-              <div className="flex items-center justify-center gap-3 text-3xl sm:text-4xl mb-3 animate-bounce">
-                <span>🙈</span>
-                <span>🌷</span>
-                <span>😂</span>
-              </div>
+              {disarmSuccess ? (
+                /* ── SUCCESS STATE: SIREN DISARMED // 14 AUGUST VERIFIED ── */
+                <div className="space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-[#10b981]/20 border border-[#34d399] mx-auto flex items-center justify-center text-3xl shadow-[0_0_24px_rgba(16,185,129,0.6)]">
+                    ❤️
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10b981]/20 border border-[#10b981]/50 text-[#34d399] text-xs font-bold uppercase tracking-wider font-mono">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>IDENTITY VERIFIED // SIREN SILENCED</span>
+                  </div>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                    YOU REMEMBERED! 🥹
+                  </h2>
+                  <p className="font-sans text-xs sm:text-sm text-[#a7f3d0] leading-relaxed max-w-sm mx-auto">
+                    Yes! We talked for the very first time on{" "}
+                    <span className="font-bold text-white underline decoration-[#34d399] decoration-2">
+                      14 August 2026
+                    </span>
+                    .
+                  </p>
 
-              {/* Funny Warning Header */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f43f5e]/20 border border-[#f43f5e]/40 text-[#fda4af] text-[11px] font-sans font-bold uppercase tracking-wider mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-[#fb7185]" />
-                <span>Prank Revealed!</span>
-              </div>
+                  {/* Styled authentic WhatsApp memory transcript snippet */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0c1317] border border-[#10b981]/50 text-left max-w-sm mx-auto mb-3 space-y-2.5 shadow-2xl relative overflow-hidden">
+                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500" />
+                    <div className="text-[10px] font-sans font-semibold text-[#8696a0] flex items-center justify-between pb-2 border-b border-[#202c33]">
+                      <span className="flex items-center gap-1.5 text-[#25d366]">
+                        <Lock className="w-3 h-3 text-[#25d366]" />
+                        WhatsApp Archive • 14 Aug 2026
+                      </span>
+                      <span className="text-[#8696a0] font-mono text-[9px]">Verified Memory</span>
+                    </div>
 
-              <h3 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#fff1f2] tracking-tight mb-2">
-                WAIT WAIT WAIT! 😂
-              </h3>
+                    {/* Anuj Bubble 1 */}
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[#202c33] border border-[#3b4a54] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
+                        A
+                      </div>
+                      <div className="flex flex-col items-start max-w-[82%]">
+                        <div className="px-3 py-1.5 rounded-2xl rounded-tl-xs bg-[#202c33] text-[#e9edef] text-xs font-sans shadow-xs">
+                          Heyy
+                        </div>
+                        <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 ml-1 flex items-center gap-1">
+                          Anuj • 5:47 AM <span className="text-[#53bdeb] text-[10px]">✓✓</span>
+                        </span>
+                      </div>
+                    </div>
 
-              <p className="font-sans text-base sm:text-lg font-bold text-[#fda4af] mb-3">
-                It&apos;s just a little prank by Anuj! 🙈🌷
-              </p>
+                    {/* Anshika Bubble 1 */}
+                    <div className="flex items-start justify-end gap-2">
+                      <div className="flex flex-col items-end max-w-[82%]">
+                        <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
+                          Hlo
+                        </div>
+                        <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
+                          Anshika • 9:56 AM
+                        </span>
+                      </div>
+                      <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
+                        A
+                      </div>
+                    </div>
 
-              <div className="p-3.5 rounded-2xl bg-[#2a1325]/80 border border-[#fda4af]/20 text-xs sm:text-sm text-[#fecdd3] font-sans leading-relaxed mb-6 text-left flex items-start gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-[#34d399] shrink-0 mt-0.5" />
-                <p>
-                  Did you actually get scared? 😭 <br />
-                  <span className="font-bold text-white">Your phone is 100% safe!</span> No data was touched, no files were hacked, and no more alarms will play. It was all just a funny little joke!
-                </p>
-              </div>
+                    {/* Anuj Bubble 2 */}
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[#202c33] border border-[#3b4a54] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
+                        A
+                      </div>
+                      <div className="flex flex-col items-start max-w-[82%]">
+                        <div className="px-3 py-1.5 rounded-2xl rounded-tl-xs bg-[#202c33] text-[#e9edef] text-xs font-sans shadow-xs">
+                          ek random question thaa 😅 aap mere classmate the na?
+                        </div>
+                        <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 ml-1 flex items-center gap-1">
+                          Anuj • 11:06 AM <span className="text-[#53bdeb] text-[10px]">✓✓</span>
+                        </span>
+                      </div>
+                    </div>
 
-              <div className="flex flex-col gap-2.5">
-                <button
-                  onClick={() => {
-                    stopSiren();
-                    setShowPrankRevealModal(false);
-                    setShowHackerLayer(false);
-                  }}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_20px_rgba(244,63,94,0.45)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
-                >
-                  <span>🌷 Continue to Countdown Card</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                    {/* Anshika Bubble 2 */}
+                    <div className="flex items-start justify-end gap-2">
+                      <div className="flex flex-col items-end max-w-[82%]">
+                        <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
+                          Haan ,Right
+                        </div>
+                        <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
+                          Anshika • 11:06 AM
+                        </span>
+                      </div>
+                      <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
+                        A
+                      </div>
+                    </div>
+                  </div>
 
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-2.5 px-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-[#fecdd3] font-sans font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
-                >
-                  <MessageCircle className="w-3.5 h-3.5 text-[#22c55e]" />
-                  <span>Send Anuj a reaction on WhatsApp 😂</span>
-                </a>
-              </div>
+                  <p className="font-sans text-xs text-[#fecdd3] pt-1 leading-relaxed">
+                    Siren permanently silenced! It was all just a little prank by Anuj! 😂🌷
+                  </p>
+
+                  {/* NOW AND ONLY NOW: The button to redirect to countdown card appears! */}
+                  <div className="flex flex-col gap-2.5 pt-2">
+                    <button
+                      onClick={() => {
+                        stopSiren();
+                        setShowPrankRevealModal(false);
+                        setShowHackerLayer(false);
+                      }}
+                      className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#10b981] via-[#059669] to-[#047857] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_24px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 hover:shadow-[0_6px_28px_rgba(16,185,129,0.55)]"
+                    >
+                      <span>🌷 Open Countdown Card</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-[#fecdd3] font-sans font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 text-[#22c55e]" />
+                      <span>Send Anuj a reaction on WhatsApp 😂</span>
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                /* ── ACTIVE GAME: GIVEN ONLY WHEN SHE TRIES TO BACK OR CLOSE TAB ── */
+                <div>
+                  {/* Animated Floating Emojis */}
+                  <div className="flex items-center justify-center gap-3 text-3xl sm:text-4xl mb-2 animate-bounce">
+                    <span>🙈</span>
+                    <span>🌷</span>
+                    <span>😂</span>
+                  </div>
+
+                  {/* Header Badge */}
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f43f5e]/20 border border-[#f43f5e]/40 text-[#fda4af] text-[11px] font-sans font-bold uppercase tracking-wider mb-2">
+                    <Sparkles className="w-3.5 h-3.5 text-[#fb7185]" />
+                    <span>Prank Caught! Tried to Exit?</span>
+                  </div>
+
+                  <h3 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#fff1f2] tracking-tight mb-1">
+                    WAIT WAIT WAIT! 😂
+                  </h3>
+
+                  <p className="font-sans text-sm sm:text-base font-bold text-[#fda4af] mb-1">
+                    It&apos;s just a little prank by Anuj! 🙈🌷
+                  </p>
+
+                  <p className="font-sans text-xs text-[#fecdd3]/90 leading-relaxed max-w-sm mx-auto mb-3">
+                    Did you actually try to close or go back?! 😭 Your phone is 100% safe...
+                    <span className="block font-bold text-white mt-0.5">
+                      BUT to stop this blaring siren &amp; reach the countdown card, solve this:
+                    </span>
+                  </p>
+
+                  {/* Question Card with Holographic Keys HUD */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-[#180816] border border-[#5c1c39] mb-3 text-left shadow-inner">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-mono font-bold text-[#f43f5e] uppercase tracking-wider flex items-center gap-1">
+                        <Radio className="w-3 h-3 animate-ping text-[#ef4444]" />
+                        SECURITY QUESTION:
+                      </span>
+
+                      {/* Holographic Keys Counter */}
+                      <div className="flex items-center gap-1.5 bg-black/60 px-2.5 py-1 rounded-full border border-[#ef4444]/40">
+                        <span className="text-[9.5px] font-mono font-bold text-[#fca5a5] flex items-center gap-0.5">
+                          <Shield className="w-3 h-3 text-[#f43f5e]" /> KEYS:
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {[1, 2].map((att) => {
+                            const active = att <= disarmAttemptsLeft;
+                            return (
+                              <span
+                                key={att}
+                                className={`px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold tracking-wider ${
+                                  active
+                                    ? "bg-[#ef4444]/30 text-[#fecaca] border border-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.8)] animate-pulse"
+                                    : "bg-black text-[#6b7280] border border-[#374151] line-through opacity-40"
+                                }`}
+                              >
+                                {active ? "🔑 ACTIVE" : "💥 LOST"}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="font-serif text-sm sm:text-base font-bold text-white mb-1">
+                      When did we talk for the first time? 💬
+                    </p>
+                    <p className="font-sans text-[11px] text-[#fda4af]/80 italic">
+                      Humne pehli baar kis date ko baat ki thi? (Sirf 2 attempts hai!)
+                    </p>
+                  </div>
+
+                  {/* Feedback Toast / Warning */}
+                  <AnimatePresence>
+                    {disarmMessage && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        className={`mb-3 p-2.5 rounded-xl border text-xs font-sans font-bold flex items-center gap-2 text-left leading-snug ${
+                          disarmAttemptsLeft === 0
+                            ? "bg-[#450a0a] border-[#ef4444] text-[#fecaca]"
+                            : disarmAttemptsLeft === 1
+                            ? "bg-[#451a03] border-[#f59e0b] text-[#fef3c7]"
+                            : "bg-[#18181b] border-[#52525b] text-[#e4e4e7]"
+                        }`}
+                      >
+                        <Flame className="w-4 h-4 shrink-0 text-[#f87171] animate-bounce" />
+                        <span>{disarmMessage}</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* 4 Date Options Grid (Holographic Cyber Tiles) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3.5">
+                    {FIRST_TALK_OPTIONS.map((opt, idx) => {
+                      const isWrong = disarmWrongSelected.includes(opt.id);
+                      const letters = ["A", "B", "C", "D"];
+                      return (
+                        <button
+                          key={opt.id}
+                          disabled={isWrong || disarmAttemptsLeft <= 0}
+                          onClick={() => handleSelectFirstTalkDate(opt.id)}
+                          className={`group relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between active:scale-95 ${
+                            isWrong
+                              ? "bg-[#250b13]/80 border-[#ef4444]/45 opacity-55 cursor-not-allowed text-[#9ca3af]"
+                              : disarmAttemptsLeft <= 0
+                              ? "bg-[#140816]/60 border-[#3b172a] opacity-50 cursor-not-allowed text-[#6b7280]"
+                              : "bg-gradient-to-r from-[#210c22] via-[#2c112f] to-[#1c081e] hover:from-[#351538] hover:to-[#280c2b] border-[#5c1c39] hover:border-[#f43f5e] text-white shadow-sm hover:shadow-[0_0_18px_rgba(244,63,94,0.3)] hover:-translate-y-0.5"
+                          }`}
+                        >
+                          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className={`w-6.5 h-6.5 rounded-xl flex items-center justify-center text-xs font-bold font-mono transition-all ${
+                                isWrong
+                                  ? "bg-[#ef4444]/30 text-[#fca5a5] border border-[#ef4444]/50"
+                                  : "bg-[#f43f5e]/20 text-[#fda4af] border border-[#f43f5e]/40 group-hover:bg-[#f43f5e] group-hover:text-white group-hover:shadow-[0_0_10px_rgba(244,63,94,0.8)]"
+                              }`}
+                            >
+                              {letters[idx]}
+                            </span>
+                            <div>
+                              <div className="text-sm font-bold font-sans tracking-wide text-white group-hover:text-[#ffe4e6]">
+                                {opt.date}
+                              </div>
+                              <div className="text-[10px] text-[#9ca3af] font-mono">
+                                {opt.fullDate}
+                              </div>
+                            </div>
+                          </div>
+
+                          {isWrong ? (
+                            <span className="text-[10px] font-bold text-[#ef4444] flex items-center gap-1 font-mono bg-red-950/60 px-2 py-0.5 rounded-full border border-red-500/40">
+                              <X className="w-3 h-3" /> WRONG
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-mono text-[#fda4af]/60 group-hover:text-white transition-colors">
+                              SELECT &gt;
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* If 2 attempts failed (Lockout state with WhatsApp hint & countdown) */}
+                  {disarmAttemptsLeft <= 0 && (
+                    <div className="p-3.5 rounded-2xl bg-[#3f080e] border-2 border-[#ef4444] text-center mb-1">
+                      <p className="font-sans text-xs text-[#fca5a5] font-bold mb-2.5 leading-relaxed">
+                        🚨 2 failed attempts! Siren will NOT stop! How could you forget?! 😭
+                      </p>
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                        <a
+                          href="https://wa.me/918278710552?text=Anuj%20please%20siren%20band%20karo%20%F0%9F%98%AD%20Mujhe%20pehli%20baar%20baat%20karne%20ki%20date%20yaad%20nahi%20aa%20rahi%2C%20hint%20do!%20%F0%9F%98%82"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-bold font-sans flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>Ask Anuj for a hint on WhatsApp 💬</span>
+                        </a>
+                        <div className="w-full sm:w-auto px-3 py-2 rounded-xl bg-black/40 border border-[#ef4444]/40 text-xs text-[#fca5a5] font-mono">
+                          Retry in: <strong className="text-white">{disarmCooldown}s</strong>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* NO OPTION TO REDIRECT TO COUNTDOWN WINDOW! NOTICE: ZERO REDIRECT BUTTONS HERE! */}
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}
