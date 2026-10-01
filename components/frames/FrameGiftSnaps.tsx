@@ -259,6 +259,11 @@ export default function FrameGiftSnaps({
       });
   }, []);
 
+  const onCompleteTaskRef = useRef(onCompleteTask);
+  useEffect(() => {
+    onCompleteTaskRef.current = onCompleteTask;
+  });
+
   useEffect(() => {
     if (isCompleted) {
       setTaskDone(true);
@@ -267,9 +272,9 @@ export default function FrameGiftSnaps({
 
   useEffect(() => {
     if (taskDone && !isCompleted) {
-      onCompleteTask();
+      onCompleteTaskRef.current();
     }
-  }, [taskDone, isCompleted, onCompleteTask]);
+  }, [taskDone, isCompleted]);
 
   // Persist snaps to localStorage
   const saveSnapsToStorage = (updated: Record<string, UploadedGiftSnap>) => {

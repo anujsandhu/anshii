@@ -174,6 +174,7 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           const presetKeys = ["step-1", "step-2", "step-3", "step-4"];
           if (presetKeys.every((k) => Boolean(data.snaps[k]?.imageUrl))) {
             setCompletedFrames((prev) => {
+              if (prev.has(3)) return prev;
               const next = new Set(prev);
               next.add(3);
               return next;
