@@ -5,8 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, CheckCircle2, ArrowDown, Gift, Send } from "lucide-react";
 import confetti from "canvas-confetti";
-import WhatsAppImageModal from "@/components/WhatsAppImageModal";
-import { getShareableImage, ShareableImageConfig } from "@/data/whatsappImages";
+import { openDirectWhatsApp } from "@/data/whatsappImages";
 
 interface Frame2BirthdayProps {
   isCompleted: boolean;
@@ -21,12 +20,23 @@ export default function Frame2Birthday({
 }: Frame2BirthdayProps) {
   const [taskDone, setTaskDone] = useState(isCompleted);
   const [noteOpen, setNoteOpen] = useState(false);
-  const [waModalImage, setWaModalImage] = useState<ShareableImageConfig | null>(null);
 
   React.useEffect(() => {
     setTaskDone(isCompleted);
     if (!isCompleted) setNoteOpen(false);
   }, [isCompleted]);
+
+  const handleSendChildhoodPhoto = () => {
+    openDirectWhatsApp("Hey Anuj! Look who grew up… 🥺✨ I found my childhood photo on your birthday website!");
+    try {
+      confetti({
+        particleCount: 40,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ["#25D366", "#fda4af", "#bbf7d0"],
+      });
+    } catch {}
+  };
 
   const handleBloomTask = () => {
     if (taskDone) return;
@@ -42,7 +52,6 @@ export default function Frame2Birthday({
     } catch {}
   };
 
-  return (
   return (
     <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
 
@@ -182,11 +191,11 @@ export default function Frame2Birthday({
                 </p>
                 <button
                   type="button"
-                  onClick={() => setWaModalImage(getShareableImage("childhood-polaroid-ch2") || null)}
-                  className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0fdf4] hover:bg-[#dcfce7] border border-[#bbf7d0] text-[#15803d] text-[9px] font-sans font-bold shadow-2xs hover:scale-105 transition-all cursor-pointer"
-                  title="Send this childhood photo to Anuj's WhatsApp"
+                  onClick={handleSendChildhoodPhoto}
+                  className="mt-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#f0fdf4] hover:bg-[#dcfce7] border border-[#bbf7d0] text-[#15803d] text-[10px] font-sans font-bold shadow-2xs hover:scale-105 transition-all cursor-pointer"
+                  title="Direct 1-click send childhood photo to Anuj on WhatsApp"
                 >
-                  <Send className="w-2 h-2" />
+                  <Send className="w-2.5 h-2.5" />
                   <span>Send to WhatsApp</span>
                 </button>
               </div>
@@ -358,12 +367,6 @@ export default function Frame2Birthday({
         </motion.div>
       </div>
 
-      {/* Sleek WhatsApp Image Confirmation Modal */}
-      <WhatsAppImageModal
-        isOpen={waModalImage !== null}
-        onClose={() => setWaModalImage(null)}
-        image={waModalImage}
-      />
     </div>
   );
 }

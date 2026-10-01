@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
@@ -43,6 +44,11 @@ export default function WhatsAppImageModal({
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [previewTimestamp, setPreviewTimestamp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Reset modal state whenever opened
   useEffect(() => {
@@ -55,7 +61,7 @@ export default function WhatsAppImageModal({
     }
   }, [isOpen, image]);
 
-  if (!isOpen || !image) return null;
+  if (!isOpen || !image || !mounted) return null;
 
   const captionPreview = generateWhatsAppCaption(
     image.title,
@@ -125,7 +131,7 @@ export default function WhatsAppImageModal({
     handleSend();
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -404,6 +410,7 @@ export default function WhatsAppImageModal({
           )}
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

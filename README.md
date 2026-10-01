@@ -1,92 +1,117 @@
-# ✨ Anshika's 19th Birthday Website (`ANSHIKA.EXE`)
+# 🌸 Anshika's 19th Birthday Scrapbook (`ANSHIKA.EXE`)
 
-A personal, highly interactive, playful CS-themed birthday experience built by **Anuj** for **Anshika** on her 19th birthday (28 October 2026).
+An interactive, responsive digital scrapbook and gift-unboxing experience built for **Anshika's 19th Birthday (28 October 2026)**.
 
-Built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, **Framer Motion**, and **Lucide React**.
+Built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, **Framer Motion**, **Cloudinary**, and **Firebase Firestore**.
 
 ---
 
-## 🚀 Live Demo & Quick Start
+## ✨ Experience Overview & Highlights
+
+- 🔐 **Password-Protected Gate (`SecretGiftGate`)**: Minimalist, animated password entry screen (`ANSHII19`) with session-based expiration and invalid-password feedback.
+- 📖 **Interactive Scrapbook Pager**:
+  - **Chapter 01: Welcome**: Floral intro with custom hand-drawn cursor and celebration burst.
+  - **Chapter 02: 19th Birthday**: Interactive flower bloom and heartfelt birthday card.
+  - **Chapter 03: Photo Scrapbook**: Polaroids with custom captions and zoom view.
+  - **Chapter 04: Gift Unboxing Snaps**: Step-by-step unboxing flow (Closed Gift Box $\rightarrow$ Wearing Bracelet $\rightarrow$ Gift #2) with live image upload.
+  - **Chapter 05: Song & Playlist**: Interactive background music player with multiple tracks and audio visualizer.
+  - **Chapter 06: Memory Match**: Engaging 3-pair memory game with CS and personal easter eggs.
+  - **Chapter 07: Scratch Card**: Realistic scratchable canvas revealing a hidden birthday message.
+  - **Chapter 08: Sincere Letter**: Typing animation and letter reveal.
+  - **Chapter 09: Grand Finale**: Floating petals, interactive celebration, and heartfelt wishes.
+- ☁️ **Cloudinary Image Storage**: Secure server-side signed uploads with format & size validation (JPEG, PNG, WebP, GIF, HEIC up to 10MB). Image binaries are stored exclusively in Cloudinary; only URLs & metadata are kept in Firestore.
+- 🔥 **Firebase Firestore Analytics**: Privacy-conscious, consent-based telemetry tracking anonymous session journeys (`sessions/{sessionId}`), chronological events (`sessions/{sessionId}/events/{eventId}`), and upload records (`uploads/{uploadId}`).
+- 🛡️ **Admin Analytics Dashboard (`/admin`)**: Protected analytics dashboard displaying real-time metrics, session timeline inspection, and an uploads gallery.
+- 💬 **WhatsApp Notification**: Dedicated trigger sending automated status notifications via official WhatsApp Cloud API.
+
+---
+
+## 📁 Project Directory Structure
+
+```text
+├── app/
+│   ├── admin/                    # Admin Analytics Dashboard (/admin)
+│   ├── api/
+│   │   ├── analytics/            # Session, event, and admin metrics API routes
+│   │   ├── auth/                 # Password verification & session cookie API
+│   │   ├── gift-snaps/           # Firestore gift snaps metadata endpoints
+│   │   ├── upload/               # Cloudinary secure upload & signature endpoints
+│   │   └── whatsapp/             # WhatsApp Cloud API notification endpoints
+│   ├── qr-card/                  # Printable QR Card page (/qr-card)
+│   ├── globals.css               # Global theme tokens, typography & animations
+│   ├── layout.tsx                # Root layout with font imports & leave guards
+│   └── page.tsx                  # Main entry point mounting ScrapbookPager
+├── components/
+│   ├── flowers/                  # Blooming floral SVGs, canvas petals & particle bursts
+│   ├── frames/                   # All 9 scrapbook chapter pages (Welcome, GiftSnaps, etc.)
+│   ├── legacy/                   # Archived components from previous iterations
+│   ├── transitions/              # Smooth curtain folds & locked skip transition alerts
+│   ├── CustomCursor.tsx          # Hand-drawn floral desktop cursor
+│   ├── EasterEgg.tsx             # Secret keyboard / gesture easter egg
+│   ├── LeavePageGuard.tsx        # Exit confirmation guard
+│   ├── MusicPlayer.tsx           # Floating audio player & soundtrack selector
+│   ├── PrintableQrCard.tsx       # Printable QR card component
+│   ├── PrivacyNoticeBanner.tsx   # Consent-based anonymous telemetry disclosure
+│   ├── ScrapbookPager.tsx        # Central scrapbook navigation engine
+│   ├── SecretGiftGate.tsx        # Password unlock & session guard
+│   ├── SendWhatsAppNotificationButton.tsx # WhatsApp notification trigger
+│   └── WhatsAppImageModal.tsx    # Media share confirmation modal
+├── data/
+│   ├── birthday.ts               # Scrapbook copy, captions, and memory text
+│   ├── musicConfig.ts            # Soundtrack tracks & frame-by-frame music map
+│   └── whatsappImages.ts         # Pre-configured shareable image metadata
+├── lib/
+│   ├── analyticsClient.ts        # Client telemetry dispatcher & session manager
+│   ├── cloudinary.ts             # Cloudinary SDK wrapper & signed upload handler
+│   └── firebaseAdmin.ts          # Firebase Admin SDK & Firestore initializer
+├── public/
+│   ├── gifs/                     # Reaction GIFs
+│   ├── music/                    # Optimized soundtrack audio files
+│   └── photos/                   # Scrapbook polaroids & childhood photos
+├── scripts/                      # Developer utility scripts (audio generation, etc.)
+├── firestore.rules               # Firestore security rules
+└── .env.example                  # Environment configuration template
+```
+
+---
+
+## 🚀 Local Development Setup
 
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Start development server
+# 2. Copy the environment template
+cp .env.example .env.local
+
+# 3. Configure your secrets in .env.local (SITE_PASSWORD, Cloudinary, Firebase)
+
+# 4. Start the development server
 npm run dev
 
-# 3. Open in your browser
+# 5. Open in browser
 http://localhost:3000
 ```
 
 ---
 
-## 🗺️ The Birthday Quest & Mini-Tasks
+## 🌐 Deploying to Vercel
 
-Anshika is greeted with a non-intrusive, playful checklist (`BIRTHDAY QUEST: X / 7`) that encourages curiosity and smiling without creating pressure or homework:
+1. Push your repository to GitHub (`git push origin main`).
+2. Go to [Vercel Dashboard](https://vercel.com/new) and import the repository.
+3. In **Project Settings $\rightarrow$ Environment Variables**, configure the following keys:
 
-1. **Task 01: Start the Birthday (`[ START MY BIRTHDAY ]`)**
-   - Tap the launch button to officially kick off Year 19 with celebration confetti and music.
+| Variable | Description | Example / Note |
+| :--- | :--- | :--- |
+| `SITE_PASSWORD` | Access password for the scrapbook | `ANSHII19` |
+| `ADMIN_KEY` | Password for the `/admin` dashboard | `ANSHII19` |
+| `AUTH_SESSION_SECRET` | Secret string for session cookie hashing | Any random 32-char string |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | Your Cloudinary name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | Your Cloudinary key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | Your Cloudinary secret |
+| `FIREBASE_SERVICE_ACCOUNT_KEY` | Entire Firebase service account JSON | Minified JSON or Base64 string |
+| `WHATSAPP_PHONE_NUMBER_ID` | (Optional) Meta Phone Number ID | From Meta Developer App |
+| `WHATSAPP_ACCESS_TOKEN` | (Optional) Meta Access Token | System User Token |
+| `WHATSAPP_TO_NUMBER` | Recipient WhatsApp number | `918278710552` |
 
-2. **Task 02: Find the Hidden Star**
-   - *"There's something hidden here... Find it."* A subtle glowing star hidden on the page triggers *"Explorer Mode: ON"*.
-
-3. **Task 03: Important Birthday Decision (Cake / Sleep / Chaos)**
-   - Witty runtime configuration:
-     - `[ CAKE 🍰 ]` $\rightarrow$ *"Correct. Obviously."*
-     - `[ SLEEP 😴 ]` $\rightarrow$ *"Valid choice."*
-     - `[ CHAOS ⚡ ]` $\rightarrow$ *"I expected this."*
-
-4. **Task 04: Debug the Birthday Code**
-   - `const birthday = 18;` $\rightarrow$ Choose `[ 19 ]` to successfully compile Version 19.0.
-
-5. **Task 05: Select a Soundtrack**
-   - Choose between *"Midnight Coding Lofi"*, *"Campus Morning Acoustic"*, and *"Celebration Ambient Chimes"*.
-
-6. **Task 06: Mini Reaction Test**
-   - *"Don't click yet..."* $\rightarrow$ *"NOW!"* Calculates reaction time (e.g. `0.38s`) with funny CS feedback.
-
-7. **Task 07: Complete the Sentence**
-   - *"Today I deserve ______."* (`[ Cake ]`, `[ A Holiday ]`, `[ Everything ]`, `[ All of the above ]`).
-
-8. **Bonus Mini-Game: 3-Pair Memory Match**
-   - Match the 3 essential CS pairs (☕ Coffee, 💻 Code, 🎂 Cake) to compile the memory stack.
-
-9. **Bonus Mini-Game: Star Catcher**
-   - Catch 5 floating golden sparks across the screen in 5 seconds.
-
-10. **Final Task: `[ READY ]` Before The Grand Finale**
-    - A gentle pause: *"Okay. That's enough playing. There's one thing I actually wanted to say..."* smoothly leads into the sincere final birthday moment!
-
-11. **100% Explorer Reward**
-    - Completing all tasks reveals a heartfelt personal achievement note from Anuj!
-    - *Note: If any task is skipped, all core birthday content, memories, photos, and messages remain 100% accessible.*
-
----
-
-## 🛠️ Customization Guide
-
-All personal information, photo captions, messages, and settings are located in one file:
-👉 **[`data/birthday.ts`](./data/birthday.ts)**
-
-- **Real Photos**: Drop 5 images into `public/photos/` (`photo1.jpg` to `photo5.jpg`).
-- **Music**: Place your song in `public/music/` (e.g. `public/music/song.mp3`).
-- **Message**: Edit `message.content` in [`data/birthday.ts`](./data/birthday.ts).
-- **Memories & Qualities**: Edit `timeline` and `qualities` arrays.
-- **Choices & Copy**: Everything is editable directly in [`data/birthday.ts`](./data/birthday.ts).
-
----
-
-## 🚢 Deploying to Vercel
-
-```bash
-# Push to GitHub
-git add .
-git commit -m "feat: complete interactive birthday quest experience"
-git push origin main
-```
-Import the repository on [Vercel](https://vercel.com) and deploy with standard Next.js settings!
-
----
-
-*Designed & developed by Anuj for Anshika • 19th Birthday • 28 October 2026*
+4. Click **Deploy**. Vercel will build and launch your production site automatically!

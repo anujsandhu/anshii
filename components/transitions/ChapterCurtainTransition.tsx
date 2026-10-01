@@ -114,7 +114,7 @@ export default function ChapterCurtainTransition({
             {/* Chapter Badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fff0f3] border border-[#fbcfe8] text-[#be185d] font-sans text-xs font-bold mb-2">
               <Sparkles className="w-3.5 h-3.5 text-[#fb7185]" />
-              <span>Chapter {targetFrame.chapter} of 08</span>
+              <span>Chapter {targetFrame.chapter} of 09</span>
             </div>
 
             {/* Target Chapter Title */}

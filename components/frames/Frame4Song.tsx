@@ -50,7 +50,7 @@ export default function Frame4Song({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-6 select-none overflow-hidden">
+    <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-[#bae6fd]/20 via-[#fbcfe8]/20 to-[#fed7aa]/20 rounded-full blur-[140px] pointer-events-none" />
 
@@ -59,8 +59,7 @@ export default function Frame4Song({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        className="w-full max-w-xl paper-card-warm rounded-3xl relative shadow-lg border border-[#ebdcd0] z-10"
-        style={{ padding: "clamp(12px, 3vw, 22px)" }}
+        className="w-full max-w-xl paper-card-warm rounded-3xl relative shadow-lg border border-[#ebdcd0] z-10 my-auto p-3.5 sm:p-6"
       >
         <div className="washi-tape-pink" />
 

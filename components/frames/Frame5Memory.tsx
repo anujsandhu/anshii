@@ -164,14 +164,14 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
   // ── Completed state ─────────────────────────────────────────────────
   if (gameOver) {
     return (
-      <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-6 select-none overflow-hidden">
+      <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-[#fed7aa]/20 via-[#fbcfe8]/20 to-transparent rounded-full blur-[130px] pointer-events-none" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-md paper-card-warm p-6 sm:p-10 rounded-3xl relative shadow-xl border border-[#ebdcd0] z-10 text-center"
+          className="w-full max-w-md paper-card-warm p-5 sm:p-9 rounded-3xl relative shadow-xl border border-[#ebdcd0] z-10 text-center my-auto"
         >
           <div className="washi-tape-yellow" />
 
@@ -224,7 +224,7 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
 
   // ── Active quiz ─────────────────────────────────────────────────────
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-6 select-none overflow-hidden">
+    <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
       {/* Ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-[#fed7aa]/20 via-[#fbcfe8]/20 to-transparent rounded-full blur-[130px] pointer-events-none" />
 
@@ -233,8 +233,7 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
         initial={{ opacity: 0, x: 28 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-lg paper-card-warm rounded-3xl relative shadow-lg border border-[#ebdcd0] z-10 overflow-hidden"
-        style={{ padding: "clamp(12px, 3vw, 22px)" }}
+        className="w-full max-w-lg paper-card-warm rounded-3xl relative shadow-lg border border-[#ebdcd0] z-10 overflow-hidden my-auto p-3.5 sm:p-6"
       >
         <div className="washi-tape-yellow" />
 

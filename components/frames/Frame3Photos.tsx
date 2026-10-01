@@ -3,12 +3,18 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, X, Maximize2, CheckCircle2, Send, ExternalLink, Sparkles } from "lucide-react";
-import confetti from "canvas-confetti";
-import WhatsAppImageModal from "@/components/WhatsAppImageModal";
 import {
-  getShareableImage,
-  ShareableImageConfig,
+  Heart,
+  CheckCircle2,
+  Send,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from "lucide-react";
+import confetti from "canvas-confetti";
+import {
+  openDirectWhatsApp,
   TARGET_WHATSAPP_CONFIG,
 } from "@/data/whatsappImages";
 
@@ -58,13 +64,7 @@ const SCRAPBOOK_PREVIEWS = [
   },
 ];
 
-// Anuj's WhatsApp number (+91 8278710552)
-const ANUJ_WA_NUMBER = TARGET_WHATSAPP_CONFIG.rawNumber;
 
-function buildWaLink(message: string) {
-  const encoded = encodeURIComponent(message);
-  return `https://wa.me/${ANUJ_WA_NUMBER}?text=${encoded}`;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -73,24 +73,15 @@ export default function Frame3Photos({
   onCompleteTask,
   onNext,
 }: Frame3PhotosProps) {
-  const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
-  const [selectedMessage, setSelectedMessage] = useState<string>("");
   const [taskDone, setTaskDone] = useState(isCompleted);
   // Track per-photo "sent" confirmation state
   const [sentPhotos, setSentPhotos] = useState<Set<number>>(new Set());
-  // Active WhatsApp modal image
-  const [waModalImage, setWaModalImage] = useState<ShareableImageConfig | null>(null);
+  // Active photo lightbox zoom state
+  const [zoomPhoto, setZoomPhoto] = useState<(typeof SCRAPBOOK_PREVIEWS)[0] | null>(null);
 
   React.useEffect(() => {
     setTaskDone(isCompleted);
   }, [isCompleted]);
-
-  // Update selectedMessage whenever a new photo is clicked
-  React.useEffect(() => {
-    if (selectedPhoto !== null && SCRAPBOOK_PREVIEWS[selectedPhoto]) {
-      setSelectedMessage(SCRAPBOOK_PREVIEWS[selectedPhoto].waMessage);
-    }
-  }, [selectedPhoto]);
 
   const handleHeartClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -107,36 +98,28 @@ export default function Frame3Photos({
     } catch {}
   };
 
-  const handleOpenWhatsAppModal = (imageId: string) => {
-    const config = getShareableImage(imageId);
-    if (config) {
-      setWaModalImage(config);
-    }
-  };
+  // Direct 1-Click WhatsApp Send (no verification modal)
+  const handleDirectWhatsAppSend = (item: (typeof SCRAPBOOK_PREVIEWS)[0]) => {
+    const msg = `Hey Anuj! 📸 ${item.waMessage} (${item.caption} • Digital Scrapbook)`;
+    openDirectWhatsApp(msg);
 
-  const handleWhatsAppSuccess = (imageId: string) => {
-    const photoIdx = SCRAPBOOK_PREVIEWS.findIndex((p) => p.imageId === imageId);
+    const photoIdx = SCRAPBOOK_PREVIEWS.findIndex((p) => p.id === item.id);
     if (photoIdx !== -1) {
       setSentPhotos((prev) => new Set([...prev, photoIdx]));
     }
+
+    try {
+      confetti({
+        particleCount: 45,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#25D366", "#fda4af", "#bbf7d0"],
+      });
+    } catch {}
   };
 
-  const handleSendToAnuj = (photoIndex: number) => {
-    const photo = SCRAPBOOK_PREVIEWS[photoIndex];
-    if (photo && photo.imageId) {
-      handleOpenWhatsAppModal(photo.imageId);
-    } else {
-      const messageToSend = selectedMessage || photo.waMessage;
-      const link = buildWaLink(messageToSend);
-      window.open(link, "_blank", "noopener,noreferrer");
-      setTimeout(() => {
-        setSentPhotos((prev) => new Set([...prev, photoIndex]));
-      }, 800);
-    }
-  };
-
-  const selectedItem = selectedPhoto !== null ? SCRAPBOOK_PREVIEWS[selectedPhoto] : null;
-  const isSent = selectedPhoto !== null && sentPhotos.has(selectedPhoto);
+  const [activeMobileIdx, setActiveMobileIdx] = useState(0);
+  const activeMobileItem = SCRAPBOOK_PREVIEWS[activeMobileIdx];
 
   return (
     <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
@@ -145,7 +128,7 @@ export default function Frame3Photos({
 
       <div className="w-full max-w-4xl flex flex-col items-center my-auto">
         {/* Header */}
-        <div className="text-center mb-1.5 z-10">
+        <div className="text-center mb-1.5 sm:mb-2 z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#fff0f3] border border-[#fbcfe8] text-[#be185d] font-sans text-xs mb-1 shadow-2xs">
             <span>📸</span>
             <span>Digital Scrapbook</span>
@@ -158,91 +141,260 @@ export default function Frame3Photos({
           </p>
         </div>
 
-        {/* 3 Polaroids */}
+        {/* ── MOBILE VIEW (< sm): Sleek, focused single Polaroid carousel ── */}
+        <div className="block sm:hidden w-full max-w-sm z-10 my-1">
+          {/* Photo Switcher Pills */}
+          <div className="flex items-center justify-center gap-1.5 mb-2">
+            {SCRAPBOOK_PREVIEWS.map((item, idx) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveMobileIdx(idx)}
+                className={`px-3 py-1 rounded-full text-[11px] font-sans font-semibold transition-all cursor-pointer shadow-2xs ${
+                  activeMobileIdx === idx
+                    ? "bg-[#3f2e24] text-white scale-105 shadow-xs"
+                    : "bg-white/85 border border-[#ebdcd0] text-[#786457] hover:bg-white"
+                }`}
+              >
+                <span>Photo {idx + 1}</span>
+                {item.hasHeart && !taskDone && (
+                  <span className="ml-1 text-[10px]">💖</span>
+                )}
+                {sentPhotos.has(idx) && (
+                  <span className="ml-1 text-[#10b981] text-[10px]">✓</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Focused Polaroid Card with Navigation Arrows */}
+          <div className="w-full flex items-center justify-center gap-1.5">
+            {/* Prev Arrow */}
+            <button
+              onClick={() =>
+                setActiveMobileIdx((prev) =>
+                  prev > 0 ? prev - 1 : SCRAPBOOK_PREVIEWS.length - 1
+                )
+              }
+              aria-label="Previous photo"
+              className="p-2 rounded-full bg-white/85 backdrop-blur-xs border border-[#ebdcd0] text-[#786457] hover:text-[#3f2e24] shadow-xs cursor-pointer shrink-0 transition-transform active:scale-90"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Active Card */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeMobileItem.id}
+                initial={{ opacity: 0, scale: 0.94, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: -8 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setZoomPhoto(activeMobileItem)}
+                className="w-full max-w-[280px] cursor-pointer group relative"
+              >
+                <div
+                  className="polaroid-card rounded-2xl relative shadow-lg"
+                  style={{
+                    padding: "10px 10px 22px 10px",
+                    transform: `rotate(${activeMobileItem.rotation * 0.6}deg)`,
+                  }}
+                >
+                  <div className={activeMobileItem.tape} />
+
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#eee7de] shadow-inner mt-2">
+                    <Image
+                      src={activeMobileItem.src}
+                      alt={activeMobileItem.caption}
+                      fill
+                      priority
+                      sizes="280px"
+                      className="object-cover"
+                    />
+
+                    <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-white/70 backdrop-blur-xs text-[#3f2e24]">
+                      <Maximize2 className="w-3 h-3" />
+                    </div>
+
+                    {/* Sent badge overlay */}
+                    {sentPhotos.has(activeMobileIdx) && (
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#ecfdf5]/95 text-[#065f46] text-[10px] font-sans font-bold border border-[#a7f3d0] shadow-xs">
+                        sent ✓
+                      </div>
+                    )}
+
+                    {/* Secret Heart Sticker */}
+                    {activeMobileItem.hasHeart && (
+                      <motion.button
+                        onClick={handleHeartClick}
+                        whileHover={{ scale: 1.25 }}
+                        whileTap={{ scale: 0.85 }}
+                        className={`absolute bottom-2 right-2 p-2 rounded-full transition-all cursor-pointer z-20 min-w-[42px] min-h-[42px] flex items-center justify-center ${
+                          taskDone
+                            ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-sm"
+                            : "bg-white/90 hover:bg-white text-[#fda4af] shadow-md animate-bounce ring-2 ring-[#fda4af]"
+                        }`}
+                        title="Tap the secret heart sticker!"
+                      >
+                        <Heart
+                          className={`w-4 h-4 ${
+                            taskDone
+                              ? "fill-[#be185d]"
+                              : "fill-[#fda4af]"
+                          }`}
+                        />
+                      </motion.button>
+                    )}
+                  </div>
+
+                  <div className="pt-2.5 text-center">
+                    <p className="font-handwriting text-xl text-[#3f2e24] font-bold leading-tight">
+                      &ldquo;{activeMobileItem.caption}&rdquo;
+                    </p>
+                    <span className="text-[11px] text-[#8c7465] font-sans block mt-0.5 mb-2.5">
+                      {activeMobileItem.sub}
+                    </span>
+
+                    {/* WhatsApp Action Button (Direct 1-Click) */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDirectWhatsAppSend(activeMobileItem);
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white text-xs font-sans font-bold shadow-xs transition-all cursor-pointer"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>Send to WhatsApp</span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Next Arrow */}
+            <button
+              onClick={() =>
+                setActiveMobileIdx((prev) =>
+                  prev < SCRAPBOOK_PREVIEWS.length - 1 ? prev + 1 : 0
+                )
+              }
+              aria-label="Next photo"
+              className="p-2 rounded-full bg-white/85 backdrop-blur-xs border border-[#ebdcd0] text-[#786457] hover:text-[#3f2e24] shadow-xs cursor-pointer shrink-0 transition-transform active:scale-90"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Dot Indicators */}
+          <div className="flex items-center justify-center gap-1.5 mt-2">
+            {SCRAPBOOK_PREVIEWS.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveMobileIdx(idx)}
+                className={`transition-all rounded-full cursor-pointer ${
+                  activeMobileIdx === idx
+                    ? "w-4 h-1.5 bg-[#be185d]"
+                    : "w-1.5 h-1.5 bg-[#d1c5b8] hover:bg-[#a89687]"
+                }`}
+                title={`Go to photo ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ── DESKTOP VIEW (sm:flex): Classic 3 tilted Polaroids side-by-side ── */}
         <div
-          className="flex flex-nowrap items-center justify-center gap-2 sm:gap-5 max-w-4xl w-full z-10 my-1 overflow-x-auto py-2 px-4"
+          className="hidden sm:flex flex-nowrap items-center justify-center gap-5 max-w-4xl w-full z-10 my-1 overflow-x-auto py-2 px-4"
           style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
         >
-        {SCRAPBOOK_PREVIEWS.map((item, index) => (
-          <motion.div
-            key={item.id}
-            onClick={() => setSelectedPhoto(index)}
-            whileHover={{ scale: 1.04, rotate: 0, zIndex: 20 }}
-            style={{ transform: `rotate(${item.rotation}deg)`, minWidth: "clamp(100px, 28vw, 192px)" }}
-            className="shrink-0 cursor-pointer group relative"
-          >
-            <div
-              className="polaroid-card rounded-xl sm:rounded-2xl relative shadow-md"
-              style={{ padding: "clamp(6px, 1.5vw, 10px) clamp(6px, 1.5vw, 10px) clamp(20px, 5vw, 40px)" }}
+          {SCRAPBOOK_PREVIEWS.map((item, index) => (
+            <motion.div
+              key={item.id}
+              onClick={() => setZoomPhoto(item)}
+              whileHover={{ scale: 1.04, rotate: 0, zIndex: 20 }}
+              style={{
+                transform: `rotate(${item.rotation}deg)`,
+                minWidth: "220px",
+                maxWidth: "240px",
+              }}
+              className="shrink-0 cursor-pointer group relative"
             >
-              <div className={item.tape} />
+              <div
+                className="polaroid-card rounded-2xl relative shadow-md"
+                style={{ padding: "10px 10px 32px 10px" }}
+              >
+                <div className={item.tape} />
 
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg sm:rounded-xl bg-[#eee7de] shadow-inner">
-                <Image
-                  src={item.src}
-                  alt={item.caption}
-                  fill
-                  sizes="(max-width: 640px) 30vw, 220px"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#eee7de] shadow-inner mt-2">
+                  <Image
+                    src={item.src}
+                    alt={item.caption}
+                    fill
+                    sizes="240px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
 
-                <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-white/70 backdrop-blur-xs text-[#3f2e24] opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Maximize2 className="w-2.5 h-2.5" />
+                  <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-white/70 backdrop-blur-xs text-[#3f2e24] opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Maximize2 className="w-2.5 h-2.5" />
+                  </div>
+
+                  {/* Sent badge overlay */}
+                  {sentPhotos.has(index) && (
+                    <div className="absolute inset-0 flex items-end justify-center pb-2 pointer-events-none">
+                      <span className="text-[9px] font-sans bg-[#ecfdf5]/90 text-[#065f46] px-1.5 py-0.5 rounded-full border border-[#a7f3d0]">
+                        sent ✓
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Secret Heart Sticker for Task */}
+                  {item.hasHeart && (
+                    <motion.button
+                      onClick={handleHeartClick}
+                      whileHover={{ scale: 1.3 }}
+                      whileTap={{ scale: 0.85 }}
+                      className={`absolute bottom-1.5 right-1.5 p-1.5 rounded-full transition-all cursor-pointer z-20 min-w-[36px] min-h-[36px] flex items-center justify-center ${
+                        taskDone
+                          ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-xs"
+                          : "bg-white/80 hover:bg-white text-[#fda4af] shadow-xs animate-bounce"
+                      }`}
+                      title="Tap the secret heart sticker!"
+                    >
+                      <Heart
+                        className={`w-3.5 h-3.5 ${
+                          taskDone ? "fill-[#be185d]" : "fill-[#fda4af]"
+                        }`}
+                      />
+                    </motion.button>
+                  )}
                 </div>
 
-                {/* Sent badge overlay */}
-                {sentPhotos.has(index) && (
-                  <div className="absolute inset-0 flex items-end justify-center pb-2 pointer-events-none">
-                    <span className="text-[9px] font-sans bg-[#ecfdf5]/90 text-[#065f46] px-1.5 py-0.5 rounded-full border border-[#a7f3d0]">
-                      sent ✓
-                    </span>
-                  </div>
-                )}
+                <div className="pt-2 text-center">
+                  <p className="font-handwriting text-lg text-[#3f2e24] font-bold leading-tight truncate">
+                    &ldquo;{item.caption}&rdquo;
+                  </p>
+                  <span className="text-[10px] text-[#8c7465] font-sans block mb-2">
+                    {item.sub}
+                  </span>
 
-                {/* Secret Heart Sticker for Task */}
-                {item.hasHeart && (
-                  <motion.button
-                    onClick={handleHeartClick}
-                    whileHover={{ scale: 1.3 }}
-                    whileTap={{ scale: 0.85 }}
-                    className={`absolute bottom-1.5 right-1.5 p-1.5 rounded-full transition-all cursor-pointer z-20 min-w-[36px] min-h-[36px] flex items-center justify-center ${
-                      taskDone
-                        ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-xs"
-                        : "bg-white/80 hover:bg-white text-[#fda4af] shadow-xs animate-bounce"
-                    }`}
-                    title="Tap the secret heart sticker!"
+                  {/* Explicit WhatsApp Media Share Action (Direct 1-Click) */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDirectWhatsAppSend(item);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0fdf4] hover:bg-[#dcfce7] border border-[#bbf7d0] text-[#15803d] text-[10px] font-sans font-bold shadow-2xs hover:scale-105 transition-all cursor-pointer"
+                    title="Direct 1-click send to Anuj on WhatsApp"
                   >
-                    <Heart className={`w-3.5 h-3.5 ${taskDone ? "fill-[#be185d]" : "fill-[#fda4af]"}`} />
-                  </motion.button>
-                )}
+                    <Send className="w-2.5 h-2.5" />
+                    <span>Send to WhatsApp</span>
+                  </button>
+                </div>
               </div>
-
-              <div className="pt-1.5 sm:pt-2 text-center">
-                <p className="font-handwriting text-[#3f2e24] font-bold leading-tight truncate" style={{ fontSize: "clamp(11px, 3vw, 18px)" }}>
-                  &ldquo;{item.caption}&rdquo;
-                </p>
-                <span className="text-[9px] sm:text-[10px] text-[#8c7465] font-sans block mb-1.5">
-                  {item.sub}
-                </span>
-
-                {/* Explicit WhatsApp Media Share Action */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenWhatsAppModal(item.imageId);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f0fdf4] hover:bg-[#dcfce7] border border-[#bbf7d0] text-[#15803d] text-[10px] font-sans font-bold shadow-2xs hover:scale-105 transition-all cursor-pointer"
-                  title="Send this photo directly to Anuj's WhatsApp"
-                >
-                  <Send className="w-2.5 h-2.5" />
-                  <span>Send to WhatsApp</span>
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
 
       {/* Task Completion Feedback */}
       <div className="mt-3 text-center max-w-sm z-10">
@@ -269,158 +421,83 @@ export default function Frame3Photos({
               onClick={onNext}
               className="mt-2 px-7 py-3 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 btn-cute"
             >
-              <span>Continue to Song Mixtape</span>
+              <span>Continue to Gift Snaps</span>
               <span className="text-base leading-none">↓</span>
             </button>
           </motion.div>
         )}
       </div>
+      </div>
 
-      {/* ── Lightbox with WhatsApp action ── */}
+
+
+      {/* Clean Full Photo Lightbox Zoom (No verification modals) */}
       <AnimatePresence>
-        {selectedPhoto !== null && selectedItem && (
+        {zoomPhoto && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSelectedPhoto(null)}
-            className="fixed inset-0 z-50 bg-[#3f2e24]/80 backdrop-blur-sm flex items-center justify-center p-4 select-none"
+            onClick={() => setZoomPhoto(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#2b1e17]/65 backdrop-blur-md select-none cursor-pointer"
           >
-            {/* Close button */}
-            <button
-              onClick={() => setSelectedPhoto(null)}
-              aria-label="Close"
-              className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-white/20 hover:bg-white/35 text-white cursor-pointer transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
             <motion.div
-              initial={{ scale: 0.88, y: 18 }}
+              initial={{ scale: 0.88, y: 15 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.88, y: 18 }}
-              transition={{ type: "spring", stiffness: 350, damping: 26 }}
+              exit={{ scale: 0.9, y: 10, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="paper-card-warm rounded-3xl shadow-2xl border border-[#ebdcd0] w-full max-w-sm overflow-hidden"
-              style={{ padding: "clamp(14px, 4vw, 24px)" }}
+              className="relative w-full max-w-sm sm:max-w-md bg-[#fffdfa] rounded-3xl border-2 border-[#ebdcd0] shadow-2xl p-4 sm:p-5 flex flex-col text-center cursor-default"
             >
-              {/* Washi tape */}
-              <div className="washi-tape-pink" />
+              <button
+                onClick={() => setZoomPhoto(null)}
+                className="absolute top-3 right-3 p-1.5 rounded-full text-[#8c7465] hover:text-[#3f2e24] hover:bg-[#f5ece3] transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
 
-              {/* Photo */}
-              <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-[#eee7de] shadow-inner mt-2">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#eee7de] shadow-inner mt-2 mb-3">
                 <Image
-                  src={selectedItem.src}
-                  alt="Memory"
+                  src={zoomPhoto.src}
+                  alt={zoomPhoto.caption}
                   fill
-                  className="object-contain"
-                  sizes="(max-width: 640px) 90vw, 500px"
+                  className="object-cover"
+                  sizes="(max-width: 640px) 90vw, 420px"
+                  priority
                 />
               </div>
 
-              {/* Caption */}
-              <div className="mt-3 text-center">
-                <p className="font-handwriting text-xl sm:text-2xl text-[#3f2e24] font-bold leading-snug">
-                  &ldquo;{selectedItem.caption}&rdquo;
-                </p>
-                <p className="text-xs text-[#8c7465] font-sans mt-0.5">
-                  {selectedItem.sub}
-                </p>
-              </div>
+              <p className="font-handwriting text-2xl text-[#3f2e24] font-bold">
+                &ldquo;{zoomPhoto.caption}&rdquo;
+              </p>
+              <span className="text-xs text-[#8c7465] font-sans mt-0.5 mb-3">
+                {zoomPhoto.sub}
+              </span>
 
-              {/* ── WhatsApp action ── */}
-              <div className="mt-3 pt-3 border-t border-[#f0e4d6]">
-                <AnimatePresence mode="wait">
-                  {!isSent ? (
-                    <motion.div
-                      key="send-prompt"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      className="flex flex-col items-center gap-2.5"
-                    >
-                      <p className="text-[12px] text-[#a0897a] font-handwriting text-base">
-                        You picked this one 👀
-                      </p>
-
-                      {/* Active Pre-filled message bubble */}
-                      <div className="w-full px-3 py-2 rounded-xl bg-[#faf7f2] border border-[#ebdcd0] text-center">
-                        <span className="text-[11px] font-sans italic text-[#5c473a]">
-                          &ldquo;{selectedMessage}&rdquo;
-                        </span>
-                      </div>
-
-                      {/* Quick message options chips */}
-                      <div className="flex flex-wrap gap-1 justify-center max-w-xs">
-                        {[
-                          selectedItem.waMessage,
-                          "I saw the bracelet…",
-                          "The teddy is actually so cute 🧸",
-                          "Okayyy, I opened the gift 👀",
-                          "This one is my favourite.",
-                        ]
-                          .filter((msg, idx, arr) => arr.indexOf(msg) === idx)
-                          .map((msgOption, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => setSelectedMessage(msgOption)}
-                              className={`text-[10px] px-2 py-0.5 rounded-full border transition-all cursor-pointer ${
-                                selectedMessage === msgOption
-                                  ? "bg-[#fda4af] border-[#fb7185] text-[#4c0519] font-bold shadow-2xs"
-                                  : "bg-white border-[#ebdcd0] text-[#786457] hover:border-[#fda4af]"
-                              }`}
-                            >
-                              {msgOption.length > 24 ? msgOption.slice(0, 22) + "…" : msgOption}
-                            </button>
-                          ))}
-                      </div>
-
-                      <motion.button
-                        type="button"
-                        onClick={() => handleSendToAnuj(selectedPhoto)}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white font-sans font-bold text-xs shadow-md transition-all cursor-pointer min-h-[44px] group mt-1"
-                      >
-                        <Send className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                        <span>Send Image to Anuj (+91 8278710552)</span>
-                        <Sparkles className="w-3.5 h-3.5 text-white/80" />
-                      </motion.button>
-                      <p className="text-[10px] text-[#8c7465] font-sans">
-                        Preview, confirm &amp; securely send via WhatsApp Cloud API ✦
-                      </p>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="sent-confirm"
-                      initial={{ opacity: 0, scale: 0.92 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex flex-col items-center gap-1.5 py-1"
-                    >
-                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46] text-xs font-sans font-semibold">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
-                        <span>Image delivered to Anuj&apos;s WhatsApp! 🌷</span>
-                      </div>
-                      <p className="text-[10px] text-[#a0897a] font-sans">
-                        Sent to {TARGET_WHATSAPP_CONFIG.displayNumber} ✓
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setZoomPhoto(null)}
+                  className="flex-1 py-2.5 px-3 rounded-2xl bg-[#f5ece3] hover:bg-[#ebdcd0] text-[#5c473a] font-sans font-semibold text-xs cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleDirectWhatsAppSend(zoomPhoto);
+                    setZoomPhoto(null);
+                  }}
+                  className="flex-[2] py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white font-sans font-bold text-xs shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send to Anuj (WhatsApp)</span>
+                </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Sleek WhatsApp Image Confirmation Modal */}
-      <WhatsAppImageModal
-        isOpen={waModalImage !== null}
-        onClose={() => setWaModalImage(null)}
-        image={waModalImage}
-        onSuccess={handleWhatsAppSuccess}
-      />
     </div>
   );
 }

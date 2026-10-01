@@ -152,14 +152,16 @@ export function getSongForFrame(frameIndex: number): SongConfig {
     case 2:
       return BIRTHDAY_SOUNDTRACKS[2]; // Woh Din — Photos
     case 3:
-      return BIRTHDAY_SOUNDTRACKS[3]; // I Like Me Better — Soundtrack
+      return BIRTHDAY_SOUNDTRACKS[3]; // I Like Me Better — Gift Snaps
     case 4:
-      return BIRTHDAY_SOUNDTRACKS[4]; // Heeriye — CS Quiz
+      return BIRTHDAY_SOUNDTRACKS[4]; // Heeriye — Soundtrack
     case 5:
-      return BIRTHDAY_SOUNDTRACKS[5]; // Kho Gaye Hum Kahan — Scratch Card
+      return BIRTHDAY_SOUNDTRACKS[1]; // Ilahi — CS Quiz
     case 6:
-      return BIRTHDAY_SOUNDTRACKS[6]; // Apna Bana Le — Letter
+      return BIRTHDAY_SOUNDTRACKS[5]; // Kho Gaye Hum Kahan — Scratch Card
     case 7:
+      return BIRTHDAY_SOUNDTRACKS[6]; // Apna Bana Le — Letter
+    case 8:
       return BIRTHDAY_SOUNDTRACKS[7]; // Until I Found You — Grand Finale
     default:
       return BIRTHDAY_SOUNDTRACKS[0];

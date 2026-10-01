@@ -165,7 +165,7 @@ export interface BirthdayConfig {
 }
 
 export interface PhysicalGiftConfig {
-  password: string; // Secret password from the card
+  password?: string; // Stored and validated securely on server via process.env.SITE_PASSWORD
   websiteUrl: string; // Deployed target URL
   qrCard: {
     title: string;
@@ -193,9 +193,8 @@ export interface PhysicalGiftConfig {
 }
 
 export const PHYSICAL_GIFT_CONFIG: PhysicalGiftConfig = {
-  // This is the ONE central password value you can customize!
-  // It is checked case-insensitively and trims spaces so Anshii has an easy time.
-  password: "ANSHII19",
+  // Password authentication is strictly validated server-side in /api/auth using SITE_PASSWORD.
+  // Secrets are not exposed in client-side JavaScript.
   websiteUrl: "https://anshi-birthday.vercel.app",
   qrCard: {
     title: "Wait… there's one more thing.",
@@ -205,17 +204,17 @@ export const PHYSICAL_GIFT_CONFIG: PhysicalGiftConfig = {
     cardSizeHint: "Physical card (2.75\" × 3.75\") designed for Anshii's gift box",
   },
   entryGate: {
-    heading: "Oh, you found the secret page.",
-    subheading: "Enter the password from your gift box.",
+    heading: "Welcome to the Private Page",
+    subheading: "Enter the secret password to continue.",
     placeholder: "Enter password",
     unlockButton: "UNLOCK →",
     grantedText: "ACCESS GRANTED ✓",
     welcomeHeading: "Welcome, Anshii.",
     welcomeSubtext: "Now you can finally see what's waiting for you.",
     wrongPasswordMessages: [
-      "Hmm, check the little card inside the gift box again 👀",
-      "Almost! Look at the card next to the teddy 🧸",
-      "Check the password on the printed card 🌷",
+      "Incorrect password. Please try again.",
+      "Almost! Check the secret password and try again 🌸",
+      "Password didn't match. Please try again 👀",
     ],
   },
   boxContents: [

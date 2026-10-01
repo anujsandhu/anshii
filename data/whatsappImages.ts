@@ -110,3 +110,14 @@ export const TARGET_WHATSAPP_CONFIG = {
   displayNumber: "+91 8278710552",
   recipientName: "Anuj",
 };
+
+/**
+ * Direct 1-Click WhatsApp Opener
+ * Directly launches WhatsApp with pre-filled message, bypassing any intermediate confirmation or verification modals.
+ */
+export function openDirectWhatsApp(message: string): void {
+  if (typeof window === "undefined") return;
+  const encoded = encodeURIComponent(message.trim());
+  const url = `https://wa.me/${TARGET_WHATSAPP_CONFIG.rawNumber}?text=${encoded}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}

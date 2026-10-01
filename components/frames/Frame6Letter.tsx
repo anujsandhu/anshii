@@ -102,17 +102,16 @@ export default function Frame6Letter({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-6 select-none overflow-hidden">
+    <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-[#fbcfe8]/25 via-[#fed7aa]/20 to-[#d8b4fe]/20 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Main Letter Card — fixed size, no internal scroll */}
+      {/* Main Letter Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65 }}
-        className="w-full max-w-xl paper-card-warm rounded-3xl relative shadow-xl border border-[#ebdcd0] z-10 text-left overflow-hidden"
-        style={{ padding: "clamp(14px, 3.5vw, 28px)" }}
+        className="w-full max-w-xl paper-card-warm rounded-3xl relative shadow-xl border border-[#ebdcd0] z-10 text-left overflow-hidden my-auto p-4 sm:p-7"
       >
         <div className="washi-tape-pink" />
 

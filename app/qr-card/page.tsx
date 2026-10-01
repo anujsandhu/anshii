@@ -17,16 +17,18 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+// QR Feature flag - currently disabled per user requirement, but structured so it can be re-enabled anytime without rebuilding auth
+export const QR_FEATURE_ENABLED = false;
+
 export default function QrCardPrintPage() {
   const [targetUrl, setTargetUrl] = useState<string>(PHYSICAL_GIFT_CONFIG.websiteUrl);
-  const [password, setPassword] = useState<string>(PHYSICAL_GIFT_CONFIG.password);
+  const [password, setPassword] = useState<string>(PHYSICAL_GIFT_CONFIG.password || "ANSHII19");
   const [sheetMode, setSheetMode] = useState<"single" | "sheet4">("single");
   const [copiedUrl, setCopiedUrl] = useState(false);
 
   useEffect(() => {
     // Automatically detect origin in browser if deployed or local
     if (typeof window !== "undefined" && window.location.origin) {
-      // If default is placeholder or user hasn't modified, use current origin
       if (PHYSICAL_GIFT_CONFIG.websiteUrl.includes("vercel.app")) {
         setTargetUrl(window.location.origin);
       }
@@ -42,6 +44,32 @@ export default function QrCardPrintPage() {
     setCopiedUrl(true);
     setTimeout(() => setCopiedUrl(false), 2000);
   };
+
+  // If QR feature is disabled, show clean minimal notice
+  if (!QR_FEATURE_ENABLED) {
+    return (
+      <div className="min-h-screen bg-[#faf7f2] text-[#3f2e24] flex flex-col items-center justify-center p-6 text-center select-none">
+        <div className="max-w-md w-full p-8 rounded-3xl bg-[#fffdfa] border-2 border-[#ebdcd0] shadow-sm flex flex-col items-center">
+          <div className="w-12 h-12 rounded-2xl bg-[#fff0f3] border border-[#fbcfe8] flex items-center justify-center text-xl mb-4 shadow-2xs">
+            🔒
+          </div>
+          <h1 className="font-serif text-2xl font-bold text-[#3f2e24] mb-2">
+            QR Feature Disabled
+          </h1>
+          <p className="text-xs sm:text-sm text-[#786457] font-sans leading-relaxed mb-6">
+            The QR-code functionality is currently removed. The website is protected behind the direct password-entry screen.
+          </p>
+          <Link
+            href="/"
+            className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] text-white font-sans font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Go to Password Entry Screen</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#faf7f2] text-[#3f2e24] flex flex-col items-center justify-start p-4 sm:p-8 font-sans selection:bg-[#fda4af]/40">

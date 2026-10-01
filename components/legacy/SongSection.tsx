@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Music2, Play, Pause, CheckCircle2, Lock, Sparkles, Disc3 } from "lucide-react";
 import confetti from "canvas-confetti";
-import { SCRAPBOOK_PLAYLIST, SongTrack } from "./MusicPlayer";
+import { SCRAPBOOK_PLAYLIST, SongTrack } from "../MusicPlayer";
 
 interface SongSectionProps {
   isLocked: boolean;

@@ -18,6 +18,7 @@ import confetti from "canvas-confetti";
 import Frame1Welcome from "./frames/Frame1Welcome";
 import Frame2Birthday from "./frames/Frame2Birthday";
 import Frame3Photos from "./frames/Frame3Photos";
+import FrameGiftSnaps from "./frames/FrameGiftSnaps";
 import Frame4Song from "./frames/Frame4Song";
 import Frame5Memory from "./frames/Frame5Memory";
 import Frame6Scratch from "./frames/Frame6Scratch";
@@ -30,6 +31,8 @@ import PetalParticles from "./flowers/PetalParticles";
 import FlowerBurst from "./flowers/FlowerBurst";
 import LockedSkipTransition from "./transitions/LockedSkipTransition";
 import ChapterCurtainTransition from "./transitions/ChapterCurtainTransition";
+import SendWhatsAppNotificationButton from "./SendWhatsAppNotificationButton";
+import { trackEvent } from "@/lib/analyticsClient";
 
 export interface FrameMeta {
   id: number;
@@ -68,38 +71,46 @@ export const SCRAPBOOK_FRAMES: FrameMeta[] = [
   {
     id: 3,
     chapter: "04",
+    title: "Gift Snaps",
+    vibe: "You & Your Gifts 🧸🎁",
+    flowerName: "🧸",
+    bgGradient: "from-[#fffbf5] via-[#fef3c7]/20 to-[#faf7f2]",
+  },
+  {
+    id: 4,
+    chapter: "05",
     title: "Soundtrack",
     vibe: "Birthday Mixtape 🎵",
     flowerName: "🌻",
     bgGradient: "from-[#f8fafc] via-[#f0f9ff] to-[#faf7f2]",
   },
   {
-    id: 4,
-    chapter: "05",
+    id: 5,
+    chapter: "06",
     title: "CS Quiz",
     vibe: "Web Dev Mini Quiz 💻",
     flowerName: "💐",
     bgGradient: "from-[#fefcf8] via-[#fef3c7]/20 to-[#faf7f2]",
   },
   {
-    id: 5,
-    chapter: "06",
+    id: 6,
+    chapter: "07",
     title: "Scratch Card",
     vibe: "Hidden Birthday Secret 🎟️",
     flowerName: "✨",
     bgGradient: "from-[#fdf8ff] via-[#fbcfe8]/15 to-[#faf7f2]",
   },
   {
-    id: 6,
-    chapter: "07",
+    id: 7,
+    chapter: "08",
     title: "Letter",
     vibe: "Handwritten Note 💌",
     flowerName: "🌺",
     bgGradient: "from-[#fffaf5] via-[#fdf2f8] to-[#faf7f2]",
   },
   {
-    id: 7,
-    chapter: "08",
+    id: 8,
+    chapter: "09",
     title: "Grand Finale",
     vibe: "Birthday Bloom Climax ✨",
     flowerName: "🌸",
@@ -260,6 +271,18 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
       isTransitioningRef.current = true;
       setCurrentFrame(targetIndex);
 
+      const targetMeta = SCRAPBOOK_FRAMES[targetIndex];
+      trackEvent({
+        type: "navigation",
+        page: targetMeta.title,
+        elementText: `Chapter ${targetMeta.chapter}: ${targetMeta.title}`,
+        metadata: {
+          fromFrame: currentFrame,
+          toFrame: targetIndex,
+          chapter: targetMeta.chapter,
+        },
+      });
+
       // Automatically sync music track for the entered frame with smooth crossfade
       const targetSong = getSongForFrame(targetIndex);
       const songIdx = BIRTHDAY_SOUNDTRACKS.findIndex((s) => s.id === targetSong.id);
@@ -296,6 +319,14 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
       if (frameId === 0) {
         setMusicTriggered(true);
       }
+
+      const frameMeta = SCRAPBOOK_FRAMES[frameId];
+      trackEvent({
+        type: "task_complete",
+        page: frameMeta?.title || `Frame ${frameId}`,
+        elementText: `Chapter ${frameMeta?.chapter} Complete`,
+        metadata: { frameId },
+      });
 
       showToast(
         `🌸 Chapter ${SCRAPBOOK_FRAMES[frameId].chapter} Complete!`,
@@ -452,11 +483,11 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
             onClick={handleTitleClick}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#e8ded1] shadow-xs text-[#3f2e24] cursor-pointer"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#e8ded1] shadow-xs text-[#3f2e24] cursor-pointer"
             title="A handmade digital card by Anuj (click 5x for Easter Egg)"
           >
             <span className="font-mono text-[10px] sm:text-xs font-bold text-[#be185d] bg-[#fdf2f4] px-1.5 py-0.5 rounded-md">
-              {activeFrameMeta.chapter} / 08
+              {activeFrameMeta.chapter} / {SCRAPBOOK_FRAMES.length.toString().padStart(2, "0")}
             </span>
             <span className="font-handwriting text-base sm:text-xl font-bold hidden sm:inline">
               {activeFrameMeta.title}
@@ -464,8 +495,8 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           </motion.button>
         </div>
 
-        {/* Center: 8 Botanical Progress Flowers */}
-        <div className="pointer-events-auto flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#e8ded1] shadow-xs">
+        {/* Center: 9 Botanical Progress Flowers */}
+        <div className="pointer-events-auto flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#e8ded1] shadow-xs">
           {SCRAPBOOK_FRAMES.map((frame) => {
             const isCompleted = completedFrames.has(frame.id);
             const isCurrent = currentFrame === frame.id;
@@ -481,19 +512,18 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
                     triggerLockedAlert();
                   }
                 }}
-                className={`relative rounded-full transition-all cursor-pointer touch-target ${
+                className={`relative rounded-full transition-all cursor-pointer flex items-center justify-center min-w-[20px] sm:min-w-[24px] min-h-[26px] sm:min-h-[32px] p-0.5 ${
                   isCurrent
-                    ? "scale-125 text-[#be185d] ring-2 ring-[#fda4af] bg-[#fdf2f4]"
+                    ? "scale-115 text-[#be185d] ring-2 ring-[#fda4af] bg-[#fdf2f4]"
                     : isCompleted
                     ? "text-[#10b981] hover:scale-110"
                     : "text-[#d1c5b8] hover:text-[#a89687]"
                 }`}
-                style={{ minWidth: 24, minHeight: 32 }}
                 title={`Chapter ${frame.chapter}: ${frame.title} ${
                   isLocked ? "(Locked)" : isCompleted ? "(Completed)" : "(Current)"
                 }`}
               >
-                <span className="text-[11px] sm:text-sm block leading-none">
+                <span className="text-[10px] sm:text-sm block leading-none">
                   {isCurrent ? "🌷" : isCompleted ? "🌸" : "🌱"}
                 </span>
               </button>
@@ -501,8 +531,9 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           })}
         </div>
 
-        {/* Right: Sound Indicator Pill */}
+        {/* Right: WhatsApp Notification Button & Sound Indicator Pill */}
         <div className="pointer-events-auto flex items-center gap-2">
+          <SendWhatsAppNotificationButton variant="header" />
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#e8ded1] shadow-xs text-xs font-sans text-[#786457]">
             <Music2 className="w-3.5 h-3.5 text-[#f43f5e] animate-pulse" />
             <span className="font-medium truncate max-w-[110px]">
@@ -568,13 +599,27 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           />
         </section>
 
-        {/* FRAME 04: SONG */}
+        {/* FRAME 04: GIFT SNAPS */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <Frame4Song
+          <FrameGiftSnaps
             isCompleted={completedFrames.has(3)}
             onCompleteTask={() =>
               handleTaskComplete(
                 3,
+                "🧸 Gift snaps saved! Beautiful memories ✓"
+              )
+            }
+            onNext={handleNext}
+          />
+        </section>
+
+        {/* FRAME 05: SONG */}
+        <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
+          <Frame4Song
+            isCompleted={completedFrames.has(4)}
+            onCompleteTask={() =>
+              handleTaskComplete(
+                4,
                 "🎵 Soundtrack set for your 19th year!"
               )
             }
@@ -586,13 +631,13 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           />
         </section>
 
-        {/* FRAME 05: CS QUIZ */}
+        {/* FRAME 06: CS QUIZ */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
           <Frame5Memory
-            isCompleted={completedFrames.has(4)}
+            isCompleted={completedFrames.has(5)}
             onCompleteTask={() =>
               handleTaskComplete(
-                4,
+                5,
                 "🧠 CS Quiz done! Web dev certified ✓"
               )
             }
@@ -600,13 +645,13 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           />
         </section>
 
-        {/* FRAME 06: SCRATCH CARD */}
+        {/* FRAME 07: SCRATCH CARD */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
           <Frame6Scratch
-            isCompleted={completedFrames.has(5)}
+            isCompleted={completedFrames.has(6)}
             onCompleteTask={() =>
               handleTaskComplete(
-                5,
+                6,
                 "🎟️ Scratch card revealed! Secret unlocked ✓"
               )
             }
@@ -614,13 +659,13 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           />
         </section>
 
-        {/* FRAME 07: LETTER */}
+        {/* FRAME 08: LETTER */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
           <Frame7Letter
-            isCompleted={completedFrames.has(6)}
+            isCompleted={completedFrames.has(7)}
             onCompleteTask={() =>
               handleTaskComplete(
-                6,
+                7,
                 "💌 Letter opened! Grand finale unlocked ✓"
               )
             }
@@ -628,7 +673,7 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           />
         </section>
 
-        {/* FRAME 08: FINAL */}
+        {/* FRAME 09: FINAL */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
           <Frame8Final onReplay={handleReplay} />
         </section>
