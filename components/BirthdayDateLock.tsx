@@ -117,7 +117,10 @@ export default function BirthdayDateLock({
     } catch {}
   };
 
-  // Realistic Alarm Buzzer Sound Synthesizer
+  // Step tracker for two-tone alternating siren
+  const sirenStepRef = useRef(0);
+
+  // Realistic Alarm Buzzer Sound Synthesizer (Alternating Emergency Two-Tone)
   const playRealisticBuzzer = useCallback(() => {
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -128,30 +131,32 @@ export default function BirthdayDateLock({
       }
       const ctx = audioCtxRef.current;
       if (ctx.state === "suspended") {
-        ctx.resume();
+        ctx.resume().catch(() => {});
       }
 
       const now = ctx.currentTime;
+      const isHigh = sirenStepRef.current % 2 === 0;
+      sirenStepRef.current++;
 
-      // Primary harsh alarm oscillator (Sawtooth)
+      // Primary harsh alarm oscillator (Sawtooth with frequency glide)
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = "sawtooth";
-      osc1.frequency.setValueAtTime(820, now);
-      osc1.frequency.exponentialRampToValueAtTime(440, now + 0.22);
-      gain1.gain.setValueAtTime(0.08, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc1.frequency.setValueAtTime(isHigh ? 880 : 640, now);
+      osc1.frequency.exponentialRampToValueAtTime(isHigh ? 640 : 880, now + 0.22);
+      gain1.gain.setValueAtTime(0.18, now);
+      gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.24);
       osc1.connect(gain1);
       gain1.connect(ctx.destination);
       osc1.start(now);
-      osc1.stop(now + 0.25);
+      osc1.stop(now + 0.24);
 
       // Secondary low-frequency buzzer drone (Square)
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = "square";
-      osc2.frequency.setValueAtTime(160, now);
-      gain2.gain.setValueAtTime(0.04, now);
+      osc2.frequency.setValueAtTime(isHigh ? 220 : 180, now);
+      gain2.gain.setValueAtTime(0.06, now);
       gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
       osc2.connect(gain2);
       gain2.connect(ctx.destination);
@@ -169,8 +174,8 @@ export default function BirthdayDateLock({
     if (sirenIntervalRef.current) clearInterval(sirenIntervalRef.current);
     sirenIntervalRef.current = setInterval(() => {
       playRealisticBuzzer();
-      triggerPhoneVibrate([200, 80, 200]);
-    }, 600);
+      triggerPhoneVibrate([240, 90, 240]);
+    }, 440);
   }, [playRealisticBuzzer]);
 
   // Stop Repeating Alarm Siren
@@ -182,24 +187,42 @@ export default function BirthdayDateLock({
     }
   }, []);
 
-  // Auto-trigger brief realistic alarm buzz on first user interaction
+  // Automatic Siren Trigger on Mount & Immediate User Interaction Fallback
   useEffect(() => {
-    const handleFirstTouch = () => {
-      triggerPhoneVibrate([200, 100, 300]);
-      playRealisticBuzzer();
-      window.removeEventListener("click", handleFirstTouch);
-      window.removeEventListener("touchstart", handleFirstTouch);
+    if (!showHackerLayer) return;
+
+    // 1. Attempt immediate autoplay on mount
+    startSiren();
+
+    // 2. Fallback for browser autoplay policies: unpause AudioContext on any interaction
+    const unlockAndPlay = () => {
+      if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+      startSiren();
     };
 
-    window.addEventListener("click", handleFirstTouch, { once: true });
-    window.addEventListener("touchstart", handleFirstTouch, { once: true });
+    const interactionEvents = [
+      "pointerdown",
+      "touchstart",
+      "touchend",
+      "click",
+      "keydown",
+      "scroll",
+      "mousemove",
+    ];
+
+    interactionEvents.forEach((event) => {
+      window.addEventListener(event, unlockAndPlay, { passive: true });
+    });
 
     return () => {
-      window.removeEventListener("click", handleFirstTouch);
-      window.removeEventListener("touchstart", handleFirstTouch);
+      interactionEvents.forEach((event) => {
+        window.removeEventListener(event, unlockAndPlay);
+      });
       stopSiren();
     };
-  }, [playRealisticBuzzer, stopSiren]);
+  }, [showHackerLayer, startSiren, stopSiren]);
 
   // Sync clock authoritative from /api/date-lock on mount and periodically
   const syncServerTime = useCallback(async () => {
@@ -346,7 +369,6 @@ export default function BirthdayDateLock({
     ]);
 
     setTimeout(() => {
-      stopSiren();
       setPrankAlert(null);
     }, 3600);
   };
