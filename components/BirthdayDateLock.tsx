@@ -27,6 +27,7 @@ import {
 interface BirthdayDateLockProps {
   onUnlock?: () => void;
   initialServerTime?: number;
+  onPrankLayerChange?: (active: boolean) => void;
 }
 
 const HACKER_PRANK_MESSAGES = [
@@ -44,6 +45,7 @@ const HACKER_PRANK_MESSAGES = [
 export default function BirthdayDateLock({
   onUnlock,
   initialServerTime,
+  onPrankLayerChange,
 }: BirthdayDateLockProps) {
   // Authoritative clock skew between server and client device
   const clockSkewRef = useRef<number>(
@@ -88,6 +90,11 @@ export default function BirthdayDateLock({
   useEffect(() => {
     document.title = "SECURITY WARNING // ACCESS RESTRICTED";
   }, []);
+
+  // Sync prank layer status with parent for cursor mode switching
+  useEffect(() => {
+    onPrankLayerChange?.(showHackerLayer);
+  }, [showHackerLayer, onPrankLayerChange]);
 
   // Check prefers-reduced-motion
   useEffect(() => {
@@ -686,6 +693,10 @@ export default function BirthdayDateLock({
                                 repeating-linear-gradient(0deg, rgba(0,0,0,0.6) 0px, rgba(0,0,0,0.6) 1px, transparent 2px, transparent 4px)`,
             }}
           >
+            {/* Full-Screen Flashing Emergency Strobe in Full Brightness */}
+            <div className="pointer-events-none fixed inset-0 z-[65] animate-emergency-strobe mix-blend-screen" />
+            <div className="pointer-events-none fixed inset-0 z-[64] animate-emergency-beacon" />
+
             {/* Top Red Security Siren Lightbar */}
             <div className="w-full max-w-2xl mx-auto flex items-center justify-between py-2 border-b border-[#3b172a]">
               <div className="flex items-center gap-2">

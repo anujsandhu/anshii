@@ -17,6 +17,7 @@ export default function ClientHome({
   initialServerTime,
 }: ClientHomeProps) {
   const [isLocked, setIsLocked] = useState(initialIsLocked);
+  const [isPrankActive, setIsPrankActive] = useState(true);
 
   useEffect(() => {
     if (!isLocked) {
@@ -43,14 +44,15 @@ export default function ClientHome({
 
   return (
     <main className="w-screen h-[100dvh] overflow-hidden bg-[#faf7f2] text-[#3f2e24] relative selection:bg-[#fda4af]/40 selection:text-[#881337]">
-      {/* Custom Hand-Drawn Floral Desktop Cursor */}
-      <CustomCursor />
+      {/* Dynamic Desktop Cursor: Cyber Red Target Reticle during prank, Cute Teddy Bear elsewhere */}
+      <CustomCursor mode={isLocked && isPrankActive ? "hacker" : "cute"} />
 
       {/* FIRST LAYER: Birthday Countdown Lock until 28 October 2026 */}
       {isLocked ? (
         <BirthdayDateLock
           onUnlock={handleUnlock}
           initialServerTime={initialServerTime}
+          onPrankLayerChange={setIsPrankActive}
         />
       ) : (
         /* SECOND LAYER (after 28 Oct): Password Verification Gate */
