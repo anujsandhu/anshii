@@ -7,7 +7,6 @@ import {
   Unlock,
   Eye,
   EyeOff,
-  RotateCcw,
   Sparkles,
   Loader2,
   MessageCircle,
@@ -267,18 +266,6 @@ export default function SecretGiftGate({ children }: SecretGiftGateProps) {
               }
             )
           : children}
-
-        {/* Small floating lock-again toggle tucked in bottom-right */}
-        <div className="fixed bottom-3 right-3 z-40 flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
-          <button
-            onClick={handleLockAgain}
-            title="Lock page & end session"
-            className="px-2.5 py-1.5 rounded-full bg-white/90 hover:bg-white text-[#4A3832] shadow-xs border border-[#F7C8D0] text-[11px] font-sans flex items-center gap-1.5 cursor-pointer backdrop-blur-xs transition-transform active:scale-95"
-          >
-            <RotateCcw className="w-3 h-3 text-[#F4A9B8]" />
-            <span className="hidden sm:inline font-medium">Lock Page</span>
-          </button>
-        </div>
       </div>
     );
   }
