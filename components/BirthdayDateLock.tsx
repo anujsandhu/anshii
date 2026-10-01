@@ -16,10 +16,10 @@ import {
   AlertOctagon,
   Radio,
   ShieldCheck,
-  Gamepad2,
+  CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import VaultGameModal from "@/components/VaultGameModal";
 import {
   calculateTimeRemaining,
   DATE_DISPLAY,
@@ -32,6 +32,14 @@ interface BirthdayDateLockProps {
   initialServerTime?: number;
   onPrankLayerChange?: (active: boolean) => void;
 }
+
+// 4 Options for "When did we talk for the first time?" (Exact date from chat archive: 14 August 2026)
+const FIRST_TALK_OPTIONS = [
+  { id: 0, date: "10 August", fullDate: "10 August 2026", isCorrect: false },
+  { id: 1, date: "14 August", fullDate: "14 August 2026", isCorrect: true },
+  { id: 2, date: "18 August", fullDate: "18 August 2026", isCorrect: false },
+  { id: 3, date: "24 August", fullDate: "24 August 2026", isCorrect: false },
+];
 
 const HACKER_PRANK_MESSAGES = [
   "Nice try Anshika. Even NASA can't bypass this before the 28th. 😂",
@@ -66,7 +74,15 @@ export default function BirthdayDateLock({
   const [prankAlert, setPrankAlert] = useState<string | null>(null);
   const [sirenActive, setSirenActive] = useState(false);
   const [showPrankRevealModal, setShowPrankRevealModal] = useState(false);
-  const [showGameModal, setShowGameModal] = useState(false);
+
+  // Disarm Game State: "When did we talk for the first time?" (4 options, strictly 2 attempts)
+  const [disarmAttemptsLeft, setDisarmAttemptsLeft] = useState<number>(2);
+  const [disarmWrongSelected, setDisarmWrongSelected] = useState<number[]>([]);
+  const [disarmSuccess, setDisarmSuccess] = useState<boolean>(false);
+  const [disarmShake, setDisarmShake] = useState<boolean>(false);
+  const [disarmMessage, setDisarmMessage] = useState<string | null>(null);
+  const [disarmCooldown, setDisarmCooldown] = useState<number>(0);
+  const disarmSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Normal scrapbook countdown states
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -208,6 +224,123 @@ export default function BirthdayDateLock({
       sirenIntervalRef.current = null;
     }
   }, []);
+
+  // Low-frequency error buzz on wrong date attempt
+  const playErrorBuzz = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.linearRampToValueAtTime(70, now + 0.32);
+      gain.gain.setValueAtTime(0.55, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.32);
+    } catch {}
+  }, []);
+
+  // Sweet victory chime on correct first talk date
+  const playVictoryChime = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      const now = ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+        gain.gain.setValueAtTime(0.35, now + idx * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.12);
+        osc.stop(now + idx * 0.12 + 0.55);
+      });
+    } catch {}
+  }, []);
+
+  // Handle Disarm Question: "When did we talk for the first time?" (4 options, strictly 2 attempts)
+  const handleSelectFirstTalkDate = useCallback(
+    (optionId: number) => {
+      if (disarmAttemptsLeft <= 0 || disarmSuccess || disarmWrongSelected.includes(optionId)) {
+        return;
+      }
+
+      const selected = FIRST_TALK_OPTIONS.find((o) => o.id === optionId);
+      if (!selected) return;
+
+      if (selected.isCorrect) {
+        // Correct date! Disarm emergency siren & lockdown
+        stopSiren();
+        playVictoryChime();
+        triggerPhoneVibrate([150, 40, 150, 40, 350]);
+        setDisarmSuccess(true);
+        setDisarmMessage("🎉 IDENTITY VERIFIED! You remembered 14 August 2026! ❤️");
+        try {
+          confetti({
+            particleCount: 90,
+            spread: 95,
+            origin: { y: 0.5 },
+            colors: ["#fda4af", "#34d399", "#fed7aa", "#f43f5e", "#38bdf8"],
+          });
+        } catch {}
+      } else {
+        // Wrong date selected
+        playErrorBuzz();
+        triggerPhoneVibrate([240, 60, 240]);
+        setDisarmShake(true);
+        setTimeout(() => setDisarmShake(false), 500);
+
+        const remaining = disarmAttemptsLeft - 1;
+        setDisarmAttemptsLeft(remaining);
+        setDisarmWrongSelected((prev) => [...prev, optionId]);
+
+        if (remaining === 1) {
+          setDisarmMessage(
+            "❌ WRONG DATE! 🚨 Only 1 ATTEMPT REMAINING! Think carefully, Anshika... how could you forget when we first talked?! 😭"
+          );
+        } else {
+          // 0 attempts remaining -> Lockdown penalty
+          setDisarmMessage(
+            "🚨 2 FAILED ATTEMPTS! ACCESS LOCKED! 🚨 How could you forget?! 😭💔 Siren will KEEP PLAYING!"
+          );
+          setDisarmCooldown(15);
+        }
+      }
+    },
+    [disarmAttemptsLeft, disarmSuccess, disarmWrongSelected, stopSiren, playVictoryChime, playErrorBuzz]
+  );
+
+  // Cooldown countdown if both attempts are exhausted
+  useEffect(() => {
+    if (disarmCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setDisarmCooldown((c) => {
+        if (c <= 1) {
+          setDisarmAttemptsLeft(2);
+          setDisarmWrongSelected([]);
+          setDisarmMessage("💡 Cooldown expired. You have 2 fresh attempts. Think carefully! 🌷");
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [disarmCooldown]);
 
   // Automatic Siren Trigger on Mount & Immediate User Interaction Fallback
   useEffect(() => {
@@ -520,27 +653,10 @@ export default function BirthdayDateLock({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setShowHackerLayer(true);
-              startSiren();
-            }}
-            title="Trigger Security Alert"
-            className="px-3 py-1 rounded-full bg-white/90 hover:bg-white border border-[#fda4af]/60 shadow-2xs text-[11px] font-sans font-semibold text-[#be123c] flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-          >
-            <span className="w-2 h-2 rounded-full bg-[#ef4444] animate-ping" />
-            <ShieldAlert className="w-3.5 h-3.5 text-[#e11d48]" />
-            <span className="hidden sm:inline">Threat Level: High</span>
-          </button>
-
-          <button
-            onClick={() => setShowGameModal(true)}
-            title="Play Vault Heist Mini-Game"
-            className="px-2.5 py-1 rounded-full bg-white/90 hover:bg-[#fff0f3] border border-[#fbcfe8] text-[#be185d] text-xs font-bold font-sans flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xs"
-          >
-            <Gamepad2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Mini-Game</span>
-          </button>
+          <div className="px-3 py-1 rounded-full bg-white/85 border border-[#ebdcd0] text-[11px] font-sans font-medium text-[#786457] flex items-center gap-1.5 shadow-2xs">
+            <Lock className="w-3 h-3 text-[#f43f5e]" />
+            <span>Opens 28 Oct</span>
+          </div>
         </div>
       </header>
 
@@ -729,25 +845,16 @@ export default function BirthdayDateLock({
             </p>
           </div>
 
-          {/* ── GAMIFIED ACTION BUTTONS ─────────────────────────────────────── */}
+          {/* ── ACTION BUTTONS ─────────────────────────────────────── */}
           <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-2.5">
-            {/* Gamified Vault Heist Mini-Game Button */}
-            <button
-              onClick={() => setShowGameModal(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e] hover:brightness-105 text-xs font-sans font-bold text-white shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:shadow-[0_6px_20px_rgba(244,63,94,0.45)] hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
-            >
-              <Gamepad2 className="w-4 h-4" />
-              <span>🎮 Play Vault Heist Game</span>
-            </button>
-
             {/* Ask Anuj on WhatsApp */}
             <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-b from-white to-[#f0fdf4] hover:bg-[#f0fdf4] border border-[#bbf7d0] text-xs font-sans font-semibold text-[#15803d] shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e] hover:brightness-105 text-xs font-sans font-bold text-white shadow-[0_4px_16px_rgba(244,63,94,0.3)] hover:shadow-[0_6px_20px_rgba(244,63,94,0.4)] hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
             >
-              <MessageCircle className="w-3.5 h-3.5 text-[#22c55e]" />
+              <MessageCircle className="w-4 h-4 text-white" />
               <span>Ask Anuj on WhatsApp</span>
             </a>
 
@@ -757,9 +864,9 @@ export default function BirthdayDateLock({
                 setShowHackerLayer(true);
                 startSiren();
               }}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-full bg-white/80 hover:bg-[#fff0f3] border border-[#ebdcd0] hover:border-[#fbcfe8] text-xs font-sans font-medium text-[#786457] hover:text-[#be185d] transition-all cursor-pointer shadow-2xs active:scale-95"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-white/90 hover:bg-[#fff0f3] border border-[#ebdcd0] hover:border-[#fbcfe8] text-xs font-sans font-medium text-[#786457] hover:text-[#be185d] transition-all cursor-pointer shadow-2xs active:scale-95"
             >
-              <Lock className="w-3 h-3 text-[#f43f5e]" />
+              <Lock className="w-3.5 h-3.5 text-[#f43f5e]" />
               <span>Check Door</span>
             </button>
           </div>
@@ -868,8 +975,12 @@ export default function BirthdayDateLock({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
-                    stopSiren();
-                    setShowPrankRevealModal(true);
+                    disarmSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+                    setDisarmShake(true);
+                    setTimeout(() => setDisarmShake(false), 500);
+                    setDisarmMessage(
+                      "⚠️ To abort lockdown and silence the siren, solve the Identity Verification question below!"
+                    );
                   }}
                   className="px-2.5 py-1 rounded-full bg-[#27101c] hover:bg-[#3d182b] border border-[#ef4444]/40 text-[11px] text-[#fca5a5] flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
                 >
@@ -943,50 +1054,217 @@ export default function BirthdayDateLock({
                 )}
               </AnimatePresence>
 
-              {/* The Prank Reveal Box */}
-              <div className="rounded-3xl bg-[#130b18] border-2 border-[#4a1c32] p-5 sm:p-7 text-center shadow-2xl">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#2b101c] border border-[#ef4444]/60 text-2xl mb-2.5 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse">
-                  <Skull className="w-7 h-7 text-[#f87171]" />
-                </div>
+              {/* ── THE DISARM GAME: FIRST TALK DATE CHALLENGE (4 OPTIONS, 2 ATTEMPTS) ── */}
+              <div
+                ref={disarmSectionRef}
+                className={`rounded-3xl bg-[#130b18] border-2 ${
+                  disarmSuccess
+                    ? "border-[#10b981] shadow-[0_0_50px_rgba(16,185,129,0.35)]"
+                    : disarmShake
+                    ? "border-[#ef4444] animate-shake-error shadow-[0_0_40px_rgba(239,68,68,0.6)]"
+                    : "border-[#4a1c32] shadow-2xl"
+                } p-4 sm:p-6 text-center transition-all`}
+              >
+                {disarmSuccess ? (
+                  /* ── SUCCESS STATE: SIREN DISARMED ── */
+                  <div className="space-y-3">
+                    <div className="w-14 h-14 rounded-full bg-[#10b981]/20 border border-[#34d399] mx-auto flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(16,185,129,0.5)]">
+                      ❤️
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10b981]/20 border border-[#10b981]/40 text-[#34d399] text-xs font-bold uppercase tracking-wider">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Identity Confirmed // 100% Match</span>
+                    </div>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                      YOU REMEMBERED! 🥹
+                    </h2>
+                    <p className="font-sans text-xs sm:text-sm text-[#a7f3d0] leading-relaxed max-w-sm mx-auto">
+                      Yes! We talked for the very first time on{" "}
+                      <span className="font-bold text-white underline decoration-[#34d399]">
+                        14 August 2026
+                      </span>
+                      .
+                    </p>
 
-                <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-1">
-                  DEVICE QUARANTINED! 🚨
-                </h2>
+                    <div className="p-3 rounded-2xl bg-black/50 border border-[#10b981]/40 text-[11px] font-mono text-[#a7f3d0] text-left max-w-sm mx-auto space-y-1">
+                      <div>&gt; Aug 14, 5:47 AM — Anuj: &quot;Heyy&quot;</div>
+                      <div>&gt; Aug 14, 9:56 AM — Anshika: &quot;Hlo&quot;</div>
+                      <div>&gt; Aug 14, 11:06 AM — Anuj: &quot;aap mere classmate the na? 😅&quot;</div>
+                      <div>&gt; Aug 14, 11:06 AM — Anshika: &quot;Haan ,Right&quot;</div>
+                    </div>
 
-                <p className="font-sans text-xs sm:text-sm font-bold text-[#f43f5e] mb-1">
-                  CRITICAL SECURITY CONTAINMENT
-                </p>
+                    <p className="font-sans text-xs text-[#fecdd3] pt-1">
+                      Siren permanently silenced! It was all just a little prank by Anuj! 😂🌷
+                    </p>
 
-                <p className="font-sans text-xs text-[#9ca3af] leading-relaxed max-w-sm mx-auto mb-5">
-                  High-priority security breach detected on this device. <br />
-                  Encrypted files strictly locked until 28 October 2026. Manual override required.
-                </p>
+                    <div className="flex items-center justify-center pt-2">
+                      <button
+                        onClick={() => {
+                          stopSiren();
+                          setShowHackerLayer(false);
+                        }}
+                        className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-[#10b981] to-[#059669] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_20px_rgba(16,185,129,0.35)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                      >
+                        <span>🌷 Open Countdown Card</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── ACTIVE GAME: 4 OPTIONS, 2 ATTEMPTS ONLY ── */
+                  <div>
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#2b101c] border border-[#ef4444]/60 text-xl mb-2 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse">
+                      <Skull className="w-6 h-6 text-[#f87171]" />
+                    </div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
-                  {/* Enter Countdown Button */}
-                  {/* Play Vault Heist Mini-Game Button */}
-                  <button
-                    onClick={() => {
-                      stopSiren();
-                      setShowPrankRevealModal(false);
-                      setShowHackerLayer(false);
-                      setShowGameModal(true);
-                    }}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white text-xs font-bold font-sans shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-                  >
-                    <Gamepad2 className="w-3.5 h-3.5" />
-                    <span>🎮 Play Vault Heist Game</span>
-                  </button>
+                    <h2 className="font-serif text-xl sm:text-2xl font-extrabold text-white tracking-tight mb-1">
+                      EMERGENCY OVERRIDE PROTOCOL 🚨
+                    </h2>
 
-                  {/* Playful Hack Attempt with Buzzer & Vibrate */}
-                  <button
-                    onClick={handleBypassAttempt}
-                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#241321] hover:bg-[#351b31] border border-[#ef4444]/50 text-[#fca5a5] text-xs font-bold font-sans flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-                  >
-                    <Radio className="w-3.5 h-3.5 text-[#ef4444]" />
-                    <span>Attempt Override</span>
-                  </button>
-                </div>
+                    <p className="font-sans text-xs font-bold text-[#f43f5e] mb-1">
+                      TO STOP THE SIREN: IDENTITY VERIFICATION REQUIRED
+                    </p>
+
+                    <p className="font-sans text-xs text-[#9ca3af] leading-relaxed max-w-sm mx-auto mb-4">
+                      Answer the passkey question to prove you are really Anshika:
+                    </p>
+
+                    {/* Question Card with Attempts Counter */}
+                    <div className="p-3 sm:p-4 rounded-2xl bg-[#1b0a15] border border-[#5c1c39] mb-4 text-left">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-mono font-bold text-[#f43f5e] uppercase tracking-wider flex items-center gap-1">
+                          <Radio className="w-3 h-3 animate-ping" />
+                          SECURITY QUESTION:
+                        </span>
+                        <div className="flex items-center gap-1.5 bg-black/40 px-2.5 py-1 rounded-full border border-[#ef4444]/30">
+                          <span className="text-[10px] font-mono font-bold text-[#fca5a5]">
+                            ATTEMPTS:
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {[1, 2].map((att) => (
+                              <span
+                                key={att}
+                                className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                                  att <= disarmAttemptsLeft
+                                    ? "bg-[#ef4444] text-white shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+                                    : "bg-[#27101c] text-[#6b7280] border border-[#3b172a]"
+                                }`}
+                              >
+                                {att <= disarmAttemptsLeft ? "●" : "✕"}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="text-[10px] font-mono text-[#f87171] font-bold ml-1">
+                            {disarmAttemptsLeft}/2
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="font-serif text-sm sm:text-base font-bold text-white mb-1">
+                        When did we talk for the first time? 💬
+                      </p>
+                      <p className="font-sans text-[11px] text-[#fda4af]/80 italic">
+                        Humne pehli baar kis date ko baat ki thi? (Sirf 2 attempts hai!)
+                      </p>
+                    </div>
+
+                    {/* Feedback Toast / Warning */}
+                    <AnimatePresence>
+                      {disarmMessage && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          className={`mb-3 p-2.5 rounded-xl border text-xs font-sans font-bold flex items-center gap-2 text-left leading-snug ${
+                            disarmAttemptsLeft === 0
+                              ? "bg-[#450a0a] border-[#ef4444] text-[#fecaca]"
+                              : disarmAttemptsLeft === 1
+                              ? "bg-[#451a03] border-[#f59e0b] text-[#fef3c7]"
+                              : "bg-[#18181b] border-[#52525b] text-[#e4e4e7]"
+                          }`}
+                        >
+                          <Flame className="w-4 h-4 shrink-0 text-[#f87171] animate-bounce" />
+                          <span>{disarmMessage}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* 4 Date Options Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
+                      {FIRST_TALK_OPTIONS.map((opt, idx) => {
+                        const isWrong = disarmWrongSelected.includes(opt.id);
+                        const letters = ["A", "B", "C", "D"];
+                        return (
+                          <button
+                            key={opt.id}
+                            disabled={isWrong || disarmAttemptsLeft <= 0}
+                            onClick={() => handleSelectFirstTalkDate(opt.id)}
+                            className={`group relative p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between active:scale-95 ${
+                              isWrong
+                                ? "bg-[#200a12] border-[#ef4444]/40 opacity-50 cursor-not-allowed text-[#9ca3af]"
+                                : disarmAttemptsLeft <= 0
+                                ? "bg-[#150a18] border-[#3b172a] opacity-50 cursor-not-allowed text-[#6b7280]"
+                                : "bg-[#1d0e1f] hover:bg-[#321434] border-[#5c1c39] hover:border-[#f43f5e] text-white shadow-sm hover:shadow-md"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                                  isWrong
+                                    ? "bg-[#ef4444]/30 text-[#fca5a5]"
+                                    : "bg-[#f43f5e]/20 text-[#fda4af] border border-[#f43f5e]/40 group-hover:bg-[#f43f5e] group-hover:text-white transition-colors"
+                                }`}
+                              >
+                                {letters[idx]}
+                              </span>
+                              <div>
+                                <div className="text-sm font-bold font-sans tracking-wide">
+                                  {opt.date}
+                                </div>
+                                <div className="text-[10px] text-[#9ca3af] font-mono">
+                                  {opt.fullDate}
+                                </div>
+                              </div>
+                            </div>
+
+                            {isWrong ? (
+                              <span className="text-[11px] font-bold text-[#ef4444] flex items-center gap-1 font-mono">
+                                <X className="w-3.5 h-3.5" /> WRONG
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-mono text-[#fda4af]/60 group-hover:text-white transition-colors">
+                                SELECT &gt;
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* If 2 attempts failed (Lockout state with WhatsApp hint & countdown) */}
+                    {disarmAttemptsLeft <= 0 && (
+                      <div className="p-3.5 rounded-2xl bg-[#3f080e] border-2 border-[#ef4444] text-center mb-3">
+                        <p className="font-sans text-xs text-[#fca5a5] font-bold mb-2.5 leading-relaxed">
+                          🚨 2 failed attempts! Siren will NOT stop! How could you forget?! 😭
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                          <a
+                            href="https://wa.me/918278710552?text=Anuj%20please%20siren%20band%20karo%20%F0%9F%98%AD%20Mujhe%20pehli%20baar%20baat%20karne%20ki%20date%20yaad%20nahi%20aa%20rahi%2C%20hint%20do!%20%F0%9F%98%82"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-bold font-sans flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>Ask Anuj for a hint on WhatsApp 💬</span>
+                          </a>
+                          <div className="w-full sm:w-auto px-3 py-2 rounded-xl bg-black/40 border border-[#ef4444]/40 text-xs text-[#fca5a5] font-mono">
+                            Retry in: <strong className="text-white">{disarmCooldown}s</strong>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1053,34 +1331,17 @@ export default function BirthdayDateLock({
                     stopSiren();
                     setShowPrankRevealModal(false);
                     setShowHackerLayer(false);
-                    setShowGameModal(true);
                   }}
                   className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_20px_rgba(244,63,94,0.45)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
                 >
-                  <Gamepad2 className="w-4 h-4" />
-                  <span>🎮 Play The Vault Heist Mini-Game!</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setShowPrankRevealModal(false);
-                    setShowHackerLayer(false);
-                  }}
-                  className="w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-[#fda4af] text-xs font-sans font-medium transition-colors cursor-pointer"
-                >
-                  Return to Countdown Card 🌷
+                  <span>🌷 Continue to Countdown Card</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ── THE GAMIFIED VAULT HEIST MINI-GAME MODAL ───────────────────────── */}
-      <VaultGameModal
-        isOpen={showGameModal}
-        onClose={() => setShowGameModal(false)}
-      />
     </div>
   );
 }
