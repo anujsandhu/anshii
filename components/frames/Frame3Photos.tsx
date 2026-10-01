@@ -50,8 +50,8 @@ const SCRAPBOOK_PREVIEWS: ScrapbookItem[] = [
     src: "/1st-msg-ss.png",
     badge: "The Beginning",
     badgeIcon: "✨",
-    caption: "The first few messages.",
-    sub: "Before all the random conversations, there was just... this.",
+    caption: "This is where it started.",
+    sub: "Before all the random conversations, there was just one little message.",
     rotation: -2.4,
     tape: "washi-tape-pink",
     hasHeart: true,
@@ -60,10 +60,10 @@ const SCRAPBOOK_PREVIEWS: ScrapbookItem[] = [
     id: 2,
     type: "video",
     src: "/1st-snap.mp4",
-    badge: "First Snap",
+    badge: "One of her snaps",
     badgeIcon: "📸",
-    caption: "One of the first snaps.",
-    sub: "Somewhere along the way, the conversation became memories.",
+    caption: "One of the first snaps I saw.",
+    sub: "I don't know why, but this one just stayed in my mind.",
     rotation: 2.1,
     tape: "washi-tape-blue",
     hasHeart: false,
@@ -73,10 +73,10 @@ const SCRAPBOOK_PREVIEWS: ScrapbookItem[] = [
     id: 3,
     type: "video",
     src: "/my-fav-snap.mp4",
-    badge: "Favorite Snap",
+    badge: "One I really like",
     badgeIcon: "♡",
-    caption: "Some memories just stay.",
-    sub: "Not everything needs an explanation. Some moments are just favorites.",
+    caption: "Okay, this one is a favorite.",
+    sub: "Maybe it's the smile. Maybe it's just you being you.",
     rotation: -1.8,
     tape: "washi-tape-yellow",
     hasHeart: false,
@@ -187,10 +187,10 @@ export default function Frame3Photos({
             <span>Digital Scrapbook</span>
           </div>
           <h2 className="text-xl sm:text-3xl font-bold font-handwriting text-[#3f2e24]">
-            Some Favorite Moments
+            A Few Little Things I Like
           </h2>
           <p className="text-[11px] sm:text-xs text-[#786457] font-sans">
-            Tap any polaroid to zoom in & view full size. Collect the secret heart sticker!
+            A few moments, smiles, and little things that somehow make me smile too.
           </p>
         </div>
 
@@ -303,7 +303,7 @@ export default function Frame3Photos({
                             ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-sm"
                             : "bg-white/90 hover:bg-white text-[#fda4af] shadow-md animate-bounce ring-2 ring-[#fda4af]"
                         }`}
-                        title="Tap the secret heart sticker!"
+                        title="A little secret..."
                       >
                         <Heart
                           className={`w-4 h-4 ${
@@ -433,7 +433,7 @@ export default function Frame3Photos({
                           ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-xs"
                           : "bg-white/90 hover:bg-white text-[#fda4af] shadow-md animate-bounce ring-2 ring-[#fda4af]"
                       }`}
-                      title="Tap the secret heart sticker!"
+                      title="A little secret..."
                     >
                       <Heart
                         className={`w-4 h-4 ${
@@ -462,7 +462,7 @@ export default function Frame3Photos({
           {!taskDone ? (
             <div className="p-2.5 rounded-2xl bg-[#fffaf5] border border-[#eddccc] text-center shadow-xs">
               <span className="text-xs text-[#786457] font-sans">
-                Task: Tap the <strong>secret heart sticker 💖</strong> on the first polaroid!
+                There might be a little secret hiding in the first one… 👀
               </span>
             </div>
           ) : (
@@ -473,10 +473,10 @@ export default function Frame3Photos({
             >
               <div className="flex items-center gap-1.5 font-sans font-semibold text-xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
-                <span>TASK COMPLETE ✓ Secret Heart Found</span>
+                <span>Okay, I wasn&apos;t going to say this yet…</span>
               </div>
-              <p className="text-[11px] font-sans text-[#047857]">
-                &ldquo;No cheating, madam. Photo unlocked!&rdquo;
+              <p className="text-[12px] font-sans text-[#047857] font-medium">
+                &ldquo;I really like your smile.&rdquo;
               </p>
               <button
                 onClick={onNext}
@@ -612,7 +612,7 @@ export default function Frame3Photos({
                                 ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-sm"
                                 : "bg-white/95 hover:bg-white text-[#fda4af] shadow-md animate-bounce ring-2 ring-[#fda4af]"
                             }`}
-                            title="Tap the secret heart sticker!"
+                            title="A little secret..."
                           >
                             <Heart
                               className={`w-4 h-4 ${
