@@ -6,17 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
   CheckCircle2,
-  Send,
   Maximize2,
   ChevronLeft,
   ChevronRight,
   X,
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import {
-  openDirectWhatsApp,
-  TARGET_WHATSAPP_CONFIG,
-} from "@/data/whatsappImages";
+
 
 interface Frame3PhotosProps {
   isCompleted: boolean;
@@ -74,10 +70,9 @@ export default function Frame3Photos({
   onNext,
 }: Frame3PhotosProps) {
   const [taskDone, setTaskDone] = useState(isCompleted);
-  // Track per-photo "sent" confirmation state
-  const [sentPhotos, setSentPhotos] = useState<Set<number>>(new Set());
-  // Active photo lightbox zoom state
   const [zoomPhoto, setZoomPhoto] = useState<(typeof SCRAPBOOK_PREVIEWS)[0] | null>(null);
+  const [activeMobileIdx, setActiveMobileIdx] = useState(0);
+  const activeMobileItem = SCRAPBOOK_PREVIEWS[activeMobileIdx];
 
   React.useEffect(() => {
     setTaskDone(isCompleted);
@@ -98,28 +93,6 @@ export default function Frame3Photos({
     } catch {}
   };
 
-  // Direct 1-Click WhatsApp Send (no verification modal)
-  const handleDirectWhatsAppSend = (item: (typeof SCRAPBOOK_PREVIEWS)[0]) => {
-    const msg = `Hey Anuj! 📸 ${item.waMessage} (${item.caption} • Digital Scrapbook)`;
-    openDirectWhatsApp(msg);
-
-    const photoIdx = SCRAPBOOK_PREVIEWS.findIndex((p) => p.id === item.id);
-    if (photoIdx !== -1) {
-      setSentPhotos((prev) => new Set([...prev, photoIdx]));
-    }
-
-    try {
-      confetti({
-        particleCount: 45,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#25D366", "#fda4af", "#bbf7d0"],
-      });
-    } catch {}
-  };
-
-  const [activeMobileIdx, setActiveMobileIdx] = useState(0);
-  const activeMobileItem = SCRAPBOOK_PREVIEWS[activeMobileIdx];
 
   return (
     <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
@@ -158,9 +131,6 @@ export default function Frame3Photos({
                 <span>Photo {idx + 1}</span>
                 {item.hasHeart && !taskDone && (
                   <span className="ml-1 text-[10px]">💖</span>
-                )}
-                {sentPhotos.has(idx) && (
-                  <span className="ml-1 text-[#10b981] text-[10px]">✓</span>
                 )}
               </button>
             ))}
@@ -215,12 +185,6 @@ export default function Frame3Photos({
                       <Maximize2 className="w-3 h-3" />
                     </div>
 
-                    {/* Sent badge overlay */}
-                    {sentPhotos.has(activeMobileIdx) && (
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#ecfdf5]/95 text-[#065f46] text-[10px] font-sans font-bold border border-[#a7f3d0] shadow-xs">
-                        sent ✓
-                      </div>
-                    )}
 
                     {/* Secret Heart Sticker */}
                     {activeMobileItem.hasHeart && (
@@ -325,14 +289,6 @@ export default function Frame3Photos({
                     <Maximize2 className="w-2.5 h-2.5" />
                   </div>
 
-                  {/* Sent badge overlay */}
-                  {sentPhotos.has(index) && (
-                    <div className="absolute inset-0 flex items-end justify-center pb-2 pointer-events-none">
-                      <span className="text-[9px] font-sans bg-[#ecfdf5]/90 text-[#065f46] px-1.5 py-0.5 rounded-full border border-[#a7f3d0]">
-                        sent ✓
-                      </span>
-                    </div>
-                  )}
 
                   {/* Secret Heart Sticker for Task */}
                   {item.hasHeart && (
@@ -404,7 +360,7 @@ export default function Frame3Photos({
 
 
 
-      {/* Clean Full Photo Lightbox Zoom (No verification modals) */}
+      {/* Full Photo Lightbox */}
       <AnimatePresence>
         {zoomPhoto && (
           <motion.div
@@ -412,24 +368,28 @@ export default function Frame3Photos({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setZoomPhoto(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#2b1e17]/65 backdrop-blur-md select-none cursor-pointer"
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+            style={{ backgroundColor: "rgba(30, 18, 12, 0.75)", backdropFilter: "blur(12px)" }}
           >
             <motion.div
-              initial={{ scale: 0.88, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
+              initial={{ scale: 0.88, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.9, y: 10, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-sm sm:max-w-md bg-[#fffdfa] rounded-3xl border-2 border-[#ebdcd0] shadow-2xl p-4 sm:p-5 flex flex-col text-center cursor-default"
             >
+              {/* Close button */}
               <button
                 onClick={() => setZoomPhoto(null)}
-                className="absolute top-3 right-3 p-1.5 rounded-full text-[#8c7465] hover:text-[#3f2e24] hover:bg-[#f5ece3] transition-colors cursor-pointer"
+                className="absolute top-3 right-3 p-1.5 rounded-full text-[#8c7465] hover:text-[#3f2e24] hover:bg-[#f5ece3] transition-colors cursor-pointer z-10"
                 title="Close"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#eee7de] shadow-inner mt-2 mb-3">
+              {/* Photo */}
+              <div className="relative w-full overflow-hidden rounded-2xl bg-[#eee7de] shadow-inner mt-2 mb-3" style={{ aspectRatio: "4/3" }}>
                 <Image
                   src={zoomPhoto.src}
                   alt={zoomPhoto.caption}
@@ -440,37 +400,25 @@ export default function Frame3Photos({
                 />
               </div>
 
-              <p className="font-handwriting text-2xl text-[#3f2e24] font-bold">
+              <p className="font-handwriting text-2xl text-[#3f2e24] font-bold leading-tight">
                 &ldquo;{zoomPhoto.caption}&rdquo;
               </p>
-              <span className="text-xs text-[#8c7465] font-sans mt-0.5 mb-3">
+              <span className="text-xs text-[#8c7465] font-sans mt-0.5 mb-4">
                 {zoomPhoto.sub}
               </span>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setZoomPhoto(null)}
-                  className="flex-1 py-2.5 px-3 rounded-2xl bg-[#f5ece3] hover:bg-[#ebdcd0] text-[#5c473a] font-sans font-semibold text-xs cursor-pointer"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleDirectWhatsAppSend(zoomPhoto);
-                    setZoomPhoto(null);
-                  }}
-                  className="flex-[2] py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white font-sans font-bold text-xs shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send to Anuj (WhatsApp)</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setZoomPhoto(null)}
+                className="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm cursor-pointer transition-all shadow-md"
+              >
+                Close ✕
+              </button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 }
