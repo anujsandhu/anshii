@@ -213,7 +213,6 @@ export default function FrameGiftSnaps({
         const allDone = presetIds.every((id) => Boolean(parsed[id]?.imageUrl));
         if (allDone) {
           setTaskDone(true);
-          onCompleteTask();
         }
       }
 
@@ -245,27 +244,32 @@ export default function FrameGiftSnaps({
             try {
               localStorage.setItem(STORAGE_KEY_SNAPS, JSON.stringify(merged));
             } catch {}
-            // Only mark done if ALL preset slots are now present
-            const presetIds = DEFAULT_GIFT_SLOTS.map((s) => s.id);
-            const allDone = presetIds.every((id) => Boolean(merged[id]?.imageUrl));
-            if (allDone) {
-              setTaskDone(true);
-              onCompleteTask();
-            }
             return merged;
           });
+          // Only mark done if ALL preset slots are now present
+          const presetIds = DEFAULT_GIFT_SLOTS.map((s) => s.id);
+          const allDone = presetIds.every((id) => Boolean(data.snaps[id]?.imageUrl));
+          if (allDone) {
+            setTaskDone(true);
+          }
         }
       })
       .catch((err) => {
         console.warn("Could not sync from Firestore API:", err);
       });
-  }, [onCompleteTask]);
+  }, []);
 
   useEffect(() => {
     if (isCompleted) {
       setTaskDone(true);
     }
   }, [isCompleted]);
+
+  useEffect(() => {
+    if (taskDone && !isCompleted) {
+      onCompleteTask();
+    }
+  }, [taskDone, isCompleted, onCompleteTask]);
 
   // Persist snaps to localStorage
   const saveSnapsToStorage = (updated: Record<string, UploadedGiftSnap>) => {

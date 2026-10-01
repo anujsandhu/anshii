@@ -363,6 +363,7 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
   const handleTaskComplete = useCallback(
     (frameId: number, customMessage?: string) => {
       setCompletedFrames((prev) => {
+        if (prev.has(frameId)) return prev;
         const next = new Set(prev);
         next.add(frameId);
         return next;
