@@ -23,7 +23,6 @@ const CANDIDATE_MAP: Record<string, string[]> = {
   ],
   woh_din: [
     "/music/Woh_Din.mp3",
-    "/music/Woh Din.mp3",
     "/music/woh-din.mp3",
   ],
   i_like_me_better: [

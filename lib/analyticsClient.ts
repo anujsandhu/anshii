@@ -70,7 +70,7 @@ export interface TrackEventParams {
   page?: string;
   elementId?: string;
   elementText?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export async function trackEvent({
@@ -108,13 +108,13 @@ export async function trackEvent({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-  } catch (err) {
+  } catch {
     // Non-blocking catch
   }
 }
 
 let initialized = false;
-let heartbeatInterval: any = null;
+let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
 export function initAnalytics(initialPage = "welcome") {
   if (initialized || typeof window === "undefined") return;
