@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowDown, Calendar, Heart } from "lucide-react";
 import { birthdayData } from "@/data/birthday";
+import { TulipFlower, DaisyFlower, Wildflower, BabysBreath, BotanicalSprig } from "@/components/flowers/FlowerSvg";
 
 interface HeroProps {
   onScrollClick?: () => void;
@@ -145,6 +146,67 @@ export default function Hero({ onScrollClick }: HeroProps) {
         className="absolute inset-0 pointer-events-none z-0 opacity-85"
       />
 
+      {/* Floating SVG Flowers and Botanical Sprigs around the perimeters */}
+      {/* Left Top Wildflower */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.6, y: 30 }}
+        animate={{ opacity: 0.85, scale: 1, y: 0 }}
+        transition={{ duration: 1.6, delay: 0.6, ease: "easeOut" }}
+        className="absolute top-12 left-4 sm:left-12 pointer-events-none hidden sm:block animate-flower-sway"
+      >
+        <Wildflower size={46} color="#d8b4fe" accentColor="#c084fc" />
+      </motion.div>
+
+      {/* Left Mid Delicate Tulip */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.6, y: 40 }}
+        animate={{ opacity: 0.8, scale: 1, y: 0 }}
+        transition={{ duration: 1.8, delay: 1.0, ease: "easeOut" }}
+        className="absolute top-1/2 left-2 sm:left-16 -translate-y-1/2 pointer-events-none hidden md:block animate-flower-sway-slow"
+      >
+        <TulipFlower size={52} color="#fda4af" accentColor="#f43f5e" />
+      </motion.div>
+
+      {/* Left Bottom Botanical Sprig */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 0.75, x: 0 }}
+        transition={{ duration: 1.6, delay: 1.4, ease: "easeOut" }}
+        className="absolute bottom-16 left-6 sm:left-20 pointer-events-none hidden sm:block"
+      >
+        <BotanicalSprig size={44} color="#86efac" />
+      </motion.div>
+
+      {/* Right Top Soft Daisy */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.6, y: 30 }}
+        animate={{ opacity: 0.85, scale: 1, y: 0 }}
+        transition={{ duration: 1.6, delay: 0.8, ease: "easeOut" }}
+        className="absolute top-16 right-4 sm:right-14 pointer-events-none hidden sm:block animate-flower-sway"
+      >
+        <DaisyFlower size={44} color="#fffbeb" accentColor="#fef08a" />
+      </motion.div>
+
+      {/* Right Mid Baby's Breath */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.6, y: 40 }}
+        animate={{ opacity: 0.8, scale: 1, y: 0 }}
+        transition={{ duration: 1.8, delay: 1.2, ease: "easeOut" }}
+        className="absolute top-1/2 right-2 sm:right-16 -translate-y-1/2 pointer-events-none hidden md:block"
+      >
+        <BabysBreath size={52} branchColor="#86efac" flowerColor="#ffffff" />
+      </motion.div>
+
+      {/* Right Bottom Tulip Blossom */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 0.8, x: 0 }}
+        transition={{ duration: 1.6, delay: 1.5, ease: "easeOut" }}
+        className="absolute bottom-20 right-6 sm:right-20 pointer-events-none hidden sm:block animate-flower-sway-slow"
+      >
+        <TulipFlower size={48} color="#fbcfe8" accentColor="#fb7185" />
+      </motion.div>
+
       {/* Dynamic Slow-Moving Ambient Gradient Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] sm:w-[720px] h-[380px] sm:h-[720px] bg-gradient-to-tr from-amber-500/20 via-rose-500/15 via-purple-600/15 to-sky-500/15 rounded-full blur-[140px] pointer-events-none animate-soft-pulse" />
       <div className="absolute top-1/2 left-1/3 -translate-x-1/2 w-[280px] sm:w-[500px] h-[280px] sm:h-[500px] bg-gradient-to-br from-indigo-600/15 via-violet-500/10 to-transparent rounded-full blur-[120px] pointer-events-none" />
@@ -210,7 +272,7 @@ export default function Hero({ onScrollClick }: HeroProps) {
           className="mt-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs sm:text-sm text-zinc-400 font-sans"
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-          <span>Made with care by <strong className="text-zinc-200 font-medium">{birthdayData.recipient.creatorName}</strong></span>
+          <span>Made with love by <strong className="text-zinc-200 font-medium">{birthdayData.recipient.creatorName}</strong></span>
           <span className="text-zinc-600">•</span>
           <span>A dedicated space for year 19</span>
         </motion.div>

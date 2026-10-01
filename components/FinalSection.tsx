@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RotateCcw, Sparkles, Heart, Terminal } from "lucide-react";
 import confetti from "canvas-confetti";
 import { birthdayData } from "@/data/birthday";
+import FinalBloom from "@/components/flowers/FinalBloom";
+import { PetalSvg, Wildflower, TulipFlower } from "@/components/flowers/FlowerSvg";
 
 interface FinalSectionProps {
   onReplay: () => void;
@@ -51,19 +53,27 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="w-full max-w-md p-8 sm:p-10 rounded-3xl playful-birthday-card border border-amber-400/30 shadow-2xl space-y-4 text-center"
+            className="w-full max-w-md p-8 sm:p-10 rounded-3xl playful-birthday-card border border-amber-400/30 shadow-2xl space-y-4 text-center relative"
           >
+            {/* Corner blossom decorations */}
+            <div className="absolute -top-3 -left-3 pointer-events-none">
+              <PetalSvg size={26} color="#fda4af" accentColor="#f43f5e" rotation={-30} />
+            </div>
+            <div className="absolute -bottom-3 -right-3 pointer-events-none">
+              <PetalSvg size={26} color="#d8b4fe" accentColor="#c084fc" rotation={45} />
+            </div>
+
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-amber-400/30 bg-amber-500/15 text-amber-200 font-sans text-xs">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>The Grand Finale</span>
             </div>
 
             <h3 className="text-2xl sm:text-3xl font-bold text-white font-sans">
-              One Last Moment
+              Okay... One last thing.
             </h3>
 
             <p className="text-sm text-zinc-300 font-sans leading-relaxed">
-              Before you wrap up exploring this little corner of the internet...
+              Before you wrap up exploring this little corner of the internet, there is one final moment waiting to bloom.
             </p>
 
             <motion.button
@@ -82,14 +92,27 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
             initial={{ opacity: 0, scale: 0.95, filter: "blur(12px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center relative w-full"
           >
+            {/* Flanking SVG Flowers for Dreamy Atmosphere */}
+            <div className="absolute -left-4 sm:left-4 top-1/4 pointer-events-none hidden sm:block animate-flower-sway">
+              <TulipFlower size={54} color="#fda4af" accentColor="#f43f5e" />
+            </div>
+            <div className="absolute -right-4 sm:right-4 top-1/4 pointer-events-none hidden sm:block animate-flower-sway-slow">
+              <Wildflower size={48} color="#d8b4fe" accentColor="#c084fc" />
+            </div>
+
+            {/* Signature SVG Final Flower Bloom Masterpiece */}
+            <div className="mb-4">
+              <FinalBloom onComplete={triggerCelebration} />
+            </div>
+
             {/* Subtle Floating Polaroid Keepsakes */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="flex items-center justify-center -space-x-4 sm:-space-x-6 mb-10"
+              transition={{ delay: 1.2, duration: 0.8 }}
+              className="flex items-center justify-center -space-x-4 sm:-space-x-6 mb-8"
             >
               <div className="w-20 sm:w-28 h-24 sm:h-32 rounded-xl overflow-hidden border-2 border-white/80 shadow-2xl -rotate-6 transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300">
                 <Image
@@ -120,21 +143,23 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
               </div>
             </motion.div>
 
-            {/* Conversational Pause Text */}
-            <motion.p
+            {/* Conversational Pause Text: "Okay... One last thing." */}
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-sm sm:text-base text-zinc-300 font-sans max-w-lg mb-6 leading-relaxed"
+              transition={{ delay: 1.4, duration: 0.8 }}
+              className="mb-4"
             >
-              &ldquo;{birthdayData.interstitials.preFinal.main} {birthdayData.interstitials.preFinal.followUp}&rdquo;
-            </motion.p>
+              <span className="text-amber-300/90 font-mono text-xs tracking-wider uppercase">
+                Okay... One last thing.
+              </span>
+            </motion.div>
 
             {/* Grand Birthday Headline */}
             <motion.h2
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.7 }}
+              transition={{ duration: 1, delay: 1.6 }}
               className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.1] text-white font-sans"
             >
               <span className="block text-white">Happy 19th Birthday,</span>
@@ -147,21 +172,21 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
             <motion.p
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.95 }}
+              transition={{ duration: 0.8, delay: 1.9 }}
               className="mt-6 text-2xl sm:text-3xl font-semibold text-amber-200 font-sans"
             >
               {birthdayData.final.celebrateLine}
             </motion.p>
 
-            {/* Warm Personal Signoff */}
+            {/* Warm Personal Signoff: — Anuj */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 1.15 }}
+              transition={{ duration: 0.7, delay: 2.1 }}
               className="mt-6 inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/[0.04] border border-white/10 text-sm text-zinc-300 font-sans"
             >
               <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/40" />
-              <span>With appreciation, <strong>Anuj</strong></span>
+              <span>With appreciation, <strong className="text-white">— Anuj</strong></span>
               <span className="text-zinc-600">•</span>
               <span className="text-xs text-zinc-400">28 October 2026</span>
             </motion.div>
@@ -170,7 +195,7 @@ export default function FinalSection({ onReplay, onOpenEasterEgg }: FinalSection
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.35 }}
+              transition={{ duration: 0.8, delay: 2.3 }}
               className="mt-12 flex flex-wrap items-center justify-center gap-4"
             >
               <button

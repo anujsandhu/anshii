@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Copy, Check, Sparkles, Heart } from "lucide-react";
 import { birthdayData } from "@/data/birthday";
+import { FloralCorner } from "@/components/flowers/FloralFrame";
+import { Wildflower, PetalSvg } from "@/components/flowers/FlowerSvg";
 
 export default function MessageSection() {
   const [copied, setCopied] = useState(false);
@@ -63,6 +65,20 @@ export default function MessageSection() {
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         className="glass-letter rounded-3xl p-7 sm:p-12 relative overflow-hidden shadow-2xl"
       >
+        {/* Delicate Botanical Corner Ornaments */}
+        <FloralCorner
+          className="absolute top-2 left-2 pointer-events-none opacity-60 z-10"
+          size={36}
+          color="#d8b4fe"
+          flowerColor="#fda4af"
+        />
+        <FloralCorner
+          className="absolute bottom-2 right-2 pointer-events-none opacity-60 rotate-180 z-10"
+          size={36}
+          color="#d8b4fe"
+          flowerColor="#fda4af"
+        />
+
         {/* Subtle decorative gold corner accent */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amber-400/10 via-purple-500/5 to-transparent pointer-events-none rounded-tr-3xl" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-500/10 via-sky-500/5 to-transparent pointer-events-none rounded-bl-3xl" />

@@ -161,7 +161,75 @@ export interface BirthdayConfig {
     signature: string;
     replayText: string;
   };
+  physicalGift: PhysicalGiftConfig;
 }
+
+export interface PhysicalGiftConfig {
+  password: string; // Secret password from the card
+  websiteUrl: string; // Deployed target URL
+  qrCard: {
+    title: string;
+    callToAction: string;
+    hint: string;
+    passwordLabel: string;
+    cardSizeHint: string;
+  };
+  entryGate: {
+    heading: string;
+    subheading: string;
+    placeholder: string;
+    unlockButton: string;
+    grantedText: string;
+    welcomeHeading: string;
+    welcomeSubtext: string;
+    wrongPasswordMessages: string[];
+  };
+  boxContents: string[];
+  playfulRemarks: {
+    bracelet: string;
+    teddy: string;
+    chocolate: string;
+  };
+}
+
+export const PHYSICAL_GIFT_CONFIG: PhysicalGiftConfig = {
+  // This is the ONE central password value you can customize!
+  // It is checked case-insensitively and trims spaces so Anshii has an easy time.
+  password: "ANSHII19",
+  websiteUrl: "https://anshi-birthday.vercel.app",
+  qrCard: {
+    title: "Wait… there's one more thing.",
+    callToAction: "Scan me 👀",
+    hint: "You'll need a little secret to get in.",
+    passwordLabel: "Password:",
+    cardSizeHint: "Physical card (2.75\" × 3.75\") designed for Anshii's gift box",
+  },
+  entryGate: {
+    heading: "Oh, you found the secret page.",
+    subheading: "Enter the password from your gift box.",
+    placeholder: "Enter password",
+    unlockButton: "UNLOCK →",
+    grantedText: "ACCESS GRANTED ✓",
+    welcomeHeading: "Welcome, Anshii.",
+    welcomeSubtext: "Now you can finally see what's waiting for you.",
+    wrongPasswordMessages: [
+      "Hmm, check the little card inside the gift box again 👀",
+      "Almost! Look at the card next to the teddy 🧸",
+      "Check the password on the printed card 🌷",
+    ],
+  },
+  boxContents: [
+    "Bracelet",
+    "Cute teddy / plushie",
+    "Chocolate",
+    "Small printed QR-code card",
+  ],
+  playfulRemarks: {
+    bracelet: "So… I hope the bracelet survived the opening.",
+    teddy: "And yes, the teddy was mandatory.",
+    chocolate: "Save some chocolate for later 🍫",
+  },
+};
 
 export const birthdayData: BirthdayConfig = {
   recipient: {
@@ -605,4 +673,5 @@ async function celebrateYear(person = "Anshika") {
     signature: "— Anuj",
     replayText: "Run the experience again",
   },
+  physicalGift: PHYSICAL_GIFT_CONFIG,
 };

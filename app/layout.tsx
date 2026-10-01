@@ -1,37 +1,33 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Caveat, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import LeavePageGuard from "@/components/LeavePageGuard";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const caveat = Caveat({
+  variable: "--font-handwriting",
   subsets: ["latin"],
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Happy 19th Birthday, Anshika ✨ | Built with ❤️ by Anuj",
+  title: "Happy 19th Birthday, Anshika ✨ | Made with ❤️ by Anuj",
   description:
-    "A personal, interactive birthday experience for Anshika turning 19. Crafted with code by Anuj.",
-  keywords: ["Anshika", "19th Birthday", "CS Student", "Birthday Website", "Anuj"],
+    "A cute, handmade digital birthday scrapbook & interactive card for Anshika's 19th birthday.",
+  keywords: ["Anshika", "19th Birthday", "Birthday Card", "Scrapbook", "Anuj"],
   authors: [{ name: "Anuj" }],
-  openGraph: {
-    title: "Happy 19th Birthday, Anshika ✨",
-    description: "Someone had to make you a website instead of just sending a birthday text.",
-    type: "website",
-  },
   icons: {
     icon: "/favicon.ico",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#080b11",
+  themeColor: "#faf7f2",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -45,9 +41,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark scroll-smooth`}
+      className={`${caveat.variable} ${plusJakarta.variable} scroll-smooth`}
     >
-      <body className="min-h-screen bg-[#080b11] text-zinc-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200 antialiased overflow-x-hidden">
+      <body className="min-h-screen bg-[#faf7f2] text-[#3f2e24] font-sans selection:bg-[#fda4af]/40 selection:text-[#7f1d1d] antialiased overflow-x-hidden">
+        <LeavePageGuard />
         {children}
       </body>
     </html>

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, CheckCircle2, Gift } from "lucide-react";
 import confetti from "canvas-confetti";
+import { Wildflower } from "@/components/flowers/FlowerSvg";
 
 interface StartBirthdayTaskProps {
   onComplete: () => void;
@@ -66,9 +67,15 @@ export default function StartBirthdayTask({
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mt-1 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-950/40 border border-emerald-400/40 text-emerald-300 font-sans text-xs sm:text-sm font-semibold shadow-lg"
+            className="mt-1 inline-flex items-center gap-2.5 px-5 py-2.5 rounded-2xl bg-emerald-950/40 border border-emerald-400/40 text-emerald-300 font-sans text-xs sm:text-sm font-semibold shadow-lg"
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <motion.div
+              initial={{ scale: 0, rotate: -25 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 14 }}
+            >
+              <Wildflower size={22} color="#d8b4fe" accentColor="#c084fc" />
+            </motion.div>
             <span>Birthday officially started! Enjoy every moment ✨</span>
           </motion.div>
         )}

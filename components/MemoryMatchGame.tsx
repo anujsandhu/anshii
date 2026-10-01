@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Sparkles, CheckCircle2, RotateCcw } from "lucide-react";
 import confetti from "canvas-confetti";
+import { FloralPhotoFrame } from "@/components/flowers/FloralFrame";
 
 interface Card {
   id: number;
@@ -123,17 +125,37 @@ export default function MemoryMatchGame() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="space-y-1.5 pt-2"
+            className="space-y-3 pt-3 flex flex-col items-center"
           >
-            <div className="text-xs sm:text-sm font-mono text-emerald-400 font-bold flex items-center justify-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Memory compiled successfully! (3/3 matched)</span>
+            {/* Memory photo in Floral Frame */}
+            <div className="pt-2">
+              <FloralPhotoFrame className="w-36 h-28 sm:w-44 sm:h-32">
+                <div className="w-full h-full rounded-2xl overflow-hidden border-2 border-amber-300/40 relative shadow-xl">
+                  <Image
+                    src="/photos/photo2.jpg"
+                    alt="Memory Match Reward"
+                    fill
+                    sizes="180px"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <span className="absolute bottom-1.5 left-2 text-[10px] font-mono text-amber-200">
+                    memory_unlocked.jpg
+                  </span>
+                </div>
+              </FloralPhotoFrame>
             </div>
+
+            <div className="text-xs sm:text-sm font-sans text-emerald-300 font-semibold flex items-center justify-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span>Memory matched! Floral frame unlocked 🌸</span>
+            </div>
+
             <button
               onClick={handleReset}
-              className="inline-flex items-center gap-1 text-[11px] font-mono text-zinc-400 hover:text-white cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-300 hover:text-white cursor-pointer transition-colors"
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className="w-3.5 h-3.5 text-amber-300" />
               <span>Play again</span>
             </button>
           </motion.div>

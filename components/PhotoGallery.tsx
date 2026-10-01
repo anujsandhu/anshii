@@ -5,6 +5,8 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, X, Maximize2, Sparkles, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { birthdayData } from "@/data/birthday";
+import { FloralCorner } from "@/components/flowers/FloralFrame";
+import { PetalSvg, Wildflower } from "@/components/flowers/FlowerSvg";
 
 interface PhotoGalleryProps {
   onPhotoUnlocked?: () => void;
@@ -99,6 +101,29 @@ export default function PhotoGallery({ onPhotoUnlocked }: PhotoGalleryProps) {
               }}
               className="cursor-pointer transition-shadow duration-300 group relative"
             >
+              {/* Botanical Frame Decoration for Scrapbook Aesthetic */}
+              {index % 3 === 0 && (
+                <FloralCorner
+                  className="absolute -top-3 -left-3 pointer-events-none z-20 opacity-80 group-hover:scale-110 transition-transform"
+                  size={38}
+                  color="#86efac"
+                  flowerColor="#fda4af"
+                />
+              )}
+              {index % 3 === 1 && (
+                <FloralCorner
+                  className="absolute -bottom-3 -right-3 pointer-events-none z-20 rotate-180 opacity-80 group-hover:scale-110 transition-transform"
+                  size={38}
+                  color="#86efac"
+                  flowerColor="#d8b4fe"
+                />
+              )}
+              {index % 3 === 2 && (
+                <div className="absolute -top-2.5 -right-2.5 pointer-events-none z-20 group-hover:scale-110 transition-transform">
+                  <PetalSvg size={24} color="#fef08a" accentColor="#f59e0b" rotation={45} />
+                </div>
+              )}
+
               {isPolaroid ? (
                 /* Polaroid Keepsake Card with Decorative Tape */
                 <div className="polaroid-card rounded-2xl relative">

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Maximize2, Sparkles, X, Heart, Bookmark } from "lucide-react";
 import { birthdayData } from "@/data/birthday";
+import { PetalSvg, Wildflower } from "@/components/flowers/FlowerSvg";
 
 export default function Timeline() {
   const [activePhoto, setActivePhoto] = useState<string | null>(null);
@@ -62,9 +63,15 @@ export default function Timeline() {
               transition={{ duration: 0.6, delay: idx * 0.15 }}
               className="relative group"
             >
-              {/* Warm Milestone Node Marker */}
-              <div className="absolute -left-[31px] sm:-left-[47px] top-1.5 w-6 h-6 rounded-full bg-[#0a0f1d] border-2 border-amber-400 flex items-center justify-center group-hover:scale-125 group-hover:border-rose-400 transition-all duration-300 shadow-lg shadow-amber-500/20">
-                <div className="w-2 h-2 rounded-full bg-amber-400 group-hover:bg-rose-400 transition-colors" />
+              {/* Floral Milestone Node Marker */}
+              <div className="absolute -left-[33px] sm:-left-[49px] top-1.5 w-7 h-7 rounded-full bg-[#0d1322] border-2 border-amber-400 flex items-center justify-center group-hover:scale-125 group-hover:border-rose-400 transition-all duration-300 shadow-lg shadow-amber-500/25">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" className="transition-transform group-hover:rotate-45">
+                  <circle cx="10" cy="10" r="4" fill="#fbbf24" />
+                  <circle cx="10" cy="4" r="2.5" fill="#fda4af" opacity="0.9" />
+                  <circle cx="16" cy="10" r="2.5" fill="#fda4af" opacity="0.9" />
+                  <circle cx="10" cy="16" r="2.5" fill="#fda4af" opacity="0.9" />
+                  <circle cx="4" cy="10" r="2.5" fill="#fda4af" opacity="0.9" />
+                </svg>
               </div>
 
               {/* Memory Card */}

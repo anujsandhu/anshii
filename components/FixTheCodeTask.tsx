@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, Sparkles, Cake } from "lucide-react";
 import confetti from "canvas-confetti";
+import { TulipFlower } from "@/components/flowers/FlowerSvg";
 
 interface FixTheCodeTaskProps {
   onComplete: () => void;
@@ -75,10 +76,16 @@ export default function FixTheCodeTask({ onComplete, isCompleted }: FixTheCodeTa
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-950/40 border border-emerald-400/40 text-emerald-300 font-sans text-sm font-semibold shadow-lg"
+            className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-emerald-950/40 border border-emerald-400/40 text-emerald-300 font-sans text-sm font-semibold shadow-lg"
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Age verified: Welcome to Year 19! ✨</span>
+            <motion.div
+              initial={{ scale: 0, rotate: -30 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 15 }}
+            >
+              <TulipFlower size={28} color="#fda4af" accentColor="#f43f5e" />
+            </motion.div>
+            <span>Age verified: A flower bloomed for Year 19! ✨</span>
           </motion.div>
         )}
 

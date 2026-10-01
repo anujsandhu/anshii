@@ -96,7 +96,16 @@ export default function EasterEgg({
         });
       } catch {}
     } else if (trimmed.toLowerCase() === "help") {
-      reply = "Available commands: sudo birthday --wish, cat note.txt, whoami, clear, exit";
+      reply = "Available commands: sudo birthday --wish, qr, cat note.txt, whoami, clear, exit";
+    } else if (trimmed.toLowerCase() === "qr" || trimmed.toLowerCase() === "gift" || trimmed.toLowerCase() === "card") {
+      reply = (
+        <span>
+          🎁 Physical Gift QR Card:{" "}
+          <a href="/qr-card" target="_blank" className="text-pink-400 underline font-bold">
+            Click here to open /qr-card for printing
+          </a>
+        </span>
+      );
     } else if (trimmed.toLowerCase() === "cat note.txt") {
       reply = "Note from Anuj: Happy 19th Anshika! May all your algorithms run in O(1) time and your coffee never get cold.";
     } else if (trimmed.toLowerCase() === "whoami") {

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Star, Sparkles, CheckCircle2 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { DaisyFlower, TulipFlower } from "@/components/flowers/FlowerSvg";
 
 interface HiddenStarTaskProps {
   onFound: () => void;
@@ -81,10 +82,27 @@ export default function HiddenStarTask({ onFound, isFound }: HiddenStarTaskProps
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="absolute inset-0 flex items-center justify-center gap-2 bg-emerald-950/40 font-sans text-sm text-emerald-300 font-semibold"
+              className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-emerald-950/40 font-sans text-sm text-emerald-300 font-semibold relative overflow-hidden"
             >
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              <span>You found it! Lucky star collected ✨</span>
+              {/* Star exploding into tiny flowers effect */}
+              <div className="flex items-center gap-2">
+                <motion.div
+                  initial={{ scale: 0, rotate: -45 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                >
+                  <DaisyFlower size={26} color="#fffbeb" accentColor="#fef08a" />
+                </motion.div>
+                <span>Star exploded into tiny flowers! ✨</span>
+                <motion.div
+                  initial={{ scale: 0, rotate: 45 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.1 }}
+                >
+                  <TulipFlower size={26} color="#fda4af" accentColor="#f43f5e" />
+                </motion.div>
+              </div>
+              <span className="text-[11px] text-zinc-400 font-normal">Lucky star collected for Year 19</span>
             </motion.div>
           )}
         </div>
