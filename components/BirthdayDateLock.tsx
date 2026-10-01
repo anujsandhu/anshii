@@ -15,6 +15,7 @@ import {
   X,
   AlertOctagon,
   Radio,
+  ShieldCheck,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -62,6 +63,7 @@ export default function BirthdayDateLock({
   const [glitchActive, setGlitchActive] = useState(false);
   const [prankAlert, setPrankAlert] = useState<string | null>(null);
   const [sirenActive, setSirenActive] = useState(false);
+  const [showPrankRevealModal, setShowPrankRevealModal] = useState(false);
 
   // Normal scrapbook countdown states
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -223,6 +225,85 @@ export default function BirthdayDateLock({
       stopSiren();
     };
   }, [showHackerLayer, startSiren, stopSiren]);
+
+  const handleOpenSecretVault = useCallback(() => {
+    stopSiren();
+    setShowPrankRevealModal(false);
+    setShowHackerLayer(false);
+  }, [stopSiren]);
+
+  // Intercept Back button, Tab Close, and Exit Intent to reveal the prank
+  useEffect(() => {
+    if (!showHackerLayer || isUnlocked) return;
+
+    // 1. History state push to catch browser back button / swipe back
+    try {
+      window.history.pushState({ prankActive: true }, "", window.location.href);
+    } catch {}
+
+    const handlePopState = () => {
+      stopSiren();
+      setShowPrankRevealModal(true);
+      try {
+        confetti({
+          particleCount: 45,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#fda4af", "#f43f5e", "#fed7aa", "#fbcfe8"],
+        });
+      } catch {}
+      try {
+        window.history.pushState({ prankActive: true }, "", window.location.href);
+      } catch {}
+    };
+
+    // 2. BeforeUnload (when closing tab / browser window)
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      stopSiren();
+      setShowPrankRevealModal(true);
+      e.preventDefault();
+      e.returnValue = "Wait! It's just a little prank by Anuj! 😂";
+      return "Wait! It's just a little prank by Anuj! 😂";
+    };
+
+    // 3. Desktop exit intent (mouse moves up toward tabs / close button)
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY <= 15) {
+        stopSiren();
+        setShowPrankRevealModal(true);
+        try {
+          confetti({
+            particleCount: 40,
+            spread: 60,
+            origin: { y: 0.5 },
+            colors: ["#fda4af", "#f43f5e", "#fed7aa"],
+          });
+        } catch {}
+      }
+    };
+
+    // 4. Mobile tab switch / app minimize (visibilitychange)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        stopSiren();
+      } else if (document.visibilityState === "visible") {
+        stopSiren();
+        setShowPrankRevealModal(true);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [showHackerLayer, isUnlocked, stopSiren]);
 
   // Sync clock authoritative from /api/date-lock on mount and periodically
   const syncServerTime = useCallback(async () => {
@@ -732,11 +813,11 @@ export default function BirthdayDateLock({
                 <button
                   onClick={() => {
                     stopSiren();
-                    setShowHackerLayer(false);
+                    setShowPrankRevealModal(true);
                   }}
                   className="px-2.5 py-1 rounded-full bg-[#27101c] hover:bg-[#3d182b] border border-[#ef4444]/40 text-[11px] text-[#fca5a5] flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
                 >
-                  <span>Reveal Vault</span>
+                  <span>Abort Lockdown</span>
                   <X className="w-3 h-3 text-[#f87171]" />
                 </button>
               </div>
@@ -817,12 +898,12 @@ export default function BirthdayDateLock({
                 </h2>
 
                 <p className="font-sans text-xs sm:text-sm font-bold text-[#f43f5e] mb-1">
-                  (Relax Anshika 😂 It&apos;s just Anuj.)
+                  CRITICAL SECURITY CONTAINMENT
                 </p>
 
                 <p className="font-sans text-xs text-[#9ca3af] leading-relaxed max-w-sm mx-auto mb-5">
-                  Did your heart jump for a second? 😭 <br />
-                  I caught you snooping around! Whatever is inside here is locked safe and will not open before October 28.
+                  High-priority security breach detected on this device. <br />
+                  Encrypted files strictly locked until 28 October 2026. Manual override required.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
@@ -830,7 +911,7 @@ export default function BirthdayDateLock({
                   <button
                     onClick={() => {
                       stopSiren();
-                      setShowHackerLayer(false);
+                      setShowPrankRevealModal(true);
                     }}
                     className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white text-xs font-bold font-sans shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
                   >
@@ -854,6 +935,79 @@ export default function BirthdayDateLock({
             <div className="py-2 text-[10px] text-[#6b7280]">
               *Security lock strictly active until 28 October 2026 00:00 IST. Nice try though! 😂
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── PRANK REVEAL MODAL: TRIGGERED WHEN TRYING TO BACK OR CLOSE TAB ──── */}
+      <AnimatePresence>
+        {showPrankRevealModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 selection:bg-[#fda4af]/40"
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 15 }}
+              transition={{ type: "spring", stiffness: 380, damping: 25 }}
+              className="w-full max-w-md rounded-3xl bg-[#1b0d18] border-2 border-[#fda4af]/60 p-6 sm:p-8 text-center shadow-[0_0_50px_rgba(253,164,175,0.35)] relative overflow-hidden"
+            >
+              {/* Cute glowing background orbs */}
+              <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-[#f43f5e]/25 blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-[#fda4af]/20 blur-2xl pointer-events-none" />
+
+              {/* Animated Floating Emojis */}
+              <div className="flex items-center justify-center gap-3 text-3xl sm:text-4xl mb-3 animate-bounce">
+                <span>🙈</span>
+                <span>🌷</span>
+                <span>😂</span>
+              </div>
+
+              {/* Funny Warning Header */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f43f5e]/20 border border-[#f43f5e]/40 text-[#fda4af] text-[11px] font-sans font-bold uppercase tracking-wider mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-[#fb7185]" />
+                <span>Prank Revealed!</span>
+              </div>
+
+              <h3 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#fff1f2] tracking-tight mb-2">
+                WAIT WAIT WAIT! 😂
+              </h3>
+
+              <p className="font-sans text-base sm:text-lg font-bold text-[#fda4af] mb-3">
+                It&apos;s just a little prank by Anuj! 🙈🌷
+              </p>
+
+              <div className="p-3.5 rounded-2xl bg-[#2a1325]/80 border border-[#fda4af]/20 text-xs sm:text-sm text-[#fecdd3] font-sans leading-relaxed mb-6 text-left flex items-start gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-[#34d399] shrink-0 mt-0.5" />
+                <p>
+                  Did you actually get scared? 😭 <br />
+                  <span className="font-bold text-white">Your phone is 100% safe!</span> No data was touched, no files were hacked, and no more alarms will play. It was all just a funny little joke!
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <button
+                  onClick={handleOpenSecretVault}
+                  className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_20px_rgba(244,63,94,0.45)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Phew! Open Secret Vault 🌷</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowPrankRevealModal(false);
+                    setShowHackerLayer(false);
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-[#fda4af] text-xs font-sans font-medium transition-colors cursor-pointer"
+                >
+                  Haha okay Anuj, you got me 😂
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
