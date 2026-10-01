@@ -177,9 +177,6 @@ export default function BirthdayDateLock({
           <span className="font-serif italic text-sm sm:text-base font-medium text-[#786457] tracking-tight">
             Anshika&apos;s 19th
           </span>
-          <span className="text-[11px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#FCE7F3]/70 text-[#BE185D] border border-[#FBCFE8]/60">
-            Chapter 00
-          </span>
         </div>
 
         <button

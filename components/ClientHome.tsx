@@ -20,8 +20,10 @@ export default function ClientHome({
   const [isLocked, setIsLocked] = useState(initialIsLocked);
 
   useEffect(() => {
-    initAnalytics("welcome");
-  }, []);
+    if (!isLocked) {
+      initAnalytics("welcome");
+    }
+  }, [isLocked]);
 
   const handleUnlock = async () => {
     try {
@@ -45,9 +47,6 @@ export default function ClientHome({
       {/* Custom Hand-Drawn Floral Desktop Cursor */}
       <CustomCursor />
 
-      {/* Transparent Consent-Based Privacy Notice */}
-      <PrivacyNoticeBanner />
-
       {/* FIRST LAYER: Birthday Countdown Lock until 28 October 2026 */}
       {isLocked ? (
         <BirthdayDateLock
@@ -55,11 +54,14 @@ export default function ClientHome({
           initialServerTime={initialServerTime}
         />
       ) : (
-        /* SECOND LAYER (after 28 Oct): Password Verification Gate */
-        <SecretGiftGate>
-          {/* FINAL LAYER (after password): Full Scrapbook Experience */}
-          <ScrapbookPager />
-        </SecretGiftGate>
+        /* SECOND LAYER (after 28 Oct): Password Verification Gate & Privacy Notice */
+        <>
+          <PrivacyNoticeBanner />
+          <SecretGiftGate>
+            {/* FINAL LAYER (after password): Full Scrapbook Experience */}
+            <ScrapbookPager />
+          </SecretGiftGate>
+        </>
       )}
     </main>
   );
