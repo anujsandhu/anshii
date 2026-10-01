@@ -501,7 +501,7 @@ export default function Frame3Photos({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => setZoomPhoto(null)}
-                className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-6"
+                className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-5"
                 style={{
                   backgroundColor: "rgba(18, 11, 7, 0.86)",
                   backdropFilter: "blur(16px)",
@@ -509,100 +509,93 @@ export default function Frame3Photos({
                 }}
               >
                 <motion.div
-                  initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                  initial={{ scale: 0.92, y: 16, opacity: 0 }}
                   animate={{ scale: 1, y: 0, opacity: 1 }}
-                  exit={{ scale: 0.92, y: 12, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  exit={{ scale: 0.94, y: 10, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                   onClick={(e) => e.stopPropagation()}
-                  className="relative w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl max-h-[92vh] bg-[#fffdfa] rounded-3xl border-2 border-[#ebdcd0] shadow-2xl p-4 sm:p-6 flex flex-col text-center cursor-default select-none overflow-y-auto no-scrollbar"
+                  className="relative w-full max-w-xl sm:max-w-2xl bg-[#fffdfa] rounded-3xl border-2 border-[#ebdcd0] shadow-2xl p-4 sm:p-5 flex flex-col justify-between text-center cursor-default select-none overflow-hidden max-h-[88vh]"
                 >
                   {/* Polaroid Washi Tape Accent */}
                   <div
-                    className="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-5 bg-[#fed7aa]/85 border-t border-b border-[#fdba74]/60 shadow-xs rotate-[-1deg]"
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-5 bg-[#fed7aa]/85 border-t border-b border-[#fdba74]/60 shadow-xs rotate-[-1deg] pointer-events-none"
                     style={{ clipPath: "polygon(4% 0%, 96% 0%, 100% 100%, 0% 100%)" }}
                   />
 
-                  {/* Close button */}
-                  <button
-                    onClick={() => setZoomPhoto(null)}
-                    className="absolute top-3.5 right-3.5 p-2 rounded-full text-[#8c7465] hover:text-[#3f2e24] bg-white/85 hover:bg-[#f5ece3] shadow-xs transition-colors cursor-pointer z-30"
-                    title="Close (Esc)"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                  {/* Top Bar: Badge on Left, Controls & Close on Right */}
+                  <div className="w-full flex items-center justify-between mb-1.5 z-10 px-0.5">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fdf2f4] border border-[#fbcfe8] text-[#be185d] font-sans text-xs font-semibold shadow-2xs">
+                      <span>{zoomPhoto.badgeIcon}</span>
+                      <span>{zoomPhoto.badge}</span>
+                    </div>
 
-                  {/* Lightbox Badge */}
-                  <div className="self-center inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fdf2f4] border border-[#fbcfe8] text-[#be185d] font-sans text-xs font-semibold mb-2 shadow-2xs">
-                    <span>{zoomPhoto.badgeIcon}</span>
-                    <span>{zoomPhoto.badge}</span>
-                  </div>
-
-                  {/* ── PHOTO VIEW WITH DEDICATED ZOOM CONTROLS ── */}
-                  {zoomPhoto.type === "image" ? (
-                    <div className="w-full flex flex-col items-center">
-                      {/* Zoom Toolbar */}
-                      <div className="flex items-center justify-between w-full max-w-xl px-3 py-1.5 mb-2 bg-[#fbf6f0] border border-[#ecdccd] rounded-xl text-xs font-sans text-[#786457]">
-                        <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
+                      {zoomPhoto.type === "image" ? (
+                        <div className="flex items-center gap-1 bg-[#fbf6f0] border border-[#ecdccd] rounded-xl px-1.5 py-0.5 text-xs text-[#786457]">
                           <button
                             type="button"
-                            onClick={() => setPhotoZoom((prev) => Math.max(1, +(prev - 0.4).toFixed(1)))}
+                            onClick={() => setPhotoZoom((prev) => Math.max(1, +(prev - 0.3).toFixed(1)))}
                             disabled={photoZoom <= 1}
-                            className="p-1 px-2 rounded-md bg-white border border-[#ecdccd] text-[#3f2e24] hover:bg-[#fff5eb] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition-colors cursor-pointer"
+                            className="p-1 text-[#3f2e24] hover:bg-white rounded-md disabled:opacity-30 transition-colors cursor-pointer"
                             title="Zoom Out"
                           >
                             <ZoomOut className="w-3.5 h-3.5" />
-                            <span>Zoom Out</span>
                           </button>
+                          <span className="text-[11px] font-semibold text-[#be185d] min-w-[34px] text-center">
+                            {Math.round(photoZoom * 100)}%
+                          </span>
                           <button
                             type="button"
-                            onClick={() => setPhotoZoom((prev) => Math.min(2.6, +(prev + 0.4).toFixed(1)))}
-                            disabled={photoZoom >= 2.6}
-                            className="p-1 px-2 rounded-md bg-white border border-[#ecdccd] text-[#3f2e24] hover:bg-[#fff5eb] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition-colors cursor-pointer"
+                            onClick={() => setPhotoZoom((prev) => Math.min(2.2, +(prev + 0.3).toFixed(1)))}
+                            disabled={photoZoom >= 2.2}
+                            className="p-1 text-[#3f2e24] hover:bg-white rounded-md disabled:opacity-30 transition-colors cursor-pointer"
                             title="Zoom In"
                           >
                             <ZoomIn className="w-3.5 h-3.5" />
-                            <span>Zoom In</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setPhotoZoom(1)}
-                            className="p-1 px-2 rounded-md bg-white border border-[#ecdccd] text-[#786457] hover:bg-[#fff5eb] flex items-center gap-1 font-medium transition-colors cursor-pointer"
-                            title="Reset Zoom"
-                          >
-                            <RotateCcw className="w-3 h-3" />
-                            <span>Reset (100%)</span>
                           </button>
                         </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleRotateVideo}
+                          className="px-2.5 py-1 rounded-xl bg-[#fff0f3] border border-[#fbcfe8] text-[#be185d] hover:bg-[#ffe4e6] transition-colors cursor-pointer flex items-center gap-1 text-xs font-semibold shadow-2xs"
+                          title="Rotate video by 90 degrees"
+                        >
+                          <RotateCw className="w-3.5 h-3.5" />
+                          <span>Rotate {((videoRotation % 360) + 360) % 360}°</span>
+                        </button>
+                      )}
 
-                        <div className="flex items-center gap-1 text-[11px] font-semibold text-[#be185d]">
-                          <span>{Math.round(photoZoom * 100)}%</span>
-                        </div>
-                      </div>
+                      <button
+                        onClick={() => setZoomPhoto(null)}
+                        className="p-1.5 rounded-full text-[#8c7465] hover:text-[#3f2e24] bg-white/90 hover:bg-[#f5ece3] border border-[#ebdcd0] shadow-xs transition-colors cursor-pointer"
+                        title="Close (Esc)"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
 
-                      {/* Photo Container with Scrollable/Draggable Zoom */}
+                  {/* ── PHOTO VIEW ── */}
+                  {zoomPhoto.type === "image" ? (
+                    <div className="relative flex-1 min-h-0 w-full flex items-center justify-center my-1 overflow-hidden">
                       <div
-                        onClick={() => setPhotoZoom((prev) => (prev >= 2 ? 1 : prev + 0.6))}
-                        className={`relative w-full max-w-2xl overflow-auto rounded-2xl bg-[#faf6f0] border border-[#ecdccd] shadow-inner mb-3 flex items-center justify-center transition-all ${
+                        className={`relative h-full w-auto max-h-[50vh] sm:max-h-[54vh] aspect-[1442/1618] rounded-2xl overflow-hidden shadow-sm border border-[#ebdcd0] bg-[#faf8f5] flex items-center justify-center select-none transition-all ${
                           photoZoom > 1 ? "cursor-zoom-out" : "cursor-zoom-in"
                         }`}
-                        style={{ maxHeight: "64vh", minHeight: "360px" }}
-                        title={photoZoom > 1 ? "Click to zoom out" : "Click to zoom in"}
+                        onClick={() => setPhotoZoom((prev) => (prev > 1 ? 1 : 1.5))}
+                        title={photoZoom > 1 ? "Click to reset zoom" : "Click to zoom in"}
                       >
                         <div
-                          className="relative transition-transform duration-300 origin-center py-2"
-                          style={{
-                            transform: `scale(${photoZoom})`,
-                            width: "100%",
-                            maxWidth: photoZoom > 1 ? "860px" : "560px",
-                            aspectRatio: "1442 / 1618",
-                          }}
+                          className="relative w-full h-full transition-transform duration-300 origin-center"
+                          style={{ transform: `scale(${photoZoom})` }}
                         >
                           <Image
                             src={zoomPhoto.src}
                             alt={zoomPhoto.caption}
                             fill
-                            className="object-contain drop-shadow-sm"
-                            sizes="(max-width: 768px) 95vw, 860px"
+                            className="object-contain"
+                            sizes="(max-height: 55vh) 600px, 90vw"
                             priority
                           />
                         </div>
@@ -614,7 +607,7 @@ export default function Frame3Photos({
                               e.stopPropagation();
                               handleHeartClick(e);
                             }}
-                            className={`absolute bottom-3 right-3 p-2.5 rounded-full transition-all cursor-pointer z-30 min-w-[46px] min-h-[46px] flex items-center justify-center ${
+                            className={`absolute bottom-2.5 right-2.5 p-2 rounded-full transition-all cursor-pointer z-30 min-w-[42px] min-h-[42px] flex items-center justify-center ${
                               taskDone
                                 ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-sm"
                                 : "bg-white/95 hover:bg-white text-[#fda4af] shadow-md animate-bounce ring-2 ring-[#fda4af]"
@@ -622,26 +615,21 @@ export default function Frame3Photos({
                             title="Tap the secret heart sticker!"
                           >
                             <Heart
-                              className={`w-5 h-5 ${
+                              className={`w-4 h-4 ${
                                 taskDone ? "fill-[#be185d]" : "fill-[#fda4af]"
                               }`}
                             />
                           </button>
                         )}
                       </div>
-
-                      <span className="text-[11px] text-[#8c7465] font-sans -mt-1 mb-2">
-                        💡 Tap image or use zoom buttons to read messages in full resolution
-                      </span>
                     </div>
                   ) : (
-                    /* ── VIDEO VIEW WITH 16:9 CONTAINER & ROTATE CONTROLS ── */
-                    <div className="w-full max-w-2xl mx-auto mt-1 mb-3">
-                      {/* Video Player Box */}
+                    /* ── VIDEO VIEW ── */
+                    <div className="relative flex-1 min-h-0 w-full flex flex-col items-center justify-center my-1">
                       <div
                         onClick={handleTogglePlayVideo}
-                        className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden bg-black shadow-2xl flex items-center justify-center cursor-pointer group"
-                        style={{ maxHeight: "60vh" }}
+                        className="relative w-full max-w-lg aspect-[16/9] rounded-2xl overflow-hidden bg-black shadow-xl flex items-center justify-center cursor-pointer group"
+                        style={{ maxHeight: "48vh" }}
                       >
                         <video
                           ref={modalVideoRef}
@@ -663,87 +651,71 @@ export default function Frame3Photos({
                         {/* Pause Overlay Indicator */}
                         {!isVideoPlaying && (
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
-                            <div className="p-4 rounded-full bg-white/90 text-[#3f2e24] shadow-lg animate-scale-in">
-                              <Play className="w-8 h-8 fill-current translate-x-0.5" />
+                            <div className="p-3.5 rounded-full bg-white/90 text-[#3f2e24] shadow-lg animate-scale-in">
+                              <Play className="w-7 h-7 fill-current translate-x-0.5" />
                             </div>
                           </div>
                         )}
                       </div>
 
-                      {/* Video Control Bar with Rotation Button */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 mt-2 bg-[#fbf6f0] border border-[#ecdccd] rounded-xl text-xs font-sans text-[#786457]">
-                        <div className="flex items-center gap-1.5">
-                          {/* Play/Pause */}
-                          <button
-                            type="button"
-                            onClick={handleTogglePlayVideo}
-                            className="p-1.5 px-3 rounded-lg bg-white border border-[#ebdcd0] text-[#3f2e24] hover:bg-[#fff5eb] transition-colors cursor-pointer flex items-center gap-1.5 font-medium shadow-2xs"
-                          >
-                            {isVideoPlaying ? (
-                              <>
-                                <Pause className="w-3.5 h-3.5 fill-current" />
-                                <span>Pause</span>
-                              </>
-                            ) : (
-                              <>
-                                <Play className="w-3.5 h-3.5 fill-current" />
-                                <span>Play</span>
-                              </>
-                            )}
-                          </button>
+                      {/* Video Playback Controls */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={handleTogglePlayVideo}
+                          className="px-2.5 py-1 rounded-lg bg-white border border-[#ebdcd0] text-[#3f2e24] hover:bg-[#fff5eb] transition-colors cursor-pointer flex items-center gap-1 text-xs font-medium shadow-2xs"
+                        >
+                          {isVideoPlaying ? (
+                            <>
+                              <Pause className="w-3.5 h-3.5 fill-current" />
+                              <span>Pause</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                              <span>Play</span>
+                            </>
+                          )}
+                        </button>
 
-                          {/* Sound Toggle */}
-                          <button
-                            type="button"
-                            onClick={handleToggleMuteVideo}
-                            className="p-1.5 px-3 rounded-lg bg-white border border-[#ebdcd0] text-[#3f2e24] hover:bg-[#fff5eb] transition-colors cursor-pointer flex items-center gap-1.5 font-medium shadow-2xs"
-                          >
-                            {isVideoMuted ? (
-                              <>
-                                <VolumeX className="w-3.5 h-3.5 text-[#e11d48]" />
-                                <span>Muted</span>
-                              </>
-                            ) : (
-                              <>
-                                <Volume2 className="w-3.5 h-3.5 text-[#10b981]" />
-                                <span>Sound On</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Video Rotation Button */}
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={handleRotateVideo}
-                            className="p-1.5 px-3 rounded-lg bg-[#fff0f3] border border-[#fbcfe8] text-[#be185d] hover:bg-[#ffe4e6] transition-colors cursor-pointer flex items-center gap-1.5 font-semibold shadow-2xs"
-                            title="Rotate video by 90 degrees"
-                          >
-                            <RotateCw className="w-3.5 h-3.5" />
-                            <span>Rotate ({((videoRotation % 360) + 360) % 360}°)</span>
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={handleToggleMuteVideo}
+                          className="px-2.5 py-1 rounded-lg bg-white border border-[#ebdcd0] text-[#3f2e24] hover:bg-[#fff5eb] transition-colors cursor-pointer flex items-center gap-1 text-xs font-medium shadow-2xs"
+                        >
+                          {isVideoMuted ? (
+                            <>
+                              <VolumeX className="w-3.5 h-3.5 text-[#e11d48]" />
+                              <span>Muted</span>
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-3.5 h-3.5 text-[#10b981]" />
+                              <span>Sound On</span>
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
                   )}
 
-                  {/* Caption & Subtitle */}
-                  <p className="font-handwriting text-2xl sm:text-3xl text-[#3f2e24] font-bold leading-tight">
-                    &ldquo;{zoomPhoto.caption}&rdquo;
-                  </p>
-                  <span className="text-xs sm:text-sm text-[#8c7465] font-sans mt-1 mb-3">
-                    {zoomPhoto.sub}
-                  </span>
+                  {/* Caption & Subtitle & Close Button */}
+                  <div className="pt-1 text-center flex flex-col items-center">
+                    <p className="font-handwriting text-xl sm:text-2xl text-[#3f2e24] font-bold leading-tight">
+                      &ldquo;{zoomPhoto.caption}&rdquo;
+                    </p>
+                    <span className="text-[11px] sm:text-xs text-[#8c7465] font-sans mt-0.5 mb-2">
+                      {zoomPhoto.sub}
+                    </span>
 
-                  {/* Close modal button */}
-                  <button
-                    type="button"
-                    onClick={() => setZoomPhoto(null)}
-                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm cursor-pointer transition-all shadow-md active:scale-95"
-                  >
-                    Close ✕
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setZoomPhoto(null)}
+                      className="px-8 py-2 rounded-xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-xs cursor-pointer transition-all shadow-md active:scale-95"
+                    >
+                      Close ✕
+                    </button>
+                  </div>
                 </motion.div>
               </motion.div>
             )}
