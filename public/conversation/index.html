@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Our Conversation ✨ Anshika & Anuj • Memory Archive</title>
+  <meta name="description" content="A private personal memory archive of our Instagram conversation, starting August 14, 2026. Made with love for Anshika's 19th Birthday.">
+  <link rel="icon" type="image/png" href="files/Instagram-Logo.png">
+  
+  <!-- Modern Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ambient Background Decor -->
+  <div class="app-background"></div>
+  <div class="ambient-glow ambient-glow-1"></div>
+  <div class="ambient-glow ambient-glow-2"></div>
+
+  <!-- =======================================================================
+       2. INTRO SCREEN
+       ======================================================================= -->
+  <div id="intro-screen">
+    <!-- Step 1: Initial Intro Card -->
+    <div class="intro-card" id="intro-step-1">
+      <div class="washi-tape-strip"></div>
+      <div class="intro-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <span>A Chapter in Memories</span>
+      </div>
+      <h1 class="intro-title">Where it all started</h1>
+      <p class="intro-subtitle">Somewhere between a random message and a very long conversation...</p>
+      
+      <div class="intro-date-pill">August 2026</div>
+      <div class="intro-handwritten">Ready to go back?</div>
+
+      <button class="intro-start-btn" onclick="window.chatApp.showFirstMessageStep()">
+        <span>Start from the beginning →</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+
+      <div class="intro-meta-stats">
+        <span>48 Days of Conversations &bull; 9,624 Messages &bull; August 14 &ndash; September 30</span>
+      </div>
+    </div>
+
+    <!-- Step 2: The First Message Reveal Experience -->
+    <div class="intro-card intro-step-2" id="intro-step-2" style="display: none;">
+      <div class="washi-tape-strip"></div>
+      <div class="intro-transition-note">&ldquo;Okay... let&apos;s go back.&rdquo;</div>
+
+      <div class="intro-badge">
+        <span>✨ WHERE IT ALL STARTED</span>
+      </div>
+
+      <div class="intro-date-pill">August 2026</div>
+
+      <!-- Screenshot Polaroid Frame -->
+      <div class="intro-ss-frame" onclick="window.chatApp.openLightbox('files/1st-msg-ss.png', 'The first few messages.')" title="Click to view full screen">
+        <div class="intro-ss-washi"></div>
+        <img class="intro-ss-img" src="files/1st-msg-ss.png" alt="First message screenshot" loading="eager" />
+        <div class="intro-ss-tape-label">the first message</div>
+      </div>
+
+      <h3 class="intro-ss-quote-1">&ldquo;The first few messages.&rdquo;</h3>
+      <p class="intro-ss-quote-2">Before all the random conversations,<br>there was just... this.</p>
+      <p class="intro-ss-quote-3">&ldquo;This was the beginning. Let&apos;s see where it went from here.&rdquo;</p>
+
+      <button class="intro-start-btn pulse-glow" onclick="window.chatApp.startConversation()">
+        <span>Start the conversation →</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- =======================================================================
+       3. INSTAGRAM-INSPIRED FIXED HEADER
+       ======================================================================= -->
+  <header id="chat-header">
+    <div class="header-left">
+      <button class="header-back-btn" title="Back to Intro" onclick="window.chatApp.reopenIntro()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </button>
+
+      <div class="header-profile">
+        <div class="header-avatar-container">
+          <div class="header-avatar-ring">
+            <img class="header-avatar-img" src="files/anshika_profile.jpg" alt="Anshika" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="header-avatar-fallback" style="display: none;">A</div>
+          </div>
+          <span class="header-online-indicator"></span>
+        </div>
+
+        <div class="header-info">
+          <div class="header-name-row">
+            <span class="header-name">Anshika</span>
+            <span class="header-verified" title="Verified Memory">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            </span>
+          </div>
+          <span class="header-subtitle" id="header-subtitle">Instagram conversation</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Search Button -->
+      <button class="header-btn" id="search-toggle-btn" title="Search conversation (Cmd+F)" onclick="window.chatApp.toggleSearch()">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+
+      <!-- Date Dropdown Button (Mobile / Quick access) -->
+      <button class="header-btn" title="Jump to date" onclick="window.chatApp.openDatePicker()">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+      </button>
+
+      <!-- Dark / Light Theme Toggle -->
+      <button class="header-btn" id="theme-toggle-btn" title="Toggle Dark/Light Mode" onclick="window.chatApp.toggleTheme()">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- Return to Birthday Surprise -->
+      <button class="header-btn" title="Back to Birthday Surprise" onclick="window.chatApp.returnToBirthdaySurprise()">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><polyline points="18 15 21 12 18 9"></polyline></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- =======================================================================
+       12. SEARCH PANEL (Expandable)
+       ======================================================================= -->
+  <div id="search-bar-panel">
+    <div class="search-input-wrapper">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="search-input" class="search-input" placeholder="Search message text, sender, or date..." autocomplete="off">
+      <button class="search-clear-btn" id="search-clear" title="Clear">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <span class="search-count" id="search-count"></span>
+    <button class="search-nav-btn" id="search-prev" title="Previous result" disabled>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </button>
+    <button class="search-nav-btn" id="search-next" title="Next result" disabled>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+  </div>
+
+  <!-- Floating Active Date Progress Pill -->
+  <div id="progress-pill">August 14 • Day 1</div>
+
+  <!-- =======================================================================
+       4. CONVERSATION MAIN SCROLL VIEWPORT
+       ======================================================================= -->
+  <main id="chat-viewport">
+    <div class="chat-content-wrapper">
+      <!-- Sentinel for loading older messages if jumping forward -->
+      <div id="top-sentinel" class="scroll-sentinel"></div>
+
+      <!-- Live Virtualized Message List -->
+      <div id="messages-list">
+        <div class="spinner"></div>
+      </div>
+
+      <!-- Sentinel for progressive infinite loading -->
+      <div id="bottom-sentinel" class="scroll-sentinel"></div>
+    </div>
+  </main>
+
+  <!-- =======================================================================
+       13. FLOATING JUMP BUTTONS
+       ======================================================================= -->
+  <div class="floating-controls">
+    <button class="jump-btn" title="Jump to First Message" onclick="window.chatApp.jumpToFirstMessage()">
+      <span>↑ First message</span>
+    </button>
+    <button class="jump-btn" title="Jump to Latest Message" onclick="window.chatApp.jumpToLatestMessage()">
+      <span>↓ Latest</span>
+    </button>
+  </div>
+
+  <!-- =======================================================================
+       14. DESKTOP SIDE TIMELINE
+       ======================================================================= -->
+  <nav id="desktop-timeline" aria-label="Conversation Timeline"></nav>
+
+  <!-- =======================================================================
+       14. MOBILE DATE PICKER SHEET MODAL
+       ======================================================================= -->
+  <div id="date-picker-modal">
+    <div class="date-picker-sheet">
+      <div class="sheet-header">
+        <h3 class="sheet-title">Jump to Date</h3>
+        <button class="sheet-close-btn" onclick="window.chatApp.closeDatePicker()" title="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="dates-grid" id="dates-grid"></div>
+    </div>
+  </div>
+
+  <!-- =======================================================================
+       10. FULL-SCREEN MEDIA LIGHTBOX (Images & Videos)
+       ======================================================================= -->
+  <div id="image-lightbox" onclick="window.chatApp.handleLightboxBackdrop(event)">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+      <button class="lightbox-close-btn" onclick="window.chatApp.closeLightbox()" title="Close (Esc)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <img id="lightbox-img" class="lightbox-img" src="" alt="Full resolution photo" style="display: none;">
+      <video id="lightbox-video" class="lightbox-video" controls playsinline preload="auto" style="display: none;"></video>
+      <div id="lightbox-caption" class="lightbox-caption"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Pill -->
+  <div id="app-toast"></div>
+
+  <!-- Core Data & Application Scripts -->
+  <script src="conversation_data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

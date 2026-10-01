@@ -50,3 +50,6 @@ firebase-admin*.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# raw instagram dump
+instagram-anujsandhuu-*/

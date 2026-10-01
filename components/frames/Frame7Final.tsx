@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { RotateCcw, Sparkles, Heart } from "lucide-react";
+import { RotateCcw, Sparkles, Heart, MessageCircle } from "lucide-react";
 import confetti from "canvas-confetti";
 import FinalBloom from "@/components/flowers/FinalBloom";
 import { TulipFlower, Wildflower } from "@/components/flowers/FlowerSvg";
@@ -101,6 +101,16 @@ export default function Frame7Final({ onReplay }: Frame7FinalProps) {
             <RotateCcw className="w-3 h-3 text-[#b45309]" />
             <span>Replay ↻</span>
           </button>
+
+          <a
+            href="/conversation"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#fdf2f4] hover:bg-[#fce7ed] border border-[#fbcfe8] text-[#be185d] font-sans text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>Our Instagram Chat 💌</span>
+          </a>
         </div>
 
         {/* Footer */}
