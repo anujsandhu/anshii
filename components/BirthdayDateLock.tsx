@@ -16,8 +16,10 @@ import {
   AlertOctagon,
   Radio,
   ShieldCheck,
+  Gamepad2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import VaultGameModal from "@/components/VaultGameModal";
 import {
   calculateTimeRemaining,
   DATE_DISPLAY,
@@ -64,6 +66,7 @@ export default function BirthdayDateLock({
   const [prankAlert, setPrankAlert] = useState<string | null>(null);
   const [sirenActive, setSirenActive] = useState(false);
   const [showPrankRevealModal, setShowPrankRevealModal] = useState(false);
+  const [showGameModal, setShowGameModal] = useState(false);
 
   // Normal scrapbook countdown states
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -471,14 +474,20 @@ export default function BirthdayDateLock({
     }, 3600);
   };
 
-  // Floating background petals configuration (Cute screen)
-  const PETALS = [
-    { id: 1, left: "8%", top: "14%", delay: 0, duration: 7, size: 18, rotate: 20 },
-    { id: 2, left: "88%", top: "18%", delay: 1.5, duration: 8, size: 22, rotate: -35 },
-    { id: 3, left: "15%", top: "78%", delay: 0.8, duration: 7.5, size: 20, rotate: 45 },
-    { id: 4, left: "82%", top: "82%", delay: 2.2, duration: 9, size: 16, rotate: -15 },
-    { id: 5, left: "4%", top: "45%", delay: 3, duration: 8.5, size: 15, rotate: 60 },
-    { id: 6, left: "92%", top: "52%", delay: 1.2, duration: 7.2, size: 19, rotate: -50 },
+  // Floating background petals & celestial sparkles
+  const FLOATING_ELEMENTS = [
+    { id: 1, left: "7%", top: "12%", delay: 0, duration: 7, size: 22, rotate: 20, icon: "🌸" },
+    { id: 2, left: "89%", top: "15%", delay: 1.5, duration: 8.5, size: 24, rotate: -35, icon: "🌷" },
+    { id: 3, left: "14%", top: "75%", delay: 0.8, duration: 8, size: 20, rotate: 45, icon: "🌸" },
+    { id: 4, left: "84%", top: "80%", delay: 2.2, duration: 9.5, size: 18, rotate: -15, icon: "✨" },
+    { id: 5, left: "5%", top: "45%", delay: 3, duration: 9, size: 16, rotate: 60, icon: "🌷" },
+    { id: 6, left: "93%", top: "48%", delay: 1.2, duration: 7.5, size: 22, rotate: -50, icon: "🌸" },
+    { id: 7, left: "24%", top: "25%", delay: 2.5, duration: 10, size: 15, rotate: 30, icon: "✨" },
+    { id: 8, left: "76%", top: "32%", delay: 3.8, duration: 8.2, size: 17, rotate: -25, icon: "💫" },
+    { id: 9, left: "38%", top: "88%", delay: 1.8, duration: 9, size: 18, rotate: 15, icon: "🌸" },
+    { id: 10, left: "68%", top: "85%", delay: 0.5, duration: 8.8, size: 16, rotate: -40, icon: "⭐" },
+    { id: 11, left: "18%", top: "58%", delay: 4.2, duration: 7.8, size: 14, rotate: 25, icon: "✨" },
+    { id: 12, left: "82%", top: "64%", delay: 2.9, duration: 8.4, size: 19, rotate: -10, icon: "🌷" },
   ];
 
   const formatNumber = (num: number) => String(num).padStart(2, "0");
@@ -490,17 +499,23 @@ export default function BirthdayDateLock({
 
   return (
     <div
-      className="relative min-h-[100dvh] w-screen flex flex-col justify-between items-center bg-[#FAF7F2] text-[#3F2E24] overflow-hidden select-none p-4 sm:p-6"
+      className="relative min-h-[100dvh] w-screen flex flex-col justify-between items-center bg-[#FAF7F2] text-[#3F2E24] overflow-hidden select-none p-3 sm:p-6"
       style={{
-        backgroundImage: `radial-gradient(circle at 50% 30%, rgba(253, 164, 175, 0.12) 0%, transparent 65%),
-                          radial-gradient(circle at 80% 80%, rgba(254, 215, 170, 0.10) 0%, transparent 55%)`,
+        backgroundImage: `radial-gradient(circle at 50% 30%, rgba(253, 164, 175, 0.16) 0%, transparent 65%),
+                          radial-gradient(circle at 80% 80%, rgba(254, 215, 170, 0.14) 0%, transparent 55%)`,
       }}
     >
-      {/* ── TOP HEADER (Minimalist, completely free of birthday clues) ───────── */}
+      {/* ── AMBIENT DREAMY GLOWING ORBS ───────────────────────────────────── */}
+      <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-gradient-to-br from-[#fda4af]/35 via-[#fecdd3]/20 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute -top-20 -right-20 w-88 h-88 rounded-full bg-gradient-to-bl from-[#fed7aa]/40 via-[#fef3c7]/20 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-28 left-1/2 -translate-x-1/2 w-[550px] h-[320px] rounded-full bg-gradient-to-t from-[#fce7f3]/30 via-[#e9d5ff]/20 to-transparent blur-3xl pointer-events-none" />
+
+      {/* ── TOP HEADER (Luxury, completely free of birthday clues) ──────────── */}
       <header className="w-full max-w-4xl mx-auto flex items-center justify-between z-20 py-2 sm:py-3">
         <div className="flex items-center gap-2">
-          <span className="font-serif italic text-sm sm:text-base font-medium text-[#786457] tracking-tight">
+          <span className="font-serif italic text-base sm:text-lg font-bold text-[#4a3832] tracking-tight flex items-center gap-1.5">
             Anshika
+            <span className="text-xs not-italic text-[#f59e0b]">✨</span>
           </span>
         </div>
 
@@ -510,56 +525,57 @@ export default function BirthdayDateLock({
               setShowHackerLayer(true);
               startSiren();
             }}
-            title="Trigger Security Lockdown Prank"
-            className="px-2.5 py-1 rounded-full bg-white/80 hover:bg-white border border-[#ef4444]/40 shadow-2xs text-[11px] font-sans font-medium text-[#ef4444] flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+            title="Trigger Security Alert"
+            className="px-3 py-1 rounded-full bg-white/90 hover:bg-white border border-[#fda4af]/60 shadow-2xs text-[11px] font-sans font-semibold text-[#be123c] flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
           >
-            <ShieldAlert className="w-3.5 h-3.5 text-[#ef4444] animate-pulse" />
-            <span className="hidden sm:inline">Security Alert</span>
+            <span className="w-2 h-2 rounded-full bg-[#ef4444] animate-ping" />
+            <ShieldAlert className="w-3.5 h-3.5 text-[#e11d48]" />
+            <span className="hidden sm:inline">Threat Level: High</span>
           </button>
 
           <button
-            onClick={triggerAttemptInteraction}
-            title="Vault status: Locked"
-            aria-label="Lock status"
-            className="w-8 h-8 rounded-full bg-white/80 border border-[#F7C8D0] shadow-2xs flex items-center justify-center text-sm cursor-pointer hover:bg-white hover:scale-105 active:scale-95 transition-all"
+            onClick={() => setShowGameModal(true)}
+            title="Play Vault Heist Mini-Game"
+            className="px-2.5 py-1 rounded-full bg-white/90 hover:bg-[#fff0f3] border border-[#fbcfe8] text-[#be185d] text-xs font-bold font-sans flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xs"
           >
-            <span className="text-sm">🔒</span>
+            <Gamepad2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Mini-Game</span>
           </button>
         </div>
       </header>
 
-      {/* ── FLOATING PETALS (Disabled if prefers-reduced-motion) ─────────────── */}
+      {/* ── FLOATING PARTICLES (Disabled if prefers-reduced-motion) ─────────── */}
       {mounted && !prefersReducedMotion && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-          {PETALS.map((petal) => (
+          {FLOATING_ELEMENTS.map((el) => (
             <motion.div
-              key={petal.id}
-              className="absolute opacity-40 text-[#FDA4AF]"
+              key={el.id}
+              className="absolute opacity-40 text-[#FDA4AF] select-none"
               style={{
-                left: petal.left,
-                top: petal.top,
-                fontSize: `${petal.size}px`,
+                left: el.left,
+                top: el.top,
+                fontSize: `${el.size}px`,
               }}
               animate={{
-                y: [0, -18, 0],
-                rotate: [petal.rotate, petal.rotate + 15, petal.rotate],
-                opacity: [0.35, 0.55, 0.35],
+                y: [0, -22, 0],
+                rotate: [el.rotate, el.rotate + 18, el.rotate],
+                opacity: [0.35, 0.65, 0.35],
               }}
               transition={{
-                duration: petal.duration,
+                duration: el.duration,
                 repeat: Infinity,
-                delay: petal.delay,
+                delay: el.delay,
                 ease: "easeInOut",
               }}
             >
-              🌸
+              {el.icon}
             </motion.div>
           ))}
         </div>
       )}
 
-      {/* ── RESTORED ORIGINAL CUTE CENTERPIECE CARD (100% Spoiler-Free) ───────── */}
-      <main className="relative z-10 w-full max-w-[520px] mx-auto my-auto flex flex-col items-center">
+      {/* ── RESTORED ORIGINAL CUTE CENTERPIECE CARD (Luxury Scrapbook) ─────── */}
+      <main className="relative z-10 w-full max-w-[540px] mx-auto my-auto flex flex-col items-center">
         {/* Subtle Playful Attempt Toast / Speech Bubble */}
         <AnimatePresence>
           {attemptMessage && (
@@ -575,64 +591,76 @@ export default function BirthdayDateLock({
           )}
         </AnimatePresence>
 
-        {/* The Cute Scrapbook Card */}
+        {/* The Luxury Scrapbook Card */}
         <motion.div
           animate={lockWiggle ? { x: [-6, 6, -5, 5, -2, 2, 0] } : {}}
           transition={{ duration: 0.4 }}
-          className="relative w-full rounded-3xl bg-[#FFFDF9] border-2 border-[#EBDCD0] shadow-[0_18px_45px_rgba(74,56,50,0.06)] p-6 sm:p-9 text-center overflow-hidden"
+          className="relative w-full rounded-[32px] bg-gradient-to-b from-[#ffffff] via-[#fffcf9] to-[#fff6f7] border-2 border-[#eeddd3] shadow-[0_25px_70px_-15px_rgba(244,63,94,0.18),0_0_0_1px_rgba(255,255,255,0.95)_inset,0_4px_12px_rgba(120,53,15,0.04)] p-6 sm:p-9 text-center overflow-hidden"
         >
-          {/* Top Decorative Washi Tape */}
+          {/* Top Decorative Gold-Foil Floral Washi Tape */}
           <div
-            className="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-[#FED7AA]/80 border-b border-[#FDBA74]/50 shadow-2xs rotate-[-1.5deg] pointer-events-none rounded-xs"
+            className="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-7 bg-gradient-to-r from-[#fed7aa] via-[#fef08a] to-[#fed7aa] border-b border-[#f59e0b]/30 shadow-xs rotate-[-1.2deg] pointer-events-none rounded-xs flex items-center justify-around px-2 opacity-95"
             style={{
-              clipPath:
-                "polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%, 3% 50%)",
+              clipPath: "polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%, 3% 50%)",
             }}
+          >
+            <span className="text-[8px] text-[#92400e]/60">✦ ✦ ✦ ✦ ✦ ✦ ✦</span>
+          </div>
+
+          {/* Corner Miniature Rose Washi Tape */}
+          <div
+            className="absolute -bottom-2 -right-3 w-16 h-5 bg-[#fbcfe8]/80 shadow-2xs rotate-[-12deg] pointer-events-none rounded-xs"
+            style={{ clipPath: "polygon(4% 0, 100% 0, 96% 100%, 0 100%)" }}
           />
 
-          {/* Stamp Badge Top Right */}
-          <div className="absolute top-4 right-4 sm:top-5 sm:right-5 px-2.5 py-1 rounded-md border border-dashed border-[#F4A9B8] bg-[#FFF0F3]/60 text-[10px] font-sans font-bold text-[#BE185D] rotate-2 tracking-wider">
-            OCT 28 &apos;26
+          {/* Vintage Postage Stamp Top Right */}
+          <div className="absolute top-4 right-4 sm:top-5 sm:right-5 px-2.5 py-1.5 rounded-lg border-2 border-dashed border-[#f43f5e]/40 bg-[#fff1f2] text-[10px] font-sans font-bold text-[#be185d] rotate-3 tracking-wider shadow-2xs flex flex-col items-center">
+            <span className="text-[8px] uppercase tracking-widest text-[#9f1239]">POSTAGE</span>
+            <span className="font-extrabold text-[11px] text-[#be123c]">OCT 28 &apos;26</span>
           </div>
 
-          {/* Main Top Flower */}
-          <div className="text-3xl sm:text-4xl mb-2.5 select-none animate-bounce-gentle">
-            🌷
+          {/* Glowing Tulip Halo */}
+          <div className="relative inline-flex items-center justify-center mb-2">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#ffe4e6] to-[#fef3c7] shadow-[0_0_24px_rgba(253,164,175,0.55)] flex items-center justify-center animate-bounce-gentle">
+              <span className="text-3xl sm:text-4xl select-none">🌷</span>
+            </div>
           </div>
 
-          {/* Badge: "Something is waiting..." */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF0F3] border border-[#FBCFE8] text-[11px] sm:text-xs font-sans font-semibold text-[#BE185D] mb-3.5 shadow-2xs">
-            <Sparkles className="w-3 h-3 text-[#F43F5E]" />
-            <span>Something is waiting...</span>
+          {/* Crystal Glassmorphic Badge */}
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-[#fff0f3] to-[#fce7f3] border border-[#fbcfe8] text-[11px] sm:text-xs font-sans font-semibold text-[#be185d] mb-3 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#f43f5e] animate-pulse" />
+            <span className="tracking-wide">Something is waiting...</span>
           </div>
 
-          {/* Main Heading: "Not yet. 👀" */}
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#3F2E24] tracking-tight leading-tight mb-2">
+          {/* Main Headline in Playfair Display */}
+          <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-[#3f2e24] tracking-tight leading-tight mb-2 drop-shadow-[0_1px_2px_rgba(120,53,15,0.06)]">
             Not yet. 👀
           </h1>
 
-          {/* Subtitle: "You found the door a little early." */}
+          {/* Subtitle */}
           <p className="font-sans text-xs sm:text-sm text-[#786457] font-medium leading-relaxed">
             You found the door a little early.
           </p>
 
-          {/* Then: "Come back on 28 October." */}
-          <p className="font-sans text-xs sm:text-sm text-[#BE185D] font-semibold mt-0.5 mb-6">
-            Come back on 28 October.
-          </p>
+          {/* Highlight Badge */}
+          <div className="inline-block my-1 px-3 py-0.5 rounded-full bg-[#fff0f3] border border-[#fda4af]/40">
+            <span className="font-sans text-xs sm:text-sm text-[#be185d] font-bold">
+              Come back on 28 October.
+            </span>
+          </div>
 
-          {/* ── COUNTDOWN TIMER CARDS (Restored Original Layout) ──────────────── */}
-          <div className="my-3 sm:my-5">
+          {/* ── COUNTDOWN TIMER (Luxury Pearl Tiles) ────────────────────────── */}
+          <div className="my-4 sm:my-5">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 max-w-md mx-auto">
               {/* DAYS */}
               <div
                 onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-[#FAF7F2] border border-[#EBDCD0] hover:border-[#FDA4AF] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-2xs hover:shadow-xs active:scale-95"
+                className="group cursor-pointer rounded-2xl bg-gradient-to-b from-[#ffffff] to-[#faf6f0] border-2 border-[#ebdcd0] hover:border-[#fda4af] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-95"
               >
-                <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#3F2E24] tracking-tight leading-none mb-1">
+                <span className="font-serif text-2xl sm:text-3xl font-extrabold bg-gradient-to-b from-[#881337] via-[#9f1239] to-[#be123c] bg-clip-text text-transparent tracking-tight leading-none mb-1">
                   {formatNumber(timeRemaining.days)}
                 </span>
-                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927E76] uppercase tracking-wider">
+                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927e76] uppercase tracking-wider">
                   DAYS
                 </span>
               </div>
@@ -640,12 +668,12 @@ export default function BirthdayDateLock({
               {/* HOURS */}
               <div
                 onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-[#FAF7F2] border border-[#EBDCD0] hover:border-[#FDA4AF] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-2xs hover:shadow-xs active:scale-95"
+                className="group cursor-pointer rounded-2xl bg-gradient-to-b from-[#ffffff] to-[#faf6f0] border-2 border-[#ebdcd0] hover:border-[#fda4af] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-95"
               >
-                <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#3F2E24] tracking-tight leading-none mb-1">
+                <span className="font-serif text-2xl sm:text-3xl font-extrabold bg-gradient-to-b from-[#881337] via-[#9f1239] to-[#be123c] bg-clip-text text-transparent tracking-tight leading-none mb-1">
                   {formatNumber(timeRemaining.hours)}
                 </span>
-                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927E76] uppercase tracking-wider">
+                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927e76] uppercase tracking-wider">
                   HOURS
                 </span>
               </div>
@@ -653,47 +681,47 @@ export default function BirthdayDateLock({
               {/* MINUTES */}
               <div
                 onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-[#FAF7F2] border border-[#EBDCD0] hover:border-[#FDA4AF] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-2xs hover:shadow-xs active:scale-95"
+                className="group cursor-pointer rounded-2xl bg-gradient-to-b from-[#ffffff] to-[#faf6f0] border-2 border-[#ebdcd0] hover:border-[#fda4af] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-95"
               >
-                <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#3F2E24] tracking-tight leading-none mb-1">
+                <span className="font-serif text-2xl sm:text-3xl font-extrabold bg-gradient-to-b from-[#881337] via-[#9f1239] to-[#be123c] bg-clip-text text-transparent tracking-tight leading-none mb-1">
                   {formatNumber(timeRemaining.minutes)}
                 </span>
-                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927E76] uppercase tracking-wider">
+                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927e76] uppercase tracking-wider">
                   MINUTES
                 </span>
               </div>
 
-              {/* SECONDS */}
+              {/* SECONDS (Special radiant blush pulse) */}
               <div
                 onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-[#FAF7F2] border border-[#EBDCD0] hover:border-[#FDA4AF] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-2xs hover:shadow-xs active:scale-95"
+                className="group cursor-pointer rounded-2xl bg-gradient-to-b from-[#fff1f2] to-[#ffe4e6] border-2 border-[#fda4af] hover:border-[#f43f5e] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-95"
               >
                 <motion.span
                   key={timeRemaining.seconds}
-                  initial={prefersReducedMotion ? false : { scale: 1.12, opacity: 0.8 }}
+                  initial={prefersReducedMotion ? false : { scale: 1.15, opacity: 0.8 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="font-serif text-2xl sm:text-3xl font-extrabold text-[#BE185D] tracking-tight leading-none mb-1"
+                  className="font-serif text-2xl sm:text-3xl font-extrabold text-[#be123c] tracking-tight leading-none mb-1 drop-shadow-[0_0_8px_rgba(244,63,94,0.35)]"
                 >
                   {formatNumber(timeRemaining.seconds)}
                 </motion.span>
-                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927E76] uppercase tracking-wider">
+                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#be123c] uppercase tracking-wider">
                   SECONDS
                 </span>
               </div>
             </div>
 
             {/* DATE LABEL */}
-            <div className="mt-4 pt-3 border-t border-[#F2E8DF] flex items-center justify-center gap-2 text-xs font-sans text-[#786457]">
+            <div className="mt-4 pt-3 border-t border-[#f2e8df] flex items-center justify-center gap-2 text-xs font-sans text-[#786457]">
               <span className="font-medium">Unlocks {DATE_DISPLAY}</span>
-              <span className="text-[#D1C2B8]">•</span>
-              <span className="font-semibold text-[#BE185D]">{TIMEZONE_DISPLAY}</span>
+              <span className="text-[#d1c2b8]">•</span>
+              <span className="font-semibold text-[#be185d]">{TIMEZONE_DISPLAY}</span>
             </div>
           </div>
 
-          {/* ── PLAYFUL MESSAGES ─────────────────────────────────────────────── */}
-          <div className="mt-4 pt-4 border-t border-[#F2E8DF] space-y-1">
-            <p className="font-serif italic text-sm sm:text-base font-medium text-[#3F2E24]">
+          {/* ── SNOOPER QUOTE ───────────────────────────────────────────────── */}
+          <div className="mt-4 pt-3 border-t border-[#f2e8df] space-y-1">
+            <p className="font-serif italic text-sm sm:text-base font-semibold text-[#3f2e24]">
               &ldquo;Yes, I actually locked it. 😂&rdquo;
             </p>
             <p className="font-sans text-xs text-[#786457]">
@@ -701,28 +729,39 @@ export default function BirthdayDateLock({
             </p>
           </div>
 
-          {/* Interactive Door Checking Buttons */}
-          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-2">
+          {/* ── GAMIFIED ACTION BUTTONS ─────────────────────────────────────── */}
+          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+            {/* Gamified Vault Heist Mini-Game Button */}
+            <button
+              onClick={() => setShowGameModal(true)}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e] hover:brightness-105 text-xs font-sans font-bold text-white shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:shadow-[0_6px_20px_rgba(244,63,94,0.45)] hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
+            >
+              <Gamepad2 className="w-4 h-4" />
+              <span>🎮 Play Vault Heist Game</span>
+            </button>
+
+            {/* Ask Anuj on WhatsApp */}
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-b from-white to-[#f0fdf4] hover:bg-[#f0fdf4] border border-[#bbf7d0] text-xs font-sans font-semibold text-[#15803d] shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95"
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-[#22c55e]" />
+              <span>Ask Anuj on WhatsApp</span>
+            </a>
+
+            {/* Door Check Button */}
             <button
               onClick={() => {
                 setShowHackerLayer(true);
                 startSiren();
               }}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#FAF7F2] hover:bg-[#FFF0F3] border border-[#EBDCD0] hover:border-[#FBCFE8] text-xs font-sans font-semibold text-[#786457] hover:text-[#BE185D] transition-all cursor-pointer shadow-2xs active:scale-95"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-full bg-white/80 hover:bg-[#fff0f3] border border-[#ebdcd0] hover:border-[#fbcfe8] text-xs font-sans font-medium text-[#786457] hover:text-[#be185d] transition-all cursor-pointer shadow-2xs active:scale-95"
             >
-              <Lock className="w-3.5 h-3.5 text-[#F43F5E]" />
-              <span>Tap to check door</span>
+              <Lock className="w-3 h-3 text-[#f43f5e]" />
+              <span>Check Door</span>
             </button>
-
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#FAF7F2] hover:bg-[#F0FDF4] border border-[#EBDCD0] hover:border-[#BBF7D0] text-xs font-sans font-semibold text-[#786457] hover:text-[#16A34A] transition-all cursor-pointer shadow-2xs active:scale-95"
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-[#22C55E]" />
-              <span>Ask Anuj on WhatsApp</span>
-            </a>
           </div>
         </motion.div>
 
@@ -925,15 +964,18 @@ export default function BirthdayDateLock({
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
                   {/* Enter Countdown Button */}
+                  {/* Play Vault Heist Mini-Game Button */}
                   <button
                     onClick={() => {
                       stopSiren();
-                      setShowPrankRevealModal(true);
+                      setShowPrankRevealModal(false);
+                      setShowHackerLayer(false);
+                      setShowGameModal(true);
                     }}
                     className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white text-xs font-bold font-sans shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
                   >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Enter Secret Vault 🌷</span>
+                    <Gamepad2 className="w-3.5 h-3.5" />
+                    <span>🎮 Play Vault Heist Game</span>
                   </button>
 
                   {/* Playful Hack Attempt with Buzzer & Vibrate */}
@@ -1007,11 +1049,16 @@ export default function BirthdayDateLock({
 
               <div className="flex flex-col gap-2.5">
                 <button
-                  onClick={handleOpenSecretVault}
+                  onClick={() => {
+                    stopSiren();
+                    setShowPrankRevealModal(false);
+                    setShowHackerLayer(false);
+                    setShowGameModal(true);
+                  }}
                   className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_20px_rgba(244,63,94,0.45)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
                 >
-                  <Eye className="w-4 h-4" />
-                  <span>Phew! Open Secret Vault 🌷</span>
+                  <Gamepad2 className="w-4 h-4" />
+                  <span>🎮 Play The Vault Heist Mini-Game!</span>
                 </button>
 
                 <button
@@ -1021,13 +1068,19 @@ export default function BirthdayDateLock({
                   }}
                   className="w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-[#fda4af] text-xs font-sans font-medium transition-colors cursor-pointer"
                 >
-                  Haha okay Anuj, you got me 😂
+                  Return to Countdown Card 🌷
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── THE GAMIFIED VAULT HEIST MINI-GAME MODAL ───────────────────────── */}
+      <VaultGameModal
+        isOpen={showGameModal}
+        onClose={() => setShowGameModal(false)}
+      />
     </div>
   );
 }

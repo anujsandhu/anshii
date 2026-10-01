@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Plus_Jakarta_Sans } from "next/font/google";
+import { Caveat, Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import LeavePageGuard from "@/components/LeavePageGuard";
 
@@ -11,6 +11,12 @@ const caveat = Caveat({
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-sans",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-serif",
   subsets: ["latin"],
   display: "swap",
 });
@@ -39,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${caveat.variable} ${plusJakarta.variable} scroll-smooth`}
+      className={`${caveat.variable} ${plusJakarta.variable} ${playfair.variable} scroll-smooth`}
     >
       <body className="min-h-screen bg-[#faf7f2] text-[#3f2e24] font-sans selection:bg-[#fda4af]/40 selection:text-[#7f1d1d] antialiased overflow-x-hidden">
         <LeavePageGuard />
