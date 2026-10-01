@@ -117,3 +117,39 @@ export function generateSignedUploadParams(folder = "anshii_birthday_uploads") {
     folder,
   };
 }
+
+/**
+ * Generate an optimized delivery URL with auto-format and auto-quality.
+ */
+export function getOptimizedImageUrl(
+  publicId: string,
+  options?: { width?: number; height?: number; crop?: string; gravity?: string }
+): string {
+  ensureCloudinaryConfig();
+  return cloudinary.url(publicId, {
+    fetch_format: "auto",
+    quality: "auto",
+    crop: options?.crop || "limit",
+    gravity: options?.gravity,
+    width: options?.width,
+    height: options?.height,
+    secure: true,
+  });
+}
+
+/**
+ * Generate an auto-cropped square thumbnail URL (e.g. 500x500).
+ */
+export function getSquareThumbnailUrl(publicId: string, size = 500): string {
+  ensureCloudinaryConfig();
+  return cloudinary.url(publicId, {
+    fetch_format: "auto",
+    quality: "auto",
+    crop: "auto",
+    gravity: "auto",
+    width: size,
+    height: size,
+    secure: true,
+  });
+}
+
