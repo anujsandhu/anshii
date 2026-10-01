@@ -190,6 +190,8 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
   const lastScrollTimeRef = useRef(0);
   const touchStartYRef = useRef(0);
   const touchStartTimeRef = useRef(0);
+  const touchStartXRef = useRef(0);
+  const touchTargetScrollableRef = useRef<Element | null>(null);
   const prefersReducedMotionRef = useRef(false);
 
   useEffect(() => {
@@ -360,11 +362,32 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
     showToast("Replaying scrapbook from Chapter 01 🌸", "info", undefined, 2500);
   }, [showToast]);
 
+  // Helper: find the closest scrollable ancestor of an element
+  const getScrollableParent = (el: Element | null): Element | null => {
+    while (el && el !== document.body) {
+      const style = window.getComputedStyle(el);
+      const overflow = style.overflowY;
+      const isScrollable = (overflow === "auto" || overflow === "scroll") && el.scrollHeight > el.clientHeight;
+      if (isScrollable) return el;
+      el = el.parentElement;
+    }
+    return null;
+  };
+
   // Wheel & Trackpad Listener (strict 1-frame-per-gesture)
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
+      // If the wheel target is inside a scrollable frame container, let it scroll naturally
+      const scrollable = getScrollableParent(e.target as Element);
+      if (scrollable) {
+        const atTop = scrollable.scrollTop <= 0;
+        const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 2;
+        // Only intercept if the scrollable is already at its boundary in the scroll direction
+        if (e.deltaY > 0 && !atBottom) return;
+        if (e.deltaY < 0 && !atTop) return;
+      }
 
+      e.preventDefault();
       if (isTransitioningRef.current) return;
 
       const now = Date.now();
@@ -376,10 +399,8 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
       lastScrollTimeRef.current = now;
 
       if (e.deltaY > 0) {
-        // User wants to go down / next
         handleNext();
       } else {
-        // User wants to go up / prev
         handlePrev();
       }
     };
@@ -392,18 +413,37 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
       touchStartYRef.current = e.touches[0].clientY;
+      touchStartXRef.current = e.touches[0].clientX;
       touchStartTimeRef.current = Date.now();
+      // Record the scrollable container (if any) where the touch started
+      touchTargetScrollableRef.current = getScrollableParent(e.target as Element);
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       if (isTransitioningRef.current) return;
 
       const touchEndY = e.changedTouches[0].clientY;
+      const touchEndX = e.changedTouches[0].clientX;
       const deltaY = touchStartYRef.current - touchEndY;
+      const deltaX = touchStartXRef.current - touchEndX;
       const deltaTime = Date.now() - touchStartTimeRef.current;
 
-      // Require meaningful swipe gesture
+      // Ignore mostly-horizontal swipes (probably swiping within a carousel/gallery)
+      if (Math.abs(deltaX) > Math.abs(deltaY)) return;
+
+      // Require meaningful vertical swipe gesture
       if (Math.abs(deltaY) > 45 && deltaTime < 900) {
+        // If the touch originated inside a scrollable frame area, check if it can still scroll
+        const scrollable = touchTargetScrollableRef.current;
+        if (scrollable) {
+          const atTop = scrollable.scrollTop <= 2;
+          const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 2;
+          // Swipe-down (deltaY < 0 = finger moved down) = scrolling up in content
+          if (deltaY < 0 && !atTop) return; // inner content can still scroll up
+          // Swipe-up (deltaY > 0 = finger moved up) = scrolling down in content
+          if (deltaY > 0 && !atBottom) return; // inner content can still scroll down
+        }
+
         const now = Date.now();
         if (now - lastScrollTimeRef.current < 800) return;
         lastScrollTimeRef.current = now;

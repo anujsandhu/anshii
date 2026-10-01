@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, CheckCircle2, Copy, Check, ChevronDown } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -12,7 +12,6 @@ interface Frame6LetterProps {
   onNext: () => void;
 }
 
-// Split letter into digestible paragraph chunks
 const LETTER_CHUNKS = [
   {
     id: 0,
@@ -66,14 +65,24 @@ export default function Frame6Letter({
 }: Frame6LetterProps) {
   const [copied, setCopied] = useState(false);
   const [taskDone, setTaskDone] = useState(isCompleted);
-  // How many chunks are revealed (starts at 1 — show first paragraph)
   const [revealed, setRevealed] = useState(1);
   const allRevealed = revealed >= LETTER_CHUNKS.length;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setTaskDone(isCompleted);
     if (isCompleted) setRevealed(LETTER_CHUNKS.length);
   }, [isCompleted]);
+
+  // Auto-scroll to bottom when a new paragraph is revealed
+  useEffect(() => {
+    if (bottomRef.current && scrollRef.current) {
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 150);
+    }
+  }, [revealed]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(FULL_TEXT).catch(() => {});
@@ -102,162 +111,180 @@ export default function Frame6Letter({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
+    <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-5 select-none overflow-hidden">
       {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-[#fbcfe8]/25 via-[#fed7aa]/20 to-[#d8b4fe]/20 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-tr from-[#fbcfe8]/25 via-[#fed7aa]/20 to-[#d8b4fe]/20 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Main Letter Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65 }}
-        className="w-full max-w-xl paper-card-warm rounded-3xl relative shadow-xl border border-[#ebdcd0] z-10 text-left overflow-hidden my-auto p-4 sm:p-7"
+      {/* Outer wrapper — fills height between header and bottom nav */}
+      <div
+        className="w-full max-w-xl flex flex-col z-10 overflow-hidden"
+        style={{
+          paddingTop: "max(58px, calc(var(--sat) + 50px))",
+          paddingBottom: "max(72px, calc(var(--sab) + 64px))",
+          height: "100%",
+        }}
       >
-        <div className="washi-tape-pink" />
+        {/* Main Letter Card — fills remaining height and scrolls internally */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className="w-full paper-card-warm rounded-2xl sm:rounded-3xl relative shadow-xl border border-[#ebdcd0] text-left overflow-hidden flex flex-col"
+          style={{ flex: 1, minHeight: 0 }}
+        >
+          <div className="washi-tape-pink" />
 
-        {/* Botanical Corner Flourishes */}
-        <FloralCorner
-          className="absolute top-2 left-2 pointer-events-none opacity-40 z-10"
-          size={28}
-          color="#86efac"
-          flowerColor="#fda4af"
-        />
-        <FloralCorner
-          className="absolute bottom-2 right-2 pointer-events-none opacity-40 rotate-180 z-10"
-          size={28}
-          color="#86efac"
-          flowerColor="#d8b4fe"
-        />
+          {/* Botanical Corner Flourishes */}
+          <FloralCorner
+            className="absolute top-2 left-2 pointer-events-none opacity-30 z-10"
+            size={22}
+            color="#86efac"
+            flowerColor="#fda4af"
+          />
+          <FloralCorner
+            className="absolute bottom-16 right-2 pointer-events-none opacity-30 rotate-180 z-10"
+            size={22}
+            color="#86efac"
+            flowerColor="#d8b4fe"
+          />
 
-        {/* Top Header */}
-        <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#ebdcd0]">
-          <div className="flex items-center gap-1.5 font-handwriting text-lg text-[#786457]">
-            <span>To: Anshika</span>
-            <span className="text-[#d1c5b8] text-xs">&bull;</span>
-            <span className="text-xs font-sans font-normal">October 28, 2026</span>
+          {/* ── TOP HEADER (fixed inside card) ── */}
+          <div className="flex items-center justify-between px-3.5 sm:px-5 pt-3.5 sm:pt-4 pb-2.5 border-b border-[#ebdcd0] shrink-0">
+            <div className="flex items-center gap-1.5 font-handwriting text-base sm:text-lg text-[#786457]">
+              <span>To: Anshika 💌</span>
+              <span className="text-[#d1c5b8] text-xs hidden sm:inline">&bull;</span>
+              <span className="text-[10px] sm:text-xs font-sans font-normal hidden sm:inline">October 28, 2026</span>
+            </div>
+
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-sans text-[#786457] hover:text-[#3f2e24] bg-[#f5ede4] hover:bg-[#ebdcd0] border border-[#e3d3c4] transition-colors cursor-pointer shrink-0"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3 h-3 text-[#10b981]" />
+                  <span className="text-[#065f46] font-medium">Saved!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3 text-[#8c7465]" />
+                  <span>Save</span>
+                </>
+              )}
+            </button>
           </div>
 
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-sans text-[#786457] hover:text-[#3f2e24] bg-[#f5ede4] hover:bg-[#ebdcd0] border border-[#e3d3c4] transition-colors cursor-pointer"
+          {/* ── SCROLLABLE LETTER BODY ── */}
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto overflow-x-hidden px-3.5 sm:px-5 py-3 space-y-2.5"
+            style={{ overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
           >
-            {copied ? (
-              <>
-                <Check className="w-3 h-3 text-[#10b981]" />
-                <span className="text-[#065f46] text-[11px] font-medium">Saved!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3 h-3 text-[#8c7465]" />
-                <span className="text-[11px]">Save letter</span>
-              </>
-            )}
-          </button>
-        </div>
+            {/* Salutation */}
+            <p className="font-handwriting text-xl sm:text-2xl font-bold text-[#be185d]">
+              Dear Anshika,
+            </p>
+            <p className="text-[11px] sm:text-sm text-[#3f2e24] font-sans font-semibold">
+              Happy 19th Birthday.
+            </p>
 
-        {/* ── Letter body: chunk-by-chunk reveal ── */}
-        <div className="space-y-2.5">
-          {/* Salutation */}
-          <p className="font-handwriting text-2xl font-bold text-[#be185d]">
-            Dear Anshika,
-          </p>
-          <p className="text-xs sm:text-sm text-[#3f2e24] font-sans font-semibold">
-            Happy 19th Birthday.
-          </p>
-
-          {/* Paragraphs revealed progressively */}
-          {LETTER_CHUNKS.slice(0, revealed).map((chunk, i) => (
-            <motion.p
-              key={chunk.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: "easeOut" }}
-              className="text-xs sm:text-sm text-[#3f2e24] font-sans leading-relaxed"
-            >
-              {chunk.text}
-            </motion.p>
-          ))}
-
-          {/* Show "Read more" tap until all revealed */}
-          <AnimatePresence>
-            {!allRevealed && (
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={handleRevealNext}
-                className="flex items-center gap-1.5 text-[11px] font-sans text-[#fda4af] hover:text-[#f43f5e] transition-colors cursor-pointer font-semibold"
-              >
-                <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
-                <span>keep reading…</span>
-              </motion.button>
-            )}
-          </AnimatePresence>
-
-          {/* Sign-off — only shows when fully revealed */}
-          <AnimatePresence>
-            {allRevealed && (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
+            {/* Paragraphs revealed progressively */}
+            {LETTER_CHUNKS.slice(0, revealed).map((chunk) => (
+              <motion.p
+                key={chunk.id}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="flex items-end justify-between pt-1"
+                transition={{ duration: 0.45, ease: "easeOut" }}
+                className="text-[12px] sm:text-sm text-[#3f2e24] font-sans leading-relaxed"
               >
-                <div>
-                  <span className="font-handwriting text-xl font-bold text-[#3f2e24] block">
-                    &mdash; Anuj
-                  </span>
-                  <span className="text-[10px] text-[#8c7465] font-sans">
-                    28 October 2026
-                  </span>
-                </div>
-                <div className="text-xl">🌸</div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                {chunk.text}
+              </motion.p>
+            ))}
 
-        {/* ── Task / CTA ── */}
-        <div className="mt-3 pt-3 border-t border-[#ebdcd0]">
-          {!taskDone ? (
-            <div className="flex flex-col sm:flex-row items-center gap-2">
-              {!allRevealed ? (
-                <p className="text-[11px] text-[#a0897a] font-sans">
-                  Tap &ldquo;keep reading&rdquo; to finish the letter first ✉️
-                </p>
-              ) : (
+            {/* "Keep reading" tap */}
+            <AnimatePresence>
+              {!allRevealed && (
                 <motion.button
-                  onClick={handleUnlockFinal}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
-                  className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer inline-flex items-center justify-center gap-2 btn-cute"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={handleRevealNext}
+                  className="flex items-center gap-1.5 text-[11px] font-sans text-[#fda4af] hover:text-[#f43f5e] transition-colors cursor-pointer font-semibold py-1"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Unlock Final Surprise 💌</span>
+                  <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
+                  <span>keep reading…</span>
                 </motion.button>
               )}
-            </div>
-          ) : (
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="flex flex-col sm:flex-row items-center gap-2"
-            >
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46] text-xs font-sans font-semibold">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
-                <span>Letter read! Final surprise unlocked ✓</span>
+            </AnimatePresence>
+
+            {/* Sign-off — only shows when fully revealed */}
+            <AnimatePresence>
+              {allRevealed && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex items-end justify-between pt-1"
+                >
+                  <div>
+                    <span className="font-handwriting text-lg sm:text-xl font-bold text-[#3f2e24] block">
+                      &mdash; Anuj
+                    </span>
+                    <span className="text-[10px] text-[#8c7465] font-sans">
+                      28 October 2026
+                    </span>
+                  </div>
+                  <div className="text-xl">🌸</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Scroll anchor */}
+            <div ref={bottomRef} className="h-1" />
+          </div>
+
+          {/* ── BOTTOM CTA (fixed at bottom of card) ── */}
+          <div className="px-3.5 sm:px-5 py-2.5 sm:py-3 border-t border-[#ebdcd0] shrink-0 bg-[#fffaf7]/95 backdrop-blur-sm">
+            {!taskDone ? (
+              <div className="flex items-center gap-2">
+                {!allRevealed ? (
+                  <p className="text-[11px] text-[#a0897a] font-sans">
+                    Tap &ldquo;keep reading&rdquo; to finish the letter first ✉️
+                  </p>
+                ) : (
+                  <motion.button
+                    onClick={handleUnlockFinal}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="w-full px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer inline-flex items-center justify-center gap-2 btn-cute"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Unlock Final Surprise 💌</span>
+                  </motion.button>
+                )}
               </div>
-              <button
-                onClick={onNext}
-                className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer inline-flex items-center justify-center gap-2 btn-cute"
+            ) : (
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex flex-col sm:flex-row items-center gap-2"
               >
-                <span>Continue to Grand Finale</span>
-                <span className="text-base leading-none">↓</span>
-              </button>
-            </motion.div>
-          )}
-        </div>
-      </motion.div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46] text-[11px] font-sans font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
+                  <span>Letter read! Final surprise unlocked ✓</span>
+                </div>
+                <button
+                  onClick={onNext}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm shadow-lg transition-all duration-200 cursor-pointer inline-flex items-center justify-center gap-2 btn-cute"
+                >
+                  <span>Continue to Grand Finale</span>
+                  <span className="text-base leading-none">↓</span>
+                </button>
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
