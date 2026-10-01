@@ -24,12 +24,13 @@ const LOCKED_TITLES = [
 const DEFAULT_TASK_HINTS: Record<number, string> = {
   0: "Pick 'Yes' or 'Obviously' to start your scrapbook! ✨",
   1: "Tap the blooming flower button to mark your attendance! 🌸",
-  2: "Find and collect the secret heart sticker on the polaroids! 💖",
-  3: "Select your favorite birthday mixtape soundtrack! 🎵",
-  4: "Answer the web development CS quiz question! 💻",
-  5: "Scratch the card to reveal the hidden surprise! 🎟️",
-  6: "Read through the letter to unlock the grand finale! 💌",
-  7: "Grand finale unlocked! 🌸",
+  2: "Find the secret heart in the polaroids to continue! 💖",
+  3: "Upload all 4 unboxing gift snaps to unlock the next chapter! 🎁",
+  4: "Select your favorite birthday mixtape soundtrack! 🎵",
+  5: "Answer the web development CS quiz question! 💻",
+  6: "Scratch the card to reveal the hidden surprise! 🎟️",
+  7: "Read through the letter to unlock the grand finale! 💌",
+  8: "Grand finale unlocked! 🌸",
 };
 
 export default function LockedSkipTransition({

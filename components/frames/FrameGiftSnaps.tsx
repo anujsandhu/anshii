@@ -213,6 +213,7 @@ export default function FrameGiftSnaps({
         const allDone = presetIds.every((id) => Boolean(parsed[id]?.imageUrl));
         if (allDone) {
           setTaskDone(true);
+          onCompleteTask();
         }
       }
 
@@ -247,7 +248,10 @@ export default function FrameGiftSnaps({
             // Only mark done if ALL preset slots are now present
             const presetIds = DEFAULT_GIFT_SLOTS.map((s) => s.id);
             const allDone = presetIds.every((id) => Boolean(merged[id]?.imageUrl));
-            if (allDone) setTaskDone(true);
+            if (allDone) {
+              setTaskDone(true);
+              onCompleteTask();
+            }
             return merged;
           });
         }
@@ -255,10 +259,12 @@ export default function FrameGiftSnaps({
       .catch((err) => {
         console.warn("Could not sync from Firestore API:", err);
       });
-  }, []);
+  }, [onCompleteTask]);
 
   useEffect(() => {
-    setTaskDone(isCompleted);
+    if (isCompleted) {
+      setTaskDone(true);
+    }
   }, [isCompleted]);
 
   // Persist snaps to localStorage
@@ -864,7 +870,10 @@ export default function FrameGiftSnaps({
                 &ldquo;Every unboxing moment is saved! 🎁📸&rdquo;
               </p>
               <button
-                onClick={onNext}
+                onClick={() => {
+                  onCompleteTask();
+                  onNext();
+                }}
                 className="mt-2 px-7 py-2.5 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 btn-cute"
               >
                 <span>Continue to Birthday Mixtape</span>

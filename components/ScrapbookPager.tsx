@@ -132,7 +132,58 @@ interface ScrapbookPagerProps {
 
 export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPagerProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
-  const [completedFrames, setCompletedFrames] = useState<Set<number>>(new Set());
+  const [completedFrames, setCompletedFrames] = useState<Set<number>>(() => {
+    const initial = new Set<number>();
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("anshii_completed_frames");
+        if (saved) {
+          const arr = JSON.parse(saved);
+          if (Array.isArray(arr)) arr.forEach((idx) => initial.add(idx));
+        }
+        // Auto-unlock frame 3 if all 4 gift snaps are in localStorage
+        const savedSnaps = localStorage.getItem("anshii_gift_snaps_v4");
+        if (savedSnaps) {
+          const parsed = JSON.parse(savedSnaps);
+          const presetKeys = ["step-1", "step-2", "step-3", "step-4"];
+          if (presetKeys.every((k) => Boolean(parsed[k]?.imageUrl))) {
+            initial.add(3);
+          }
+        }
+      } catch {}
+    }
+    return initial;
+  });
+
+  // Persist completedFrames to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "anshii_completed_frames",
+        JSON.stringify(Array.from(completedFrames))
+      );
+    } catch {}
+  }, [completedFrames]);
+
+  // On mount, also check if Firestore has all 4 gift snaps uploaded
+  useEffect(() => {
+    fetch("/api/gift-snaps")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.snaps) {
+          const presetKeys = ["step-1", "step-2", "step-3", "step-4"];
+          if (presetKeys.every((k) => Boolean(data.snaps[k]?.imageUrl))) {
+            setCompletedFrames((prev) => {
+              const next = new Set(prev);
+              next.add(3);
+              return next;
+            });
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const [activeTrackIndex, setActiveTrackIndex] = useState(0);
   const [musicTriggered, setMusicTriggered] = useState(autoStartMusic);
 
