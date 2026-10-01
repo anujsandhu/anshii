@@ -3,9 +3,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Sparkles, CheckCircle2, ArrowDown, Gift, Send } from "lucide-react";
+import { Heart, Sparkles, CheckCircle2, ArrowDown, Gift } from "lucide-react";
 import confetti from "canvas-confetti";
-import { openDirectWhatsApp } from "@/data/whatsappImages";
 
 interface Frame2BirthdayProps {
   isCompleted: boolean;
@@ -26,17 +25,6 @@ export default function Frame2Birthday({
     if (!isCompleted) setNoteOpen(false);
   }, [isCompleted]);
 
-  const handleSendChildhoodPhoto = () => {
-    openDirectWhatsApp("Hey Anuj! Look who grew up… 🥺✨ I found my childhood photo on your birthday website!");
-    try {
-      confetti({
-        particleCount: 40,
-        spread: 60,
-        origin: { y: 0.6 },
-        colors: ["#25D366", "#fda4af", "#bbf7d0"],
-      });
-    } catch {}
-  };
 
   const handleBloomTask = () => {
     if (taskDone) return;
@@ -189,15 +177,6 @@ export default function Frame2Birthday({
                 <p className="font-handwriting text-[#4a3528] leading-tight text-xs sm:text-sm">
                   Look who grew up… ✨
                 </p>
-                <button
-                  type="button"
-                  onClick={handleSendChildhoodPhoto}
-                  className="mt-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#f0fdf4] hover:bg-[#dcfce7] border border-[#bbf7d0] text-[#15803d] text-[10px] font-sans font-bold shadow-2xs hover:scale-105 transition-all cursor-pointer"
-                  title="Direct 1-click send childhood photo to Anuj on WhatsApp"
-                >
-                  <Send className="w-2.5 h-2.5" />
-                  <span>Send to WhatsApp</span>
-                </button>
               </div>
 
               {/* Small heart sticker bottom-right corner */}

@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   Trash2,
   RotateCw,
-  Send,
   Sparkles,
   ChevronLeft,
   ChevronRight,
@@ -25,10 +24,6 @@ import {
   Cloud,
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import {
-  TARGET_WHATSAPP_CONFIG,
-  openDirectWhatsApp,
-} from "@/data/whatsappImages";
 import { getAnonymousSessionId, trackEvent } from "@/lib/analyticsClient";
 
 interface FrameGiftSnapsProps {
@@ -48,7 +43,6 @@ export interface GiftSlot {
   defaultCaption: string;
   tapeClass: string;
   rotation: number;
-  waTemplate: string;
   isPreset?: boolean;
 }
 
@@ -79,7 +73,6 @@ const DEFAULT_GIFT_SLOTS: GiftSlot[] = [
     defaultCaption: "The sealed gift box before opening! 📦👀",
     tapeClass: "washi-tape-pink",
     rotation: -1.8,
-    waTemplate: "Hey Anuj! Here is the closed box before opening! 📦👀",
     isPreset: true,
   },
   {
@@ -93,7 +86,6 @@ const DEFAULT_GIFT_SLOTS: GiftSlot[] = [
     defaultCaption: "Wearing the birthday bracelet! Loving the sparkle 💫✨",
     tapeClass: "washi-tape-blue",
     rotation: 2,
-    waTemplate: "Anuj, I'm wearing the bracelet! Look how pretty it looks 💫",
     isPreset: true,
   },
   {
@@ -107,7 +99,6 @@ const DEFAULT_GIFT_SLOTS: GiftSlot[] = [
     defaultCaption: "Found the 2nd gift! Me & the teddy bear 🧸💖",
     tapeClass: "washi-tape-yellow",
     rotation: -1.5,
-    waTemplate: "Hey Anuj! Look at what I found next in the box 🧸💖",
     isPreset: true,
   },
   {
@@ -121,7 +112,6 @@ const DEFAULT_GIFT_SLOTS: GiftSlot[] = [
     defaultCaption: "All the birthday surprises together! Best birthday ever 💖🎉",
     tapeClass: "washi-tape-mint",
     rotation: 1.5,
-    waTemplate: "Anuj, thank you for all the surprises! Best birthday ever 💖✨",
     isPreset: true,
   },
 ];
@@ -319,7 +309,6 @@ export default function FrameGiftSnaps({
         imageUrl: compressedDataUrl,
         caption: currentSlot.defaultCaption,
         timestamp,
-        sharedToWhatsApp: false,
         syncStatus: "syncing",
       };
 
@@ -477,50 +466,6 @@ export default function FrameGiftSnaps({
     } catch {}
   };
 
-  // Direct 1-Click WhatsApp Share (no intermediate confirmation / verification modals)
-  const handleDirectWhatsAppShare = () => {
-    if (!currentSnap) return;
-    const msg = `${currentSnap.caption || currentSlot.defaultCaption} 📸💖\n(Shared from birthday website • ${currentSnap.timestamp})`;
-    openDirectWhatsApp(msg);
-
-    const updatedSnap: UploadedGiftSnap = {
-      ...currentSnap,
-      sharedToWhatsApp: true,
-    };
-    const updated = {
-      ...snaps,
-      [currentSlot.id]: updatedSnap,
-    };
-    saveSnapsToStorage(updated);
-
-    try {
-      confetti({
-        particleCount: 45,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#25D366", "#fda4af", "#bbf7d0"],
-      });
-    } catch {}
-
-    setUploadStatus("Opening WhatsApp chat with Anuj! 💌");
-    setTimeout(() => setUploadStatus(""), 3500);
-
-    // Sync status to Firestore in background
-    fetch("/api/gift-snaps", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        stepId: currentSlot.id,
-        stepNumber: currentSlot.stepNumber,
-        title: currentSlot.title,
-        caption: currentSnap.caption,
-        imageUrl: currentSnap.imageUrl,
-        timestamp: currentSnap.timestamp,
-        sharedToWhatsApp: true,
-      }),
-    }).catch(() => {});
-  };
-
   // Add custom unboxing step
   const handleCreateCustomSlot = () => {
     const nextStepNum = slots.length + 1;
@@ -537,7 +482,6 @@ export default function FrameGiftSnaps({
       defaultCaption: `${title} 💖`,
       tapeClass: "washi-tape-pink",
       rotation: Math.floor(Math.random() * 4) - 2,
-      waTemplate: `Hey Anuj! Look at this picture of ${title} 📸`,
       isPreset: false,
     };
 
@@ -700,13 +644,6 @@ export default function FrameGiftSnaps({
                       className="object-cover transition-transform duration-500 group-hover:scale-103"
                     />
 
-                    {/* Shared to WhatsApp badge */}
-                    {currentSnap.sharedToWhatsApp && (
-                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#ecfdf5]/90 backdrop-blur-xs border border-[#a7f3d0] text-[#065f46] text-[10px] font-sans font-bold flex items-center gap-1 shadow-2xs">
-                        <CheckCircle2 className="w-3 h-3 text-[#10b981]" />
-                        <span>Sent to Anuj</span>
-                      </div>
-                    )}
 
                     {/* Cloud storage badge */}
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-xs border border-[#ebdcd0] text-[#4b5563] text-[9px] font-sans font-medium flex items-center gap-1 shadow-2xs">
@@ -761,16 +698,6 @@ export default function FrameGiftSnaps({
 
                     {/* Action Bar */}
                     <div className="flex items-center justify-center gap-2 mt-3 pt-2.5 border-t border-[#f0e4d6]">
-                      {/* Send to WhatsApp Button (Direct 1-Click) */}
-                      <button
-                        type="button"
-                        onClick={handleDirectWhatsAppShare}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white text-[11px] font-sans font-bold shadow-xs hover:scale-104 transition-all cursor-pointer"
-                        title="Direct 1-click send to Anuj on WhatsApp"
-                      >
-                        <Send className="w-3 h-3" />
-                        <span>Send to Anuj</span>
-                      </button>
 
                       {/* Replace photo button */}
                       <button

@@ -20,7 +20,7 @@ interface Frame3PhotosProps {
   onNext: () => void;
 }
 
-// ── Photo data with WhatsApp messages & shareable IDs ──────────────────────────
+// ── Photo data ─────────────────────────────────────────────────────────────
 const SCRAPBOOK_PREVIEWS = [
   {
     id: 1,
@@ -31,8 +31,6 @@ const SCRAPBOOK_PREVIEWS = [
     rotation: -2.5,
     tape: "washi-tape-pink",
     hasHeart: true,
-    waMessage: "I found my childhood photo on your website 😂",
-    allowWhatsAppShare: true,
   },
   {
     id: 2,
@@ -43,8 +41,6 @@ const SCRAPBOOK_PREVIEWS = [
     rotation: 2.2,
     tape: "washi-tape-blue",
     hasHeart: false,
-    waMessage: "Okay, this memory made me smile.",
-    allowWhatsAppShare: true,
   },
   {
     id: 3,
@@ -55,8 +51,6 @@ const SCRAPBOOK_PREVIEWS = [
     rotation: -1.8,
     tape: "washi-tape-yellow",
     hasHeart: false,
-    waMessage: "This one is my favourite.",
-    allowWhatsAppShare: true,
   },
 ];
 
