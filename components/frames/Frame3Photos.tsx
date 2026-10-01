@@ -250,22 +250,9 @@ export default function Frame3Photos({
                     <p className="font-handwriting text-xl text-[#3f2e24] font-bold leading-tight">
                       &ldquo;{activeMobileItem.caption}&rdquo;
                     </p>
-                    <span className="text-[11px] text-[#8c7465] font-sans block mt-0.5 mb-2.5">
+                    <span className="text-[11px] text-[#8c7465] font-sans block mt-0.5">
                       {activeMobileItem.sub}
                     </span>
-
-                    {/* WhatsApp Action Button (Direct 1-Click) */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDirectWhatsAppSend(activeMobileItem);
-                      }}
-                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white text-xs font-sans font-bold shadow-xs transition-all cursor-pointer"
-                    >
-                      <Send className="w-3 h-3" />
-                      <span>Send to WhatsApp</span>
-                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -373,23 +360,9 @@ export default function Frame3Photos({
                   <p className="font-handwriting text-lg text-[#3f2e24] font-bold leading-tight truncate">
                     &ldquo;{item.caption}&rdquo;
                   </p>
-                  <span className="text-[10px] text-[#8c7465] font-sans block mb-2">
+                  <span className="text-[10px] text-[#8c7465] font-sans block">
                     {item.sub}
                   </span>
-
-                  {/* Explicit WhatsApp Media Share Action (Direct 1-Click) */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDirectWhatsAppSend(item);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0fdf4] hover:bg-[#dcfce7] border border-[#bbf7d0] text-[#15803d] text-[10px] font-sans font-bold shadow-2xs hover:scale-105 transition-all cursor-pointer"
-                    title="Direct 1-click send to Anuj on WhatsApp"
-                  >
-                    <Send className="w-2.5 h-2.5" />
-                    <span>Send to WhatsApp</span>
-                  </button>
                 </div>
               </div>
             </motion.div>

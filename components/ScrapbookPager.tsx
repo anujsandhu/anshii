@@ -31,7 +31,7 @@ import PetalParticles from "./flowers/PetalParticles";
 import FlowerBurst from "./flowers/FlowerBurst";
 import LockedSkipTransition from "./transitions/LockedSkipTransition";
 import ChapterCurtainTransition from "./transitions/ChapterCurtainTransition";
-import SendWhatsAppNotificationButton from "./SendWhatsAppNotificationButton";
+
 import { trackEvent } from "@/lib/analyticsClient";
 
 export interface FrameMeta {
@@ -571,9 +571,8 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           })}
         </div>
 
-        {/* Right: WhatsApp Notification Button & Sound Indicator Pill */}
+        {/* Right: Sound Indicator Pill */}
         <div className="pointer-events-auto flex items-center gap-2">
-          <SendWhatsAppNotificationButton variant="header" />
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#e8ded1] shadow-xs text-xs font-sans text-[#786457]">
             <Music2 className="w-3.5 h-3.5 text-[#f43f5e] animate-pulse" />
             <span className="font-medium truncate max-w-[110px]">
