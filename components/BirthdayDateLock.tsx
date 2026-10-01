@@ -22,6 +22,11 @@ import {
   Key,
   Shield,
   Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  SkipForward,
+  Music,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -44,6 +49,39 @@ const FIRST_TALK_OPTIONS = [
   { id: 2, date: "18 August", fullDate: "18 August 2026", isCorrect: false },
   { id: 3, date: "24 August", fullDate: "24 August 2026", isCorrect: false },
 ];
+
+// Curated calm background soundtracks for the countdown card
+const CALM_SOUNDTRACKS = [
+  {
+    id: "iktara",
+    title: "Iktara",
+    artist: "Wake Up Sid",
+    src: "/music/Iktara.mp3",
+    tag: "Acoustic Warmth",
+  },
+  {
+    id: "until-i-found-you",
+    title: "Until I Found You",
+    artist: "Stephen Sanchez",
+    src: "/music/Until_I_Found_You.mp3",
+    tag: "Romantic Ballad",
+  },
+  {
+    id: "kalank-lofi",
+    title: "Kalank (Lofi)",
+    artist: "Acoustic Reverb",
+    src: "/music/Sanjay_S_Yadav_Slickmusix_-_Kalank_Lofi_Reverb_(mp3.pm).mp3",
+    tag: "Gentle Lofi",
+  },
+  {
+    id: "woh-din",
+    title: "Woh Din",
+    artist: "Chhichhore",
+    src: "/music/Woh_Din.mp3",
+    tag: "Nostalgic Melody",
+  },
+];
+
 
 const HACKER_PRANK_MESSAGES = [
   "Nice try Anshika. Even NASA can't bypass this before the 28th. 😂",
@@ -99,6 +137,97 @@ export default function BirthdayDateLock({
   // Audio Context Ref for Buzzer Siren
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sirenIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ── CALM BACKGROUND MUSIC (Plays on Countdown Card) ───────────────
+  const calmAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [currentTrackIdx, setCurrentTrackIdx] = useState(0);
+  const [isCalmMusicPlaying, setIsCalmMusicPlaying] = useState(false);
+  const [calmMusicVolume, setCalmMusicVolume] = useState(0.38);
+  const [isCalmMuted, setIsCalmMuted] = useState(false);
+
+  // Initialize and update calm audio instance on track change
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const track = CALM_SOUNDTRACKS[currentTrackIdx];
+    const audio = new Audio(track.src);
+    audio.loop = true;
+    audio.volume = isCalmMuted ? 0 : calmMusicVolume;
+    calmAudioRef.current = audio;
+
+    const onPlay = () => setIsCalmMusicPlaying(true);
+    const onPause = () => setIsCalmMusicPlaying(false);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+
+    // If countdown card screen is active, start playing immediately
+    if (!showHackerLayer && !isCalmMuted) {
+      audio.play().catch(() => {});
+    }
+
+    return () => {
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+      audio.pause();
+      audio.src = "";
+    };
+  }, [currentTrackIdx]);
+
+  // Coordinate Calm Music with Siren (Pause during siren, resume on countdown card)
+  useEffect(() => {
+    if (showHackerLayer) {
+      if (calmAudioRef.current && !calmAudioRef.current.paused) {
+        calmAudioRef.current.pause();
+      }
+    } else {
+      if (calmAudioRef.current && calmAudioRef.current.paused && !isCalmMuted) {
+        calmAudioRef.current.play().catch(() => {});
+      }
+    }
+  }, [showHackerLayer, isCalmMuted]);
+
+  // Global user gesture unblock listener for browser autoplay policy
+  useEffect(() => {
+    if (showHackerLayer) return;
+
+    const handleFirstGesture = () => {
+      if (calmAudioRef.current && calmAudioRef.current.paused && !isCalmMuted && !showHackerLayer) {
+        calmAudioRef.current.play().catch(() => {});
+      }
+    };
+
+    window.addEventListener("click", handleFirstGesture, { once: true, passive: true });
+    window.addEventListener("touchstart", handleFirstGesture, { once: true, passive: true });
+
+    return () => {
+      window.removeEventListener("click", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+    };
+  }, [showHackerLayer, isCalmMuted]);
+
+  // Calm Music Control Handlers
+  const toggleCalmPlayPause = useCallback(() => {
+    if (!calmAudioRef.current) return;
+    if (calmAudioRef.current.paused) {
+      calmAudioRef.current.play().catch(() => {});
+    } else {
+      calmAudioRef.current.pause();
+    }
+  }, []);
+
+  const nextCalmTrack = useCallback(() => {
+    setCurrentTrackIdx((prev) => (prev + 1) % CALM_SOUNDTRACKS.length);
+  }, []);
+
+  const toggleCalmMute = useCallback(() => {
+    setIsCalmMuted((prev) => {
+      const next = !prev;
+      if (calmAudioRef.current) {
+        calmAudioRef.current.volume = next ? 0 : calmMusicVolume;
+      }
+      return next;
+    });
+  }, [calmMusicVolume]);
+
 
   // Simulated live hacker terminal logs (ZERO BIRTHDAY CLUES)
   const [terminalLogs, setTerminalLogs] = useState<string[]>([
@@ -665,19 +794,100 @@ export default function BirthdayDateLock({
       <div className="absolute -top-20 -right-20 w-88 h-88 rounded-full bg-gradient-to-bl from-[#fed7aa]/40 via-[#fef3c7]/20 to-transparent blur-3xl pointer-events-none" />
       <div className="absolute -bottom-28 left-1/2 -translate-x-1/2 w-[550px] h-[320px] rounded-full bg-gradient-to-t from-[#fce7f3]/30 via-[#e9d5ff]/20 to-transparent blur-3xl pointer-events-none" />
 
-      {/* ── TOP HEADER (Luxury, completely free of birthday clues) ──────────── */}
-      <header className="w-full max-w-4xl mx-auto flex items-center justify-between z-20 py-2 sm:py-3">
-        <div className="flex items-center gap-2">
+      {/* ── TOP HEADER (Luxury with Calm Music Player & Status) ──────────── */}
+      <header className="w-full max-w-4xl mx-auto flex items-center justify-between z-20 py-2 sm:py-3 gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="font-serif italic text-base sm:text-lg font-bold text-[#4a3832] tracking-tight flex items-center gap-1.5">
             Anshika
             <span className="text-xs not-italic text-[#f59e0b]">✨</span>
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* ── CALM MUSIC PLAYER PILL (Plays calming tracks like Iktara) ──── */}
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/92 backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border border-[#ebdcd0] shadow-[0_2px_14px_rgba(244,63,94,0.08)]">
+          {/* Mini Rotating Vinyl */}
+          <button
+            onClick={toggleCalmPlayPause}
+            className="relative flex items-center justify-center cursor-pointer group"
+            title={isCalmMusicPlaying ? "Pause calm music" : "Play calm music"}
+          >
+            <motion.div
+              animate={isCalmMusicPlaying ? { rotate: 360 } : { rotate: 0 }}
+              transition={{ repeat: Infinity, duration: 4.5, ease: "linear" }}
+              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-tr from-[#1c1917] via-[#292524] to-[#44403c] p-0.5 flex items-center justify-center shadow-xs"
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-[#f43f5e] flex items-center justify-center">
+                <div className="w-1 h-1 rounded-full bg-white" />
+              </div>
+            </motion.div>
+          </button>
+
+          {/* Track Info with animated sound wave */}
+          <div
+            className="flex flex-col text-left cursor-pointer select-none"
+            onClick={toggleCalmPlayPause}
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] sm:text-[11px] font-sans font-bold text-[#4a3832] truncate max-w-[80px] sm:max-w-[125px]">
+                {CALM_SOUNDTRACKS[currentTrackIdx].title}
+              </span>
+              {isCalmMusicPlaying ? (
+                <span className="flex items-end gap-0.5 h-2.5 text-[#f43f5e]">
+                  <span className="w-0.5 bg-[#f43f5e] animate-audio-bar-1 rounded-full" />
+                  <span className="w-0.5 bg-[#f43f5e] animate-audio-bar-2 rounded-full" />
+                  <span className="w-0.5 bg-[#f43f5e] animate-audio-bar-3 rounded-full" />
+                </span>
+              ) : (
+                <span className="text-[9px] text-[#9ca3af] font-mono">paused</span>
+              )}
+            </div>
+            <span className="text-[8px] sm:text-[9px] text-[#927e76] font-medium truncate max-w-[80px] sm:max-w-[125px]">
+              {CALM_SOUNDTRACKS[currentTrackIdx].artist}
+            </span>
+          </div>
+
+          {/* Play/Pause Button */}
+          <button
+            onClick={toggleCalmPlayPause}
+            className="p-1 hover:bg-[#fff0f3] rounded-full text-[#786457] hover:text-[#f43f5e] transition-colors cursor-pointer"
+            title={isCalmMusicPlaying ? "Pause" : "Play"}
+          >
+            {isCalmMusicPlaying ? (
+              <Pause className="w-3 h-3 text-[#f43f5e]" />
+            ) : (
+              <Play className="w-3 h-3 text-[#786457] ml-0.5" />
+            )}
+          </button>
+
+          {/* Next Song Button */}
+          <button
+            onClick={nextCalmTrack}
+            className="p-1 hover:bg-[#fff0f3] rounded-full text-[#786457] hover:text-[#f43f5e] transition-colors cursor-pointer"
+            title="Next calm song"
+          >
+            <SkipForward className="w-3 h-3" />
+          </button>
+
+          {/* Mute Toggle */}
+          <button
+            onClick={toggleCalmMute}
+            className="p-1 hover:bg-[#fff0f3] rounded-full text-[#786457] hover:text-[#f43f5e] transition-colors cursor-pointer hidden sm:block"
+            title={isCalmMuted ? "Unmute" : "Mute"}
+          >
+            {isCalmMuted ? (
+              <VolumeX className="w-3 h-3 text-[#f43f5e]" />
+            ) : (
+              <Volume2 className="w-3 h-3 text-[#786457]" />
+            )}
+          </button>
+        </div>
+
+        {/* Lock Status Pill */}
+        <div className="flex items-center gap-2 shrink-0">
           <div className="px-3 py-1 rounded-full bg-white/85 border border-[#ebdcd0] text-[11px] font-sans font-medium text-[#786457] flex items-center gap-1.5 shadow-2xs">
             <Lock className="w-3 h-3 text-[#f43f5e]" />
-            <span>Opens 28 Oct</span>
+            <span className="hidden sm:inline">Opens 28 Oct</span>
+            <span className="sm:hidden">28 Oct</span>
           </div>
         </div>
       </header>
