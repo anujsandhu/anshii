@@ -2,14 +2,23 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Unlock, Sparkles } from "lucide-react";
+import {
+  Terminal,
+  ShieldAlert,
+  Lock,
+  Unlock,
+  AlertTriangle,
+  Flame,
+  MessageCircle,
+  Skull,
+  RefreshCw,
+  Cpu,
+} from "lucide-react";
 import confetti from "canvas-confetti";
 import {
   calculateTimeRemaining,
-  UNLOCK_TIMESTAMP_MS,
   DATE_DISPLAY,
   TIMEZONE_DISPLAY,
-  getRandomAttemptMessage,
   CountdownTimeRemaining,
 } from "@/lib/dateLock";
 
@@ -18,12 +27,23 @@ interface BirthdayDateLockProps {
   initialServerTime?: number;
 }
 
+const HACKER_PRANK_MESSAGES = [
+  "Nice try. Even NASA can't bypass this before the 28th. 😂",
+  "🚨 ALERT: Anshika caught trying to hack her own birthday surprise!",
+  "Access Denied: Firewall protected by Anuj's anti-snooping protocol. 🛡️",
+  "Error 403: Birthday snooper detected. Go away and come back on Oct 28! 👀",
+  "Decryption attempt failed. Security level: MAXIMUM ANUJ DEFENSE. 😂",
+  "Bro, it's NOT opening early. Stop pressing the button! 😭",
+  "October 28. Mark the calendar. Not today, Anshika! 🌷",
+  "Your IP has been logged into the 'Impatient People Hall of Fame' 🏆😂",
+  "Trying to break into your own birthday vault? Nice try. 😂",
+];
+
 export default function BirthdayDateLock({
   onUnlock,
   initialServerTime,
 }: BirthdayDateLockProps) {
   // Authoritative clock skew between server and client device
-  // (serverTime - clientDateNow)
   const clockSkewRef = useRef<number>(
     initialServerTime ? initialServerTime - Date.now() : 0
   );
@@ -35,23 +55,39 @@ export default function BirthdayDateLock({
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [unlockStep, setUnlockStep] = useState<0 | 1 | 2 | 3>(0);
-  const [attemptMessage, setAttemptMessage] = useState<string | null>(null);
-  const [lockWiggle, setLockWiggle] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [glitchActive, setGlitchActive] = useState(false);
+  const [prankAlert, setPrankAlert] = useState<string | null>(null);
+  const [terminalLogs, setTerminalLogs] = useState<string[]>([
+    "INITIALIZING SYSTEM BREACH SIMULATION...",
+    "Scanning network ports for target: [ANSHIKA_DEVICE]...",
+    "Connection established via SSL TLS-1.3 [ENCRYPTED]",
+    "Accessing target personal archives...",
+  ]);
+  const [hackProgress, setHackProgress] = useState(34);
+  const [isTerminalCollapsed, setIsTerminalCollapsed] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+
   const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check prefers-reduced-motion
-  useEffect(() => {
-    setMounted(true);
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
+  // Play subtle high-tech synthesizer beeps
+  const playHackerBeep = (freq = 480, duration = 0.07) => {
+    if (!audioEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.03, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch {}
+  };
 
   // Sync clock authoritative from /api/date-lock on mount and periodically
   const syncServerTime = useCallback(async () => {
@@ -64,7 +100,6 @@ export default function BirthdayDateLock({
       if (res.ok) {
         const data = await res.json();
         if (data.serverTime) {
-          // Calibrate clock skew accounting for half network roundtrip
           const calibratedServerTime = data.serverTime + latency;
           clockSkewRef.current = calibratedServerTime - endFetch;
 
@@ -76,14 +111,11 @@ export default function BirthdayDateLock({
           }
         }
       }
-    } catch {
-      // Fallback gracefully maintains previous skew
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
     syncServerTime();
-    // Re-sync every 60 seconds to prevent clock drift or device tampering
     const syncInterval = setInterval(syncServerTime, 60000);
     return () => clearInterval(syncInterval);
   }, [syncServerTime]);
@@ -106,28 +138,49 @@ export default function BirthdayDateLock({
     return () => clearInterval(timer);
   }, [isUnlocked]);
 
-  // Unlock sequence animation
+  // Simulate funny live terminal updates
+  useEffect(() => {
+    const stream = [
+      "Dumping cached selfies & smiles... [LOCKED]",
+      "Target verified: Anshika (Turning 19 on Oct 28)",
+      "Birthday firewall detected: ANUJ-SEC-V2",
+      "Brute force attempt: PASSWORD_BYPASS -> FAILED [403]",
+      "Status: Surveillance lock engaged until Oct 28 00:00 IST",
+    ];
+
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < stream.length) {
+        setTerminalLogs((prev) => [...prev.slice(-4), stream[i]]);
+        setHackProgress((p) => Math.min(99, p + 13));
+        i++;
+      }
+    }, 2800);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Unlock sequence animation when timer hits 0
   const handleUnlockSequence = () => {
     setIsUnlocked(true);
-    setUnlockStep(1); // "Okay..."
+    setUnlockStep(1);
 
     setTimeout(() => {
-      setUnlockStep(2); // "Your wait is over. 👀"
+      setUnlockStep(2);
     }, 1200);
 
     setTimeout(() => {
-      setUnlockStep(3); // 🔓 "THE DOOR IS OPEN"
+      setUnlockStep(3);
       try {
         confetti({
-          particleCount: 50,
-          spread: 70,
+          particleCount: 60,
+          spread: 80,
           origin: { y: 0.5 },
-          colors: ["#fda4af", "#fbcfe8", "#f43f5e", "#fed7aa", "#fff1f2"],
+          colors: ["#ef4444", "#f43f5e", "#fda4af", "#10b981", "#fbbf24"],
         });
       } catch {}
     }, 2400);
 
-    // Transition smoothly to the password page
     setTimeout(() => {
       if (onUnlock) {
         onUnlock();
@@ -135,266 +188,306 @@ export default function BirthdayDateLock({
     }, 4200);
   };
 
-  // Playful interaction on clicking lock or cards
-  const triggerAttemptInteraction = () => {
+  // Trigger playful "Hacker Crack Attempt"
+  const handleBypassAttempt = () => {
     if (isUnlocked) return;
+    setAudioEnabled(true);
+    playHackerBeep(880, 0.1);
 
-    setLockWiggle(true);
-    setTimeout(() => setLockWiggle(false), 500);
+    // Glitch effect shake
+    setGlitchActive(true);
+    setTimeout(() => setGlitchActive(false), 600);
 
-    const msg = getRandomAttemptMessage();
-    setAttemptMessage(msg);
+    const randomMsg =
+      HACKER_PRANK_MESSAGES[
+        Math.floor(Math.random() * HACKER_PRANK_MESSAGES.length)
+      ];
+    setPrankAlert(randomMsg);
+
+    // Add to terminal logs
+    setTerminalLogs((prev) => [
+      ...prev.slice(-3),
+      `> MANUAL HACK ATTEMPT BY USER -> REJECTED ❌`,
+      `> ${randomMsg}`,
+    ]);
 
     if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
     messageTimeoutRef.current = setTimeout(() => {
-      setAttemptMessage(null);
-    }, 3200);
+      setPrankAlert(null);
+    }, 4000);
   };
-
-  // Floating background petals configuration
-  const PETALS = [
-    { id: 1, left: "8%", top: "14%", delay: 0, duration: 7, size: 18, rotate: 20 },
-    { id: 2, left: "88%", top: "18%", delay: 1.5, duration: 8, size: 22, rotate: -35 },
-    { id: 3, left: "15%", top: "78%", delay: 0.8, duration: 7.5, size: 20, rotate: 45 },
-    { id: 4, left: "82%", top: "82%", delay: 2.2, duration: 9, size: 16, rotate: -15 },
-    { id: 5, left: "4%", top: "45%", delay: 3, duration: 8.5, size: 15, rotate: 60 },
-    { id: 6, left: "92%", top: "52%", delay: 1.2, duration: 7.2, size: 19, rotate: -50 },
-  ];
 
   const formatNumber = (num: number) => String(num).padStart(2, "0");
 
+  const whatsappMessage = encodeURIComponent(
+    "Anuj wtf is this website 😭 why does it say I'm getting hacked?! please give me the password early 😂"
+  );
+  const whatsappUrl = `https://wa.me/918278710552?text=${whatsappMessage}`;
+
   return (
     <div
-      className="relative min-h-[100dvh] w-screen flex flex-col justify-between items-center bg-[#FAF7F2] text-[#3F2E24] overflow-hidden select-none p-4 sm:p-6"
+      className={`relative min-h-[100dvh] w-screen flex flex-col justify-between items-center bg-[#09070b] text-[#f3f4f6] overflow-x-hidden select-none p-3 sm:p-6 font-mono transition-transform duration-100 ${
+        glitchActive ? "translate-x-1.5 translate-y-[-1px] filter hue-rotate-90" : ""
+      }`}
       style={{
-        backgroundImage: `radial-gradient(circle at 50% 30%, rgba(253, 164, 175, 0.12) 0%, transparent 65%),
-                          radial-gradient(circle at 80% 80%, rgba(254, 215, 170, 0.10) 0%, transparent 55%)`,
+        backgroundImage: `radial-gradient(circle at 50% 20%, rgba(239, 68, 68, 0.15) 0%, transparent 70%),
+                          radial-gradient(circle at 80% 80%, rgba(244, 63, 94, 0.10) 0%, transparent 60%),
+                          linear-gradient(rgba(15, 11, 20, 0.95), rgba(9, 7, 11, 0.98))`,
       }}
     >
-      {/* ── TOP HEADER (Minimalist, no nav leakage) ─────────────────────────── */}
-      <header className="w-full max-w-4xl mx-auto flex items-center justify-between z-20 py-2 sm:py-3">
+      {/* CRT Scanline Overlay Effect */}
+      <div
+        className="pointer-events-none fixed inset-0 z-30 opacity-[0.14]"
+        style={{
+          background:
+            "repeating-linear-gradient(0deg, rgba(0,0,0,0.6) 0px, rgba(0,0,0,0.6) 1px, transparent 2px, transparent 4px)",
+        }}
+      />
+
+      {/* ── TOP STATUS BAR ──────────────────────────────────────────────────── */}
+      <header className="w-full max-w-3xl mx-auto flex items-center justify-between z-20 py-2 sm:py-3 border-b border-[#372433]">
         <div className="flex items-center gap-2">
-          <span className="font-serif italic text-sm sm:text-base font-medium text-[#786457] tracking-tight">
-            Anshika&apos;s 19th
+          <div className="w-2.5 h-2.5 rounded-full bg-[#ef4444] animate-ping" />
+          <span className="text-xs sm:text-sm font-bold tracking-wider text-[#fda4af]">
+            CRITICAL_ALERT // ANSHIKA_DATA_VAULT
           </span>
         </div>
 
-        <button
-          onClick={triggerAttemptInteraction}
-          title="Birthday vault status: Locked"
-          aria-label="Birthday lock status"
-          className="w-8 h-8 rounded-full bg-white/80 border border-[#F7C8D0] shadow-2xs flex items-center justify-center text-sm cursor-pointer hover:bg-white hover:scale-105 active:scale-95 transition-all"
-        >
-          <span className="text-sm">🔒</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-[#271520] border border-[#ef4444]/40 text-[10px] text-[#ef4444] tracking-widest uppercase font-bold">
+            BREACH SIMULATION ACTIVE
+          </span>
+          <button
+            onClick={() => setIsTerminalCollapsed(!isTerminalCollapsed)}
+            className="px-2.5 py-1 rounded-md bg-[#1f131a] hover:bg-[#2d1b26] border border-[#4a2839] text-[11px] text-[#fda4af] flex items-center gap-1.5 cursor-pointer transition-colors"
+          >
+            <Terminal className="w-3 h-3 text-[#f43f5e]" />
+            <span>{isTerminalCollapsed ? "View Terminal" : "Hide Terminal"}</span>
+          </button>
+        </div>
       </header>
 
-      {/* ── FLOATING PETALS (Disabled if prefers-reduced-motion) ─────────────── */}
-      {mounted && !prefersReducedMotion && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-          {PETALS.map((petal) => (
-            <motion.div
-              key={petal.id}
-              className="absolute opacity-40 text-[#FDA4AF]"
-              style={{
-                left: petal.left,
-                top: petal.top,
-                fontSize: `${petal.size}px`,
-              }}
-              animate={{
-                y: [0, -18, 0],
-                rotate: [petal.rotate, petal.rotate + 15, petal.rotate],
-                opacity: [0.35, 0.55, 0.35],
-              }}
-              transition={{
-                duration: petal.duration,
-                repeat: Infinity,
-                delay: petal.delay,
-                ease: "easeInOut",
-              }}
-            >
-              🌸
-            </motion.div>
-          ))}
+      {/* ── MAIN CONTENT AREA ──────────────────────────────────────────────── */}
+      <main className="relative z-10 w-full max-w-[560px] mx-auto my-auto flex flex-col items-center">
+        {/* Hacker Alert Banner */}
+        <div className="w-full mb-3 flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#291219]/90 border border-[#ef4444]/60 shadow-[0_0_20px_rgba(239,68,68,0.25)] text-center animate-pulse">
+          <ShieldAlert className="w-4 h-4 text-[#ef4444] shrink-0" />
+          <span className="text-[11px] sm:text-xs font-bold text-[#fca5a5] tracking-wide">
+            ⚠ UNAUTHORIZED BIRTHDAY SNOOPER DETECTED ⚠
+          </span>
         </div>
-      )}
 
-      {/* ── MAIN CENTERPIECE CARD ────────────────────────────────────────────── */}
-      <main className="relative z-10 w-full max-w-[520px] mx-auto my-auto flex flex-col items-center">
-        {/* Subtle Playful Attempt Toast / Speech Bubble */}
+        {/* Live Interactive Hacker Terminal */}
+        {!isTerminalCollapsed && (
+          <div className="w-full mb-4 rounded-2xl bg-[#0e0a12]/90 border border-[#3b1d2e] p-3 text-[11px] sm:text-xs text-[#9ca3af] shadow-inner">
+            <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#261621] text-[10px] text-[#6b7280]">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                <div className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+                <div className="w-2 h-2 rounded-full bg-[#10b981]" />
+                <span className="ml-1 text-[#f43f5e] font-semibold">
+                  root@anuj-vault:~# ./extract_birthday_payload
+                </span>
+              </div>
+              <span>PORT: 8080</span>
+            </div>
+
+            <div className="space-y-1 font-mono leading-relaxed">
+              {terminalLogs.map((log, index) => (
+                <div
+                  key={index}
+                  className={
+                    log.includes("REJECTED") || log.includes("FAILED")
+                      ? "text-[#f87171] font-bold"
+                      : log.includes("verified") || log.includes("SUCCESS")
+                      ? "text-[#34d399]"
+                      : "text-[#d1d5db]"
+                  }
+                >
+                  <span className="text-[#f43f5e] mr-1.5">&gt;</span>
+                  {log}
+                </div>
+              ))}
+            </div>
+
+            {/* Simulated extraction progress */}
+            <div className="mt-2.5 pt-2 border-t border-[#261621] flex items-center justify-between text-[10px]">
+              <span className="text-[#9ca3af]">SNOOPER DEFENSE PROTOCOL</span>
+              <span className="text-[#ef4444] font-bold">{hackProgress}% LOCKED</span>
+            </div>
+            <div className="w-full h-1.5 bg-[#261621] rounded-full overflow-hidden mt-1">
+              <div
+                className="h-full bg-gradient-to-r from-[#ef4444] to-[#f43f5e] transition-all duration-300"
+                style={{ width: `${hackProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Playful Floating Prank Toast */}
         <AnimatePresence>
-          {attemptMessage && (
+          {prankAlert && (
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.92 }}
+              initial={{ opacity: 0, y: 10, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.95 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="mb-3 px-4 py-2 rounded-2xl bg-[#4A3832] text-[#FFFDF9] text-xs sm:text-sm font-sans font-medium shadow-lg border border-[#F4A9B8]/40 flex items-center gap-2 z-30"
+              className="w-full mb-3 px-4 py-2.5 rounded-2xl bg-[#450a0a] border border-[#ef4444] text-[#fecaca] text-xs font-sans font-bold shadow-[0_0_25px_rgba(239,68,68,0.4)] flex items-center gap-2.5 z-40 text-left"
             >
-              <span>{attemptMessage}</span>
+              <Flame className="w-4 h-4 text-[#f87171] shrink-0 animate-bounce" />
+              <span>{prankAlert}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* The Card */}
-        <motion.div
-          animate={lockWiggle ? { x: [-6, 6, -5, 5, -2, 2, 0] } : {}}
-          transition={{ duration: 0.4 }}
-          className="relative w-full rounded-3xl bg-[#FFFDF9] border-2 border-[#EBDCD0] shadow-[0_18px_45px_rgba(74,56,50,0.06)] p-6 sm:p-9 text-center overflow-hidden"
-        >
-          {/* Top Decorative Washi Tape */}
-          <div
-            className="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-[#FED7AA]/80 border-b border-[#FDBA74]/50 shadow-2xs rotate-[-1.5deg] pointer-events-none rounded-xs"
-            style={{
-              clipPath:
-                "polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%, 3% 50%)",
-            }}
-          />
-
-          {/* Stamp Badge Top Right */}
-          <div className="absolute top-4 right-4 sm:top-5 sm:right-5 px-2.5 py-1 rounded-md border border-dashed border-[#F4A9B8] bg-[#FFF0F3]/60 text-[10px] font-sans font-bold text-[#BE185D] rotate-2 tracking-wider">
-            OCT 28 &apos;26
+        {/* ── THE PRANK REVEAL & COUNTDOWN CARD ────────────────────────────── */}
+        <div className="relative w-full rounded-3xl bg-[#140d19]/90 border-2 border-[#4a2238] shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-5 sm:p-8 text-center backdrop-blur-md overflow-hidden">
+          {/* Top Stamp */}
+          <div className="absolute top-4 right-4 px-2 py-0.5 rounded bg-[#2b121f] border border-[#f43f5e]/60 text-[10px] text-[#f43f5e] font-bold tracking-widest uppercase">
+            TARGET: 28 OCT
           </div>
 
-          {/* Main Top Flower */}
-          <div className="text-3xl sm:text-4xl mb-2.5 select-none animate-bounce-gentle">
-            🌷
+          {/* Hacker Skull / Playful Icon */}
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#2b101c] border border-[#ef4444]/60 text-2xl mb-3 shadow-[0_0_20px_rgba(239,68,68,0.35)] animate-pulse">
+            <Skull className="w-7 h-7 text-[#f87171]" />
           </div>
 
-          {/* Badge: "Something is waiting..." */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF0F3] border border-[#FBCFE8] text-[11px] sm:text-xs font-sans font-semibold text-[#BE185D] mb-3.5 shadow-2xs">
-            <Sparkles className="w-3 h-3 text-[#F43F5E]" />
-            <span>Something is waiting...</span>
-          </div>
-
-          {/* Main Heading: "Not yet. 👀" */}
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#3F2E24] tracking-tight leading-tight mb-2">
-            Not yet. 👀
+          {/* Big Teasing Title */}
+          <h1 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#fff] tracking-tight leading-tight mb-1">
+            YOU&apos;VE BEEN &ldquo;HACKED&rdquo;! 🚨
           </h1>
 
-          {/* Subtitle: "You found the door a little early." */}
-          <p className="font-sans text-xs sm:text-sm text-[#786457] font-medium leading-relaxed">
-            You found the door a little early.
+          <p className="font-sans text-xs sm:text-sm font-bold text-[#f43f5e] mb-1">
+            (Relax Anshika 😂 It&apos;s just Anuj.)
           </p>
 
-          {/* Then: "Come back on 28 October." */}
-          <p className="font-sans text-xs sm:text-sm text-[#BE185D] font-semibold mt-0.5 mb-6">
-            Come back on 28 October.
+          <p className="font-sans text-xs text-[#9ca3af] leading-relaxed max-w-sm mx-auto mb-5">
+            Did your heart skip a beat for a second? 😭 <br />
+            I told you not to come snooping around before October 28! Your birthday surprise is locked safe in this vault.
           </p>
 
-          {/* ── COUNTDOWN TIMER CARDS ────────────────────────────────────────── */}
-          <div className="my-3 sm:my-5">
-            {/* Desktop: 4 cards in row | Mobile: 2x2 grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 max-w-md mx-auto">
+          {/* ── COUNTDOWN CARDS (CYBER VAULT THEME) ─────────────────────────── */}
+          <div className="mb-5">
+            <div className="text-[10px] font-mono tracking-widest text-[#f43f5e] uppercase font-bold mb-2 flex items-center justify-center gap-1.5">
+              <Cpu className="w-3 h-3 text-[#f43f5e]" />
+              <span>DECRYPTION TIMELOCK ENGAGED</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-md mx-auto">
               {/* DAYS */}
               <div
-                onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-[#FAF7F2] border border-[#EBDCD0] hover:border-[#FDA4AF] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-2xs hover:shadow-xs active:scale-95"
+                onClick={handleBypassAttempt}
+                className="group cursor-pointer rounded-2xl bg-[#1d1222] border border-[#4a2238] hover:border-[#f43f5e] transition-all p-3 flex flex-col items-center justify-center shadow-md active:scale-95"
               >
-                <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#3F2E24] tracking-tight leading-none mb-1">
+                <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#fff] tracking-tight leading-none mb-1">
                   {formatNumber(timeRemaining.days)}
                 </span>
-                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927E76] uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-[#9ca3af] tracking-wider uppercase">
                   DAYS
                 </span>
               </div>
 
               {/* HOURS */}
               <div
-                onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-[#FAF7F2] border border-[#EBDCD0] hover:border-[#FDA4AF] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-2xs hover:shadow-xs active:scale-95"
+                onClick={handleBypassAttempt}
+                className="group cursor-pointer rounded-2xl bg-[#1d1222] border border-[#4a2238] hover:border-[#f43f5e] transition-all p-3 flex flex-col items-center justify-center shadow-md active:scale-95"
               >
-                <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#3F2E24] tracking-tight leading-none mb-1">
+                <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#fff] tracking-tight leading-none mb-1">
                   {formatNumber(timeRemaining.hours)}
                 </span>
-                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927E76] uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-[#9ca3af] tracking-wider uppercase">
                   HOURS
                 </span>
               </div>
 
               {/* MINUTES */}
               <div
-                onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-[#FAF7F2] border border-[#EBDCD0] hover:border-[#FDA4AF] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-2xs hover:shadow-xs active:scale-95"
+                onClick={handleBypassAttempt}
+                className="group cursor-pointer rounded-2xl bg-[#1d1222] border border-[#4a2238] hover:border-[#f43f5e] transition-all p-3 flex flex-col items-center justify-center shadow-md active:scale-95"
               >
-                <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#3F2E24] tracking-tight leading-none mb-1">
+                <span className="font-serif text-2xl sm:text-3xl font-extrabold text-[#fff] tracking-tight leading-none mb-1">
                   {formatNumber(timeRemaining.minutes)}
                 </span>
-                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927E76] uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-[#9ca3af] tracking-wider uppercase">
                   MINUTES
                 </span>
               </div>
 
-              {/* SECONDS (with subtle micro-animation) */}
+              {/* SECONDS */}
               <div
-                onClick={triggerAttemptInteraction}
-                className="group cursor-pointer rounded-2xl bg-[#FAF7F2] border border-[#EBDCD0] hover:border-[#FDA4AF] transition-all p-3 sm:p-3.5 flex flex-col items-center justify-center shadow-2xs hover:shadow-xs active:scale-95"
+                onClick={handleBypassAttempt}
+                className="group cursor-pointer rounded-2xl bg-[#1d1222] border border-[#4a2238] hover:border-[#f43f5e] transition-all p-3 flex flex-col items-center justify-center shadow-md active:scale-95"
               >
                 <motion.span
                   key={timeRemaining.seconds}
-                  initial={prefersReducedMotion ? false : { scale: 1.12, opacity: 0.8 }}
+                  initial={{ scale: 1.15, opacity: 0.8 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="font-serif text-2xl sm:text-3xl font-extrabold text-[#BE185D] tracking-tight leading-none mb-1"
+                  className="font-serif text-2xl sm:text-3xl font-extrabold text-[#f43f5e] tracking-tight leading-none mb-1"
                 >
                   {formatNumber(timeRemaining.seconds)}
                 </motion.span>
-                <span className="font-sans text-[10px] sm:text-[11px] font-bold text-[#927E76] uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-[#9ca3af] tracking-wider uppercase">
                   SECONDS
                 </span>
               </div>
             </div>
 
-            {/* DATE LABEL */}
-            <div className="mt-4 pt-3 border-t border-[#F2E8DF] flex items-center justify-center gap-2 text-xs font-sans text-[#786457]">
-              <span className="font-medium">Unlocks {DATE_DISPLAY}</span>
-              <span className="text-[#D1C2B8]">•</span>
-              <span className="font-semibold text-[#BE185D]">{TIMEZONE_DISPLAY}</span>
+            {/* TIME DETAILS */}
+            <div className="mt-3.5 pt-2.5 border-t border-[#2d1726] flex items-center justify-center gap-2 text-[11px] text-[#9ca3af]">
+              <span>Auto-Decrypts: {DATE_DISPLAY}</span>
+              <span className="text-[#f43f5e]">•</span>
+              <span className="font-bold text-[#fca5a5]">{TIMEZONE_DISPLAY}</span>
             </div>
           </div>
 
-          {/* ── PLAYFUL MESSAGES ─────────────────────────────────────────────── */}
-          <div className="mt-4 pt-4 border-t border-[#F2E8DF] space-y-1">
-            <p className="font-serif italic text-sm sm:text-base font-medium text-[#3F2E24]">
-              &ldquo;Yes, I actually locked it. 😂&rdquo;
-            </p>
-            <p className="font-sans text-xs text-[#786457]">
-              Knowing the password won&apos;t help you yet.
-            </p>
-          </div>
-
-          {/* Interactive Lock Button Icon inside card */}
-          <div className="mt-5 flex justify-center">
+          {/* ── ACTION BUTTONS ─────────────────────────────────────────────── */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-3 border-t border-[#2d1726]">
+            {/* Button 1: Attempt Hacker Bypass */}
             <button
-              onClick={triggerAttemptInteraction}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-[#FFF0F3] border border-[#EBDCD0] hover:border-[#FBCFE8] text-xs font-sans font-semibold text-[#786457] hover:text-[#BE185D] transition-all cursor-pointer shadow-2xs active:scale-95"
+              onClick={handleBypassAttempt}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#dc2626] to-[#e11d48] hover:from-[#ef4444] hover:to-[#f43f5e] text-white text-xs font-bold shadow-[0_0_20px_rgba(225,29,72,0.4)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
             >
-              <Lock className="w-3.5 h-3.5 text-[#F43F5E]" />
-              <span>Tap to check door</span>
+              <Lock className="w-3.5 h-3.5" />
+              <span>Attempt Brute-Force Hack</span>
             </button>
-          </div>
-        </motion.div>
 
-        {/* ── UNLOCK ANIMATION OVERLAY (When timer hits 0) ──────────────────── */}
+            {/* Button 2: WhatsApp Anuj */}
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#1d1222] hover:bg-[#2c1932] border border-[#4a2238] hover:border-[#f43f5e] text-[#fda4af] text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-[#22c55e]" />
+              <span>Beg Anuj for Password</span>
+            </a>
+          </div>
+
+          <p className="mt-3.5 text-[10px] text-[#6b7280]">
+            *Even if you know the password, the date-lock will not open before Oct 28. 😂
+          </p>
+        </div>
+
+        {/* ── UNLOCK ANIMATION (When Countdown hits 0 on Oct 28) ────────────── */}
         <AnimatePresence>
           {isUnlocked && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-[#FAF7F2]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center"
+              className="fixed inset-0 z-50 bg-[#09070b]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center"
             >
-              <div className="max-w-md w-full p-8 rounded-3xl bg-white border-2 border-[#FDA4AF] shadow-2xl flex flex-col items-center">
+              <div className="max-w-md w-full p-8 rounded-3xl bg-[#140d19] border-2 border-[#10b981] shadow-[0_0_60px_rgba(16,185,129,0.4)] flex flex-col items-center">
                 {unlockStep >= 3 ? (
                   <motion.div
                     initial={{ scale: 0.5, rotate: -20 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    className="w-16 h-16 rounded-3xl bg-[#FFF0F3] border border-[#FBCFE8] flex items-center justify-center mb-4 text-[#F43F5E]"
+                    className="w-16 h-16 rounded-3xl bg-[#064e3b] border border-[#10b981] flex items-center justify-center mb-4 text-[#34d399]"
                   >
                     <Unlock className="w-8 h-8" />
                   </motion.div>
                 ) : (
-                  <div className="w-16 h-16 rounded-3xl bg-[#FAF7F2] border border-[#EBDCD0] flex items-center justify-center mb-4 text-[#786457]">
+                  <div className="w-16 h-16 rounded-3xl bg-[#2b101c] border border-[#ef4444] flex items-center justify-center mb-4 text-[#f87171]">
                     <Lock className="w-8 h-8 animate-pulse" />
                   </div>
                 )}
@@ -403,7 +496,7 @@ export default function BirthdayDateLock({
                   <motion.h2
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="font-serif text-2xl font-bold text-[#3F2E24]"
+                    className="font-serif text-2xl font-bold text-white"
                   >
                     Okay...
                   </motion.h2>
@@ -413,7 +506,7 @@ export default function BirthdayDateLock({
                   <motion.h2
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="font-serif text-2xl font-bold text-[#3F2E24]"
+                    className="font-serif text-2xl font-bold text-white"
                   >
                     Your wait is over. 👀
                   </motion.h2>
@@ -425,11 +518,11 @@ export default function BirthdayDateLock({
                     animate={{ opacity: 1, scale: 1 }}
                     className="space-y-2"
                   >
-                    <h2 className="font-serif text-3xl font-extrabold text-[#BE185D] tracking-tight">
-                      THE DOOR IS OPEN
+                    <h2 className="font-serif text-3xl font-extrabold text-[#34d399] tracking-tight">
+                      FIREWALL UNLOCKED! 🔓
                     </h2>
-                    <p className="font-sans text-xs text-[#786457]">
-                      Loading your birthday surprise...
+                    <p className="font-sans text-xs text-[#9ca3af]">
+                      Transferring to Birthday Access Portal...
                     </p>
                   </motion.div>
                 )}
@@ -439,10 +532,10 @@ export default function BirthdayDateLock({
         </AnimatePresence>
       </main>
 
-      {/* ── FOOTER: Exact Copy "See you on the other side. 🌷" ─────────────── */}
-      <footer className="w-full max-w-4xl mx-auto py-3 text-center z-10">
-        <p className="font-serif italic text-xs sm:text-sm text-[#786457] font-medium tracking-wide">
-          See you on the other side. 🌷
+      {/* ── FOOTER ──────────────────────────────────────────────────────────── */}
+      <footer className="w-full max-w-3xl mx-auto py-2.5 text-center z-10 border-t border-[#261521]">
+        <p className="text-[11px] text-[#6b7280]">
+          Anuj Security Systems Inc. • All birthday surprises reserved until 28 Oct 2026 🌷
         </p>
       </footer>
     </div>
