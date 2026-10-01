@@ -16,10 +16,8 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Happy 19th Birthday, Anshika ✨ | Made with ❤️ by Anuj",
-  description:
-    "A cute, handmade digital birthday scrapbook & interactive card for Anshika's 19th birthday.",
-  keywords: ["Anshika", "19th Birthday", "Birthday Card", "Scrapbook", "Anuj"],
+  title: "SECURITY WARNING // ACCESS RESTRICTED",
+  description: "Access to this system is restricted until 28 October 2026.",
   authors: [{ name: "Anuj" }],
   icons: {
     icon: "/favicon.ico",

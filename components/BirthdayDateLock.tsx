@@ -13,13 +13,16 @@ import {
   MessageCircle,
   Eye,
   X,
+  Volume2,
+  VolumeX,
+  AlertOctagon,
+  Radio,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
   calculateTimeRemaining,
   DATE_DISPLAY,
   TIMEZONE_DISPLAY,
-  getRandomAttemptMessage,
   CountdownTimeRemaining,
 } from "@/lib/dateLock";
 
@@ -29,15 +32,15 @@ interface BirthdayDateLockProps {
 }
 
 const HACKER_PRANK_MESSAGES = [
-  "Nice try. Even NASA can't bypass this before the 28th. 😂",
-  "🚨 ALERT: Anshika caught trying to hack her own birthday surprise!",
-  "Access Denied: Firewall protected by Anuj's anti-snooping protocol. 🛡️",
-  "Error 403: Birthday snooper detected. Go away and come back on Oct 28! 👀",
+  "Nice try Anshika. Even NASA can't bypass this before the 28th. 😂",
+  "🚨 ALERT: Anshika caught snooping around the secret vault!",
+  "Access Denied: Protected by Anuj's anti-snooper firewall. 🛡️",
+  "Error 403: Snooper detected. Go away and come back on Oct 28! 👀",
   "Decryption attempt failed. Security level: MAXIMUM ANUJ DEFENSE. 😂",
   "Bro, it's NOT opening early. Stop pressing the button! 😭",
-  "October 28. Mark the calendar. Not today, Anshika! 🌷",
+  "October 28. Mark your calendar. Not today, Anshika! 🌷",
   "Your IP has been logged into the 'Impatient People Hall of Fame' 🏆😂",
-  "Trying to break into your own birthday vault? Nice try. 😂",
+  "Trying to break into the secret vault? Nice try. 😂",
 ];
 
 export default function BirthdayDateLock({
@@ -58,6 +61,7 @@ export default function BirthdayDateLock({
   const [showHackerLayer, setShowHackerLayer] = useState(true);
   const [glitchActive, setGlitchActive] = useState(false);
   const [prankAlert, setPrankAlert] = useState<string | null>(null);
+  const [sirenActive, setSirenActive] = useState(false);
 
   // Normal scrapbook countdown states
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -67,20 +71,24 @@ export default function BirthdayDateLock({
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Simulated live hacker terminal logs
+  // Audio Context Ref for Buzzer Siren
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const sirenIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Simulated live hacker terminal logs (ZERO BIRTHDAY CLUES)
   const [terminalLogs, setTerminalLogs] = useState<string[]>([
-    "INITIALIZING SYSTEM BREACH PROTOCOL...",
-    "Target identified: [ANSHIKA_DEVICE] (Turning 19 on Oct 28)",
-    "Bypassing camera & mic... REJECTED (Relax, we don't do that 😂)",
-    "Locating 19th birthday surprise... [ENCRYPTED - AES-256]",
+    "INITIALIZING SYSTEM LOCKDOWN PROTOCOL...",
+    "Connection flagged: [ANSHIKA_DEVICE] (Access Unverified)",
+    "Bypassing security certificates... ACCESS DENIED",
+    "Target personal archives... [ENCRYPTED - AES-256 GCM]",
   ]);
-  const [hackProgress, setHackProgress] = useState(48);
+  const [hackProgress, setHackProgress] = useState(65);
 
   const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Set browser tab title without giving birthday clues away
+  // Enforce zero-clue mysterious title before Oct 28
   useEffect(() => {
-    document.title = "Not yet. 👀 | Anshika";
+    document.title = "SECURITY WARNING // ACCESS RESTRICTED";
   }, []);
 
   // Check prefers-reduced-motion
@@ -95,24 +103,98 @@ export default function BirthdayDateLock({
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  // Play subtle high-tech synthesizer beeps
-  const playHackerBeep = (freq = 480, duration = 0.07) => {
+  // Physical Phone Vibration
+  const triggerPhoneVibrate = (pattern: number[] = [250, 100, 250, 100, 500]) => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(pattern);
+      }
+    } catch {}
+  };
+
+  // Realistic Alarm Buzzer Sound Synthesizer
+  const playRealisticBuzzer = useCallback(() => {
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      gain.gain.setValueAtTime(0.025, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + duration);
+
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioCtx();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") {
+        ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+
+      // Primary harsh alarm oscillator (Sawtooth)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sawtooth";
+      osc1.frequency.setValueAtTime(820, now);
+      osc1.frequency.exponentialRampToValueAtTime(440, now + 0.22);
+      gain1.gain.setValueAtTime(0.08, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.25);
+
+      // Secondary low-frequency buzzer drone (Square)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "square";
+      osc2.frequency.setValueAtTime(160, now);
+      gain2.gain.setValueAtTime(0.04, now);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now);
+      osc2.stop(now + 0.22);
     } catch {}
-  };
+  }, []);
+
+  // Start Repeating Alarm Siren
+  const startSiren = useCallback(() => {
+    setSirenActive(true);
+    triggerPhoneVibrate([300, 120, 300, 120, 600]);
+    playRealisticBuzzer();
+
+    if (sirenIntervalRef.current) clearInterval(sirenIntervalRef.current);
+    sirenIntervalRef.current = setInterval(() => {
+      playRealisticBuzzer();
+      triggerPhoneVibrate([200, 80, 200]);
+    }, 600);
+  }, [playRealisticBuzzer]);
+
+  // Stop Repeating Alarm Siren
+  const stopSiren = useCallback(() => {
+    setSirenActive(false);
+    if (sirenIntervalRef.current) {
+      clearInterval(sirenIntervalRef.current);
+      sirenIntervalRef.current = null;
+    }
+  }, []);
+
+  // Auto-trigger brief realistic alarm buzz on first user interaction
+  useEffect(() => {
+    const handleFirstTouch = () => {
+      triggerPhoneVibrate([200, 100, 300]);
+      playRealisticBuzzer();
+      window.removeEventListener("click", handleFirstTouch);
+      window.removeEventListener("touchstart", handleFirstTouch);
+    };
+
+    window.addEventListener("click", handleFirstTouch, { once: true });
+    window.addEventListener("touchstart", handleFirstTouch, { once: true });
+
+    return () => {
+      window.removeEventListener("click", handleFirstTouch);
+      window.removeEventListener("touchstart", handleFirstTouch);
+      stopSiren();
+    };
+  }, [playRealisticBuzzer, stopSiren]);
 
   // Sync clock authoritative from /api/date-lock on mount and periodically
   const syncServerTime = useCallback(async () => {
@@ -163,13 +245,13 @@ export default function BirthdayDateLock({
     return () => clearInterval(timer);
   }, [isUnlocked]);
 
-  // Terminal log simulation in prank layer
+  // Terminal log simulation in prank layer (NO BIRTHDAY MENTIONS)
   useEffect(() => {
     const stream = [
-      "Accessing personal photo cache... [LOCKED]",
-      "Birthday firewall engaged: ANUJ-SEC-V2",
-      "Manual crack attempt: PASSWORD_BYPASS -> FAILED [403]",
-      "Defense status: Timelock active until Oct 28 00:00 IST",
+      "Accessing personal photo archives... [LOCKED]",
+      "Security firewall engaged: ANUJ-SEC-V2",
+      "Manual crack attempt: ACCESS_OVERRIDE -> FAILED [403]",
+      "Defense status: System locked until Oct 28 00:00 IST",
     ];
 
     let i = 0;
@@ -177,18 +259,19 @@ export default function BirthdayDateLock({
       if (i < stream.length && stream[i]) {
         const nextLog = stream[i];
         setTerminalLogs((prev) => [...prev.slice(-4), nextLog]);
-        setHackProgress((p) => Math.min(99, p + 13));
+        setHackProgress((p) => Math.min(99, p + 11));
         i++;
       } else {
         clearInterval(interval);
       }
-    }, 2500);
+    }, 2400);
 
     return () => clearInterval(interval);
   }, []);
 
   // Unlock sequence animation when timer reaches zero on 28 Oct
   const handleUnlockSequence = () => {
+    stopSiren();
     setIsUnlocked(true);
     setShowHackerLayer(false);
     document.title = "Happy 19th Birthday, Anshika ✨ | Made with ❤️ by Anuj";
@@ -221,10 +304,16 @@ export default function BirthdayDateLock({
   const triggerAttemptInteraction = () => {
     if (isUnlocked) return;
 
+    triggerPhoneVibrate([100, 50, 100]);
+    playRealisticBuzzer();
+
     setLockWiggle(true);
     setTimeout(() => setLockWiggle(false), 500);
 
-    const msg = getRandomAttemptMessage();
+    const msg =
+      HACKER_PRANK_MESSAGES[
+        Math.floor(Math.random() * HACKER_PRANK_MESSAGES.length)
+      ];
     setAttemptMessage(msg);
 
     if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
@@ -235,9 +324,9 @@ export default function BirthdayDateLock({
 
   // Trigger funny hacker crack attempt inside the prank layer
   const handleBypassAttempt = () => {
-    playHackerBeep(880, 0.1);
+    startSiren();
     setGlitchActive(true);
-    setTimeout(() => setGlitchActive(false), 500);
+    setTimeout(() => setGlitchActive(false), 600);
 
     const randomMsg =
       HACKER_PRANK_MESSAGES[
@@ -247,14 +336,17 @@ export default function BirthdayDateLock({
 
     setTerminalLogs((prev) => [
       ...prev.slice(-3),
-      `> MANUAL HACK ATTEMPT BY USER -> REJECTED ❌`,
+      `> INTRUSION ALERT: MANUAL OVERRIDE REJECTED ❌`,
       `> ${randomMsg}`,
     ]);
 
-    setTimeout(() => setPrankAlert(null), 3800);
+    setTimeout(() => {
+      stopSiren();
+      setPrankAlert(null);
+    }, 3600);
   };
 
-  // Floating background petals configuration
+  // Floating background petals configuration (Cute screen)
   const PETALS = [
     { id: 1, left: "8%", top: "14%", delay: 0, duration: 7, size: 18, rotate: 20 },
     { id: 2, left: "88%", top: "18%", delay: 1.5, duration: 8, size: 22, rotate: -35 },
@@ -267,7 +359,7 @@ export default function BirthdayDateLock({
   const formatNumber = (num: number) => String(num).padStart(2, "0");
 
   const whatsappMessage = encodeURIComponent(
-    "Anuj wtf is this website 😭 why does it say I got hacked?! please give me the password early 😂"
+    "Anuj what is this 😭 why does this website say my device is quarantined?! what are you hiding until 28 Oct 😂"
   );
   const whatsappUrl = `https://wa.me/918278710552?text=${whatsappMessage}`;
 
@@ -279,28 +371,31 @@ export default function BirthdayDateLock({
                           radial-gradient(circle at 80% 80%, rgba(254, 215, 170, 0.10) 0%, transparent 55%)`,
       }}
     >
-      {/* ── TOP HEADER (Minimalist, zero clues, no chapter tags) ─────────────── */}
+      {/* ── TOP HEADER (Minimalist, completely free of birthday clues) ───────── */}
       <header className="w-full max-w-4xl mx-auto flex items-center justify-between z-20 py-2 sm:py-3">
         <div className="flex items-center gap-2">
           <span className="font-serif italic text-sm sm:text-base font-medium text-[#786457] tracking-tight">
-            Anshika&apos;s 19th
+            Anshika
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowHackerLayer(true)}
-            title="View Security Breach Prank"
-            className="px-2.5 py-1 rounded-full bg-white/80 hover:bg-white border border-[#F7C8D0] shadow-2xs text-[11px] font-sans font-medium text-[#BE185D] flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+            onClick={() => {
+              setShowHackerLayer(true);
+              startSiren();
+            }}
+            title="Trigger Security Lockdown Prank"
+            className="px-2.5 py-1 rounded-full bg-white/80 hover:bg-white border border-[#ef4444]/40 shadow-2xs text-[11px] font-sans font-medium text-[#ef4444] flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
           >
-            <ShieldAlert className="w-3.5 h-3.5 text-[#ef4444]" />
+            <ShieldAlert className="w-3.5 h-3.5 text-[#ef4444] animate-pulse" />
             <span className="hidden sm:inline">Security Alert</span>
           </button>
 
           <button
             onClick={triggerAttemptInteraction}
-            title="Birthday vault status: Locked"
-            aria-label="Birthday lock status"
+            title="Vault status: Locked"
+            aria-label="Lock status"
             className="w-8 h-8 rounded-full bg-white/80 border border-[#F7C8D0] shadow-2xs flex items-center justify-center text-sm cursor-pointer hover:bg-white hover:scale-105 active:scale-95 transition-all"
           >
             <span className="text-sm">🔒</span>
@@ -338,7 +433,7 @@ export default function BirthdayDateLock({
         </div>
       )}
 
-      {/* ── RESTORED ORIGINAL CUTE CENTERPIECE CARD ──────────────────────────── */}
+      {/* ── RESTORED ORIGINAL CUTE CENTERPIECE CARD (100% Spoiler-Free) ───────── */}
       <main className="relative z-10 w-full max-w-[520px] mx-auto my-auto flex flex-col items-center">
         {/* Subtle Playful Attempt Toast / Speech Bubble */}
         <AnimatePresence>
@@ -484,7 +579,10 @@ export default function BirthdayDateLock({
           {/* Interactive Door Checking Buttons */}
           <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-2">
             <button
-              onClick={() => setShowHackerLayer(true)}
+              onClick={() => {
+                setShowHackerLayer(true);
+                startSiren();
+              }}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#FAF7F2] hover:bg-[#FFF0F3] border border-[#EBDCD0] hover:border-[#FBCFE8] text-xs font-sans font-semibold text-[#786457] hover:text-[#BE185D] transition-all cursor-pointer shadow-2xs active:scale-95"
             >
               <Lock className="w-3.5 h-3.5 text-[#F43F5E]" />
@@ -557,7 +655,7 @@ export default function BirthdayDateLock({
                       THE DOOR IS OPEN
                     </h2>
                     <p className="font-sans text-xs text-[#786457]">
-                      Loading your birthday surprise...
+                      Loading your surprise...
                     </p>
                   </motion.div>
                 )}
@@ -574,7 +672,7 @@ export default function BirthdayDateLock({
         </p>
       </footer>
 
-      {/* ── THE EXTRA LAYER: SCARY HACKER DATA BREACH PRANK OVERLAY ─────────── */}
+      {/* ── THE EXTRA LAYER: REALISTIC SECURITY BREACH & SIREN BUZZER PRANK ──── */}
       <AnimatePresence>
         {showHackerLayer && !isUnlocked && (
           <motion.div
@@ -582,62 +680,79 @@ export default function BirthdayDateLock({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.3 }}
-            className={`fixed inset-0 z-50 bg-[#09070b]/98 backdrop-blur-xl flex flex-col justify-between items-center p-3 sm:p-6 font-mono text-[#f3f4f6] overflow-y-auto ${
-              glitchActive ? "translate-x-1.5 filter hue-rotate-90" : ""
-            }`}
+            className={`fixed inset-0 z-50 bg-[#070508]/98 backdrop-blur-xl flex flex-col justify-between items-center p-3 sm:p-6 font-mono text-[#f3f4f6] overflow-y-auto ${
+              glitchActive ? "translate-x-2 filter invert hue-rotate-180" : ""
+            } ${sirenActive ? "border-4 border-[#ef4444] shadow-[inset_0_0_80px_rgba(239,68,68,0.5)]" : ""}`}
             style={{
-              backgroundImage: `radial-gradient(circle at 50% 15%, rgba(239, 68, 68, 0.20) 0%, transparent 65%),
-                                repeating-linear-gradient(0deg, rgba(0,0,0,0.5) 0px, rgba(0,0,0,0.5) 1px, transparent 2px, transparent 4px)`,
+              backgroundImage: `radial-gradient(circle at 50% 12%, rgba(239, 68, 68, 0.28) 0%, transparent 65%),
+                                repeating-linear-gradient(0deg, rgba(0,0,0,0.6) 0px, rgba(0,0,0,0.6) 1px, transparent 2px, transparent 4px)`,
             }}
           >
-            {/* Top Security Siren */}
+            {/* Top Red Security Siren Lightbar */}
             <div className="w-full max-w-2xl mx-auto flex items-center justify-between py-2 border-b border-[#3b172a]">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#ef4444] animate-ping" />
+                <div className="w-3 h-3 rounded-full bg-[#ef4444] animate-ping" />
                 <span className="text-[11px] sm:text-xs font-bold text-[#fca5a5] tracking-widest uppercase">
-                  SECURITY_BREACH // ANSHIKA_DATA_VAULT
+                  INCIDENT #SEC-9842 // ACCESS_DENIED
                 </span>
               </div>
 
-              <button
-                onClick={() => setShowHackerLayer(false)}
-                className="px-2.5 py-1 rounded-full bg-[#27101c] hover:bg-[#3d182b] border border-[#ef4444]/40 text-[11px] text-[#fca5a5] flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
-              >
-                <span>Reveal Vault</span>
-                <X className="w-3 h-3 text-[#f87171]" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={sirenActive ? stopSiren : startSiren}
+                  className={`px-2 py-0.5 rounded-full border text-[10px] flex items-center gap-1 cursor-pointer transition-colors ${
+                    sirenActive
+                      ? "bg-[#ef4444] text-white border-[#f87171] animate-pulse"
+                      : "bg-[#27101c] text-[#fca5a5] border-[#ef4444]/40"
+                  }`}
+                >
+                  {sirenActive ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
+                  <span>{sirenActive ? "Mute Siren" : "Test Siren"}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    stopSiren();
+                    setShowHackerLayer(false);
+                  }}
+                  className="px-2.5 py-1 rounded-full bg-[#27101c] hover:bg-[#3d182b] border border-[#ef4444]/40 text-[11px] text-[#fca5a5] flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                >
+                  <span>Reveal Vault</span>
+                  <X className="w-3 h-3 text-[#f87171]" />
+                </button>
+              </div>
             </div>
 
             {/* Hacker Card Modal */}
-            <div className="w-full max-w-lg mx-auto my-auto py-4">
-              {/* Alert Header Banner */}
-              <div className="w-full mb-3 flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl bg-[#29101a] border border-[#ef4444]/60 text-center animate-pulse">
-                <ShieldAlert className="w-4 h-4 text-[#ef4444] shrink-0" />
-                <span className="text-[11px] font-bold text-[#fecaca] tracking-wide">
-                  ⚠ CRITICAL ALERT: UNAUTHORIZED INTRUSION DETECTED ⚠
+            <div className="w-full max-w-lg mx-auto my-auto py-3">
+              {/* Alert Header Strobe Banner */}
+              <div className="w-full mb-3 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[#350d18] border-2 border-[#ef4444] text-center shadow-[0_0_30px_rgba(239,68,68,0.4)] animate-pulse">
+                <AlertOctagon className="w-5 h-5 text-[#ef4444] shrink-0 animate-bounce" />
+                <span className="text-xs sm:text-sm font-extrabold text-[#fecaca] tracking-wide uppercase">
+                  ⚠ CRITICAL SECURITY INTRUSION DETECTED ⚠
                 </span>
               </div>
 
-              {/* Terminal Snippet */}
-              <div className="w-full mb-4 rounded-2xl bg-[#0b070f] border border-[#3b172a] p-3 text-[11px] text-[#9ca3af] shadow-inner text-left">
+              {/* Realistic Cyber Terminal Snippet */}
+              <div className="w-full mb-4 rounded-2xl bg-[#09060c] border border-[#3b172a] p-3.5 text-[11px] text-[#9ca3af] shadow-inner text-left">
                 <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#210f1c] text-[10px] text-[#6b7280]">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-[#ef4444]" />
                     <div className="w-2 h-2 rounded-full bg-[#f59e0b]" />
                     <div className="w-2 h-2 rounded-full bg-[#10b981]" />
                     <span className="ml-1 text-[#f43f5e] font-semibold">
-                      root@anuj-vault:~# ./snooper_defense
+                      sec-monitor@anuj-vault:~# ./quarantine_device
                     </span>
                   </div>
-                  <span>DEFENSE: {hackProgress}%</span>
+                  <span className="text-[#ef4444] font-bold">DEFENSE: {hackProgress}%</span>
                 </div>
 
                 <div className="space-y-1 leading-relaxed">
                   {terminalLogs
                     .filter((log): log is string => typeof log === "string" && Boolean(log))
                     .map((log, index) => {
-                      const isFailed = log.includes("REJECTED") || log.includes("FAILED");
-                      const isSuccess = log.includes("verified") || log.includes("SUCCESS");
+                      const isFailed = log.includes("DENIED") || log.includes("FAILED");
+                      const isSuccess = log.includes("LOCKDOWN") || log.includes("ENCRYPTED");
                       return (
                         <div
                           key={index}
@@ -645,7 +760,7 @@ export default function BirthdayDateLock({
                             isFailed
                               ? "text-[#f87171] font-bold"
                               : isSuccess
-                              ? "text-[#34d399]"
+                              ? "text-[#fbbf24]"
                               : "text-[#d1d5db]"
                           }
                         >
@@ -673,13 +788,13 @@ export default function BirthdayDateLock({
               </AnimatePresence>
 
               {/* The Prank Reveal Box */}
-              <div className="rounded-3xl bg-[#140c19] border-2 border-[#4a1c32] p-5 sm:p-7 text-center shadow-2xl">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#2b101c] border border-[#ef4444]/60 text-2xl mb-2.5 animate-pulse">
-                  <Skull className="w-6 h-6 text-[#f87171]" />
+              <div className="rounded-3xl bg-[#130b18] border-2 border-[#4a1c32] p-5 sm:p-7 text-center shadow-2xl">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#2b101c] border border-[#ef4444]/60 text-2xl mb-2.5 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse">
+                  <Skull className="w-7 h-7 text-[#f87171]" />
                 </div>
 
                 <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-1">
-                  YOU&apos;VE BEEN &ldquo;HACKED&rdquo;! 🚨
+                  DEVICE QUARANTINED! 🚨
                 </h2>
 
                 <p className="font-sans text-xs sm:text-sm font-bold text-[#f43f5e] mb-1">
@@ -688,26 +803,29 @@ export default function BirthdayDateLock({
 
                 <p className="font-sans text-xs text-[#9ca3af] leading-relaxed max-w-sm mx-auto mb-5">
                   Did your heart jump for a second? 😭 <br />
-                  I caught you snooping before your birthday! Your real surprise is locked in the vault behind this screen.
+                  I caught you snooping around! Whatever is inside here is locked safe and will not open before October 28.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
                   {/* Enter Countdown Button */}
                   <button
-                    onClick={() => setShowHackerLayer(false)}
+                    onClick={() => {
+                      stopSiren();
+                      setShowHackerLayer(false);
+                    }}
                     className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white text-xs font-bold font-sans shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    <span>Enter Birthday Vault 🌷</span>
+                    <span>Enter Secret Vault 🌷</span>
                   </button>
 
-                  {/* Playful Hack Attempt */}
+                  {/* Playful Hack Attempt with Buzzer & Vibrate */}
                   <button
                     onClick={handleBypassAttempt}
-                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#241321] hover:bg-[#351b31] border border-[#4a1c32] text-[#fca5a5] text-xs font-bold font-sans flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#241321] hover:bg-[#351b31] border border-[#ef4444]/50 text-[#fca5a5] text-xs font-bold font-sans flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
                   >
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Attempt Hack Bypass</span>
+                    <Radio className="w-3.5 h-3.5 text-[#ef4444]" />
+                    <span>Attempt Override</span>
                   </button>
                 </div>
               </div>
@@ -715,7 +833,7 @@ export default function BirthdayDateLock({
 
             {/* Bottom Disclaimer */}
             <div className="py-2 text-[10px] text-[#6b7280]">
-              *Security lock strictly expires on 28 October 2026 00:00 IST. Nice try though! 😂
+              *Security lock strictly active until 28 October 2026 00:00 IST. Nice try though! 😂
             </div>
           </motion.div>
         )}
