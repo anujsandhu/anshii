@@ -578,25 +578,28 @@ export default function Frame3Photos({
 
                   {/* ── PHOTO VIEW ── */}
                   {zoomPhoto.type === "image" ? (
-                    <div className="relative flex-1 min-h-0 w-full flex items-center justify-center my-1 overflow-hidden">
+                    <div className="w-full flex items-center justify-center my-2">
                       <div
-                        className={`relative h-full w-auto max-h-[50vh] sm:max-h-[54vh] aspect-[1442/1618] rounded-2xl overflow-hidden shadow-sm border border-[#ebdcd0] bg-[#faf8f5] flex items-center justify-center select-none transition-all ${
+                        className={`relative overflow-hidden rounded-2xl shadow-sm border border-[#ebdcd0] bg-[#faf8f5] flex items-center justify-center select-none transition-all ${
                           photoZoom > 1 ? "cursor-zoom-out" : "cursor-zoom-in"
                         }`}
+                        style={{
+                          height: "min(50vh, 420px)",
+                          maxHeight: "420px",
+                          aspectRatio: "1442 / 1618",
+                          maxWidth: "100%",
+                        }}
                         onClick={() => setPhotoZoom((prev) => (prev > 1 ? 1 : 1.5))}
                         title={photoZoom > 1 ? "Click to reset zoom" : "Click to zoom in"}
                       >
                         <div
-                          className="relative w-full h-full transition-transform duration-300 origin-center"
+                          className="relative w-full h-full transition-transform duration-300 origin-center flex items-center justify-center"
                           style={{ transform: `scale(${photoZoom})` }}
                         >
-                          <Image
+                          <img
                             src={zoomPhoto.src}
                             alt={zoomPhoto.caption}
-                            fill
-                            className="object-contain"
-                            sizes="(max-height: 55vh) 600px, 90vw"
-                            priority
+                            className="w-full h-full object-contain pointer-events-none"
                           />
                         </div>
 
