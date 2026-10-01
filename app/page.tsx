@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const isLocked = isServerDateLocked();
   if (isLocked) {
     return {
-      title: "Not yet. 👀 | Anshika",
+      title: "Not yet. 👀",
       description: "Something is waiting... Come back on 28 October.",
       openGraph: {
         title: "Not yet. 👀",

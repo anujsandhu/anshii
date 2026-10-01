@@ -84,13 +84,13 @@ const CALM_SOUNDTRACKS = [
 
 
 const HACKER_PRANK_MESSAGES = [
-  "Nice try Anshika. Even NASA can't bypass this before the 28th. 😂",
-  "🚨 ALERT: Anshika caught snooping around the secret vault!",
+  "Nice try! Even NASA can't bypass this before the 28th. 😂",
+  "🚨 ALERT: Unauthorized visitor caught snooping around the secret vault!",
   "Access Denied: Protected by Anuj's anti-snooper firewall. 🛡️",
   "Error 403: Snooper detected. Go away and come back on Oct 28! 👀",
   "Decryption attempt failed. Security level: MAXIMUM ANUJ DEFENSE. 😂",
   "Bro, it's NOT opening early. Stop pressing the button! 😭",
-  "October 28. Mark your calendar. Not today, Anshika! 🌷",
+  "October 28. Mark your calendar. Not today! 🌷",
   "Your IP has been logged into the 'Impatient People Hall of Fame' 🏆😂",
   "Trying to break into the secret vault? Nice try. 😂",
 ];
@@ -229,10 +229,10 @@ export default function BirthdayDateLock({
   }, [calmMusicVolume]);
 
 
-  // Simulated live hacker terminal logs (ZERO BIRTHDAY CLUES)
+  // Simulated live hacker terminal logs (ZERO CLUES)
   const [terminalLogs, setTerminalLogs] = useState<string[]>([
     "INITIALIZING SYSTEM LOCKDOWN PROTOCOL...",
-    "Connection flagged: [ANSHIKA_DEVICE] (Access Unverified)",
+    "Connection flagged: [VISITOR_DEVICE] (Access Unverified)",
     "Bypassing security certificates... ACCESS DENIED",
     "Target personal archives... [ENCRYPTED - AES-256 GCM]",
   ]);
@@ -242,8 +242,12 @@ export default function BirthdayDateLock({
 
   // Enforce zero-clue mysterious title before Oct 28
   useEffect(() => {
-    document.title = "SECURITY WARNING // ACCESS RESTRICTED";
-  }, []);
+    if (showHackerLayer) {
+      document.title = "🚨 SECURITY WARNING // ACCESS RESTRICTED";
+    } else {
+      document.title = "Not yet. 👀";
+    }
+  }, [showHackerLayer]);
 
   // Sync prank layer status with parent for cursor mode switching
   useEffect(() => {
@@ -444,7 +448,7 @@ export default function BirthdayDateLock({
 
         if (remaining === 1) {
           setDisarmMessage(
-            "❌ WRONG DATE! 🚨 Only 1 ATTEMPT REMAINING! Think carefully, Anshika... how could you forget when we first talked?! 😭"
+            "❌ WRONG DATE! 🚨 Only 1 ATTEMPT REMAINING! Think carefully... how could you forget when we first talked?! 😭"
           );
         } else {
           // 0 attempts remaining -> Lockdown penalty
@@ -781,34 +785,37 @@ export default function BirthdayDateLock({
       {/* ── TOP HEADER (Luxury with Calm Music Player & Status) ──────────── */}
       <header className="w-full max-w-4xl mx-auto flex items-center justify-between z-20 py-2 sm:py-3 gap-2">
         <div className="flex items-center gap-2 shrink-0">
+          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-tr from-[#ffe4e6] to-[#fecdd3] border border-[#fda4af]/60 flex items-center justify-center text-xs shadow-2xs">
+            💌
+          </div>
           <span className="font-serif italic text-base sm:text-lg font-bold text-[#4a3832] tracking-tight flex items-center gap-1.5">
-            Anshika
+            For You
             <span className="text-xs not-italic text-[#f59e0b]">✨</span>
           </span>
         </div>
 
         {/* ── CALM MUSIC PLAYER PILL (Plays calming tracks like Iktara) ──── */}
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/92 backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border border-[#ebdcd0] shadow-[0_2px_14px_rgba(244,63,94,0.08)]">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-[#ebdcd0] shadow-[0_2px_14px_rgba(244,63,94,0.08)]">
           {/* Mini Rotating Vinyl */}
           <button
             onClick={toggleCalmPlayPause}
-            className="relative flex items-center justify-center cursor-pointer group"
+            className="relative flex items-center justify-center cursor-pointer group shrink-0"
             title={isCalmMusicPlaying ? "Pause calm music" : "Play calm music"}
           >
             <motion.div
               animate={isCalmMusicPlaying ? { rotate: 360 } : { rotate: 0 }}
               transition={{ repeat: Infinity, duration: 4.5, ease: "linear" }}
-              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-tr from-[#1c1917] via-[#292524] to-[#44403c] p-0.5 flex items-center justify-center shadow-xs"
+              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-tr from-[#1c1917] via-[#292524] to-[#44403c] p-[2px] flex items-center justify-center shadow-xs ring-1 ring-black/10"
             >
               <div className="w-2.5 h-2.5 rounded-full bg-[#f43f5e] flex items-center justify-center">
-                <div className="w-1 h-1 rounded-full bg-white" />
+                <div className="w-1 h-1 rounded-full bg-white shadow-xs" />
               </div>
             </motion.div>
           </button>
 
           {/* Track Info with animated sound wave */}
           <div
-            className="flex flex-col text-left cursor-pointer select-none"
+            className="flex flex-col text-left cursor-pointer select-none leading-tight"
             onClick={toggleCalmPlayPause}
           >
             <div className="flex items-center gap-1.5">
@@ -816,13 +823,13 @@ export default function BirthdayDateLock({
                 {CALM_SOUNDTRACKS[currentTrackIdx].title}
               </span>
               {isCalmMusicPlaying ? (
-                <span className="flex items-end gap-0.5 h-2.5 text-[#f43f5e]">
-                  <span className="w-0.5 bg-[#f43f5e] animate-audio-bar-1 rounded-full" />
-                  <span className="w-0.5 bg-[#f43f5e] animate-audio-bar-2 rounded-full" />
-                  <span className="w-0.5 bg-[#f43f5e] animate-audio-bar-3 rounded-full" />
+                <span className="flex items-end gap-[2px] h-[11px] max-h-[11px] overflow-hidden pb-[1px] text-[#f43f5e] shrink-0" aria-label="Playing">
+                  <span className="w-[2.5px] bg-[#f43f5e] rounded-full animate-calm-bar-1" style={{ minHeight: "3px" }} />
+                  <span className="w-[2.5px] bg-[#f43f5e] rounded-full animate-calm-bar-2" style={{ minHeight: "3px" }} />
+                  <span className="w-[2.5px] bg-[#f43f5e] rounded-full animate-calm-bar-3" style={{ minHeight: "3px" }} />
                 </span>
               ) : (
-                <span className="text-[9px] text-[#9ca3af] font-mono">paused</span>
+                <span className="text-[9px] text-[#9ca3af] font-mono leading-none">paused</span>
               )}
             </div>
             <span className="text-[8px] sm:text-[9px] text-[#927e76] font-medium truncate max-w-[80px] sm:max-w-[125px]">
@@ -1241,7 +1248,7 @@ export default function BirthdayDateLock({
                     INCIDENT #SEC-9842 // THREAT LEVEL: MAXIMUM
                   </span>
                   <span className="text-[9px] text-[#f87171]/70 font-mono">
-                    TARGET: ANSHIKA // VAULT LOCKDOWN ACTIVE
+                    TARGET: UNAUTHORIZED VISITOR // VAULT LOCKDOWN ACTIVE
                   </span>
                 </div>
               </div>
@@ -1349,7 +1356,7 @@ export default function BirthdayDateLock({
                 <div className="p-3 rounded-2xl bg-black/60 border border-[#ef4444]/40 max-w-sm mx-auto mb-5 text-left font-mono text-[11px] text-[#9ca3af] space-y-1">
                   <div className="text-[#f87171] font-bold">&gt; BYPASS ATTEMPTS: REJECTED ❌</div>
                   <div className="text-[#fbbf24]">&gt; AUDIO SIREN: UNMUTABLE 🔊</div>
-                  <div className="text-[#d1d5db]">&gt; TARGET: ANSHIKA // 0 PRIVILEGES</div>
+                  <div className="text-[#d1d5db]">&gt; TARGET: VISITOR_DEVICE // 0 PRIVILEGES</div>
                 </div>
 
                 {/* Mobile / Direct Escape Attempt Button (triggers question modal) */}
@@ -1444,18 +1451,18 @@ export default function BirthdayDateLock({
                       </div>
                     </div>
 
-                    {/* Anshika Bubble 1 */}
+                    {/* Contact Bubble 1 */}
                     <div className="flex items-start justify-end gap-2">
                       <div className="flex flex-col items-end max-w-[82%]">
                         <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
                           Hlo
                         </div>
                         <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
-                          Anshika • 9:56 AM
+                          You • 9:56 AM
                         </span>
                       </div>
-                      <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
-                        A
+                      <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[11px] shrink-0 mt-1">
+                        🌸
                       </div>
                     </div>
 
@@ -1474,18 +1481,18 @@ export default function BirthdayDateLock({
                       </div>
                     </div>
 
-                    {/* Anshika Bubble 2 */}
+                    {/* Contact Bubble 2 */}
                     <div className="flex items-start justify-end gap-2">
                       <div className="flex flex-col items-end max-w-[82%]">
                         <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
                           Haan ,Right
                         </div>
                         <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
-                          Anshika • 11:06 AM
+                          You • 11:06 AM
                         </span>
                       </div>
-                      <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
-                        A
+                      <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[11px] shrink-0 mt-1">
+                        🌸
                       </div>
                     </div>
                   </div>

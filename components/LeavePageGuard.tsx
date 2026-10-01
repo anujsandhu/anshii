@@ -14,7 +14,7 @@ interface LeavePageGuardProps {
 }
 
 export const LEAVE_PAGE_WARNING_TEXT =
-  "Are you sure you want to leave? Your birthday celebration progress might be lost!";
+  "Are you sure you want to leave? Any unsaved progress will be lost.";
 
 export default function LeavePageGuard({
   warningMessage = LEAVE_PAGE_WARNING_TEXT,

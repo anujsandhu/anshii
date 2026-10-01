@@ -439,6 +439,16 @@ canvas {
 .animate-audio-bar-3 { animation: audioEqBar 0.26s ease-in-out infinite 0.14s; }
 .animate-audio-bar-4 { animation: audioEqBar 0.48s ease-in-out infinite 0.04s; }
 
+/* Calm Music Mini Visualizer in header pill - smooth, gentle, strictly contained within 11px */
+@keyframes calmEqBar {
+  0%, 100% { height: 3px; opacity: 0.55; }
+  50% { height: 10px; opacity: 1; }
+}
+
+.animate-calm-bar-1 { animation: calmEqBar 0.55s ease-in-out infinite; }
+.animate-calm-bar-2 { animation: calmEqBar 0.7s ease-in-out infinite 0.15s; }
+.animate-calm-bar-3 { animation: calmEqBar 0.45s ease-in-out infinite 0.3s; }
+
 /* Luxury Shimmer Glow */
 @keyframes luxuryShimmer {
   0% { background-position: -200% 0; }
