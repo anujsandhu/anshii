@@ -78,9 +78,9 @@ const DEFAULT_GIFT_SLOTS: GiftSlot[] = [
   {
     id: "step-2",
     stepNumber: 2,
-    title: "Step 2: Wear The Bracelet",
-    tabLabel: "2. Wear Bracelet",
-    icon: "💫",
+    title: "Step 2: Open The Box",
+    tabLabel: "2. Open Box",
+    icon: "✨",
     tagline: "Open the box & wear it! ✨",
     prompt: "Now open the gift box! Put on the birthday bracelet and take a photo wearing it on your wrist!",
     defaultCaption: "Wearing the birthday bracelet! Loving the sparkle 💫✨",
@@ -117,7 +117,7 @@ const DEFAULT_GIFT_SLOTS: GiftSlot[] = [
 ];
 
 const STORAGE_KEY_SNAPS = "anshii_gift_snaps_v4";
-const STORAGE_KEY_SLOTS = "anshii_gift_slots_v4";
+const STORAGE_KEY_SLOTS = "anshii_gift_slots_v5";
 
 // Client-side image compressor: keeps polaroids crisp (~1200px max) but under ~150KB
 async function compressImageFile(file: File): Promise<string> {
@@ -216,11 +216,20 @@ export default function FrameGiftSnaps({
         }
       }
 
+      // Clean up legacy v4 cache to prevent stale labels like 'Wear Bracelet'
+      localStorage.removeItem("anshii_gift_slots_v4");
+
       const savedSlots = localStorage.getItem(STORAGE_KEY_SLOTS);
       if (savedSlots) {
         const parsedSlots = JSON.parse(savedSlots);
         if (Array.isArray(parsedSlots) && parsedSlots.length > 0) {
-          setSlots(parsedSlots);
+          // Always ensure preset unboxing slots use latest defaults (no spoilers!)
+          const mergedPresets = DEFAULT_GIFT_SLOTS.map((defaultSlot) => {
+            const found = parsedSlots.find((s: GiftSlot) => s.id === defaultSlot.id);
+            return found ? { ...found, ...defaultSlot } : defaultSlot;
+          });
+          const customSlots = parsedSlots.filter((s: GiftSlot) => !s.isPreset);
+          setSlots([...mergedPresets, ...customSlots]);
         }
       }
     } catch {}
@@ -268,8 +277,7 @@ export default function FrameGiftSnaps({
   // Handle slot tab click with progressive locking check
   const handleSelectSlot = (idx: number) => {
     if (!isSlotUnlocked(idx)) {
-      const prevSlot = slots[idx - 1];
-      setLockedToast(`Complete ${prevSlot.tabLabel} first to unlock this step! 🔒`);
+      setLockedToast("Complete the previous step first to unlock this! 🔒");
       setTimeout(() => setLockedToast(null), 3200);
       return;
     }
@@ -534,6 +542,16 @@ export default function FrameGiftSnaps({
             const isActive = activeSlotIndex === idx;
             const isUnlocked = isSlotUnlocked(idx);
 
+            // Hide spoilers (bracelet text, teddy bear icon, etc.) until that step is unlocked!
+            const displayIcon = !isUnlocked ? "🎁" : slot.icon;
+            const displayLabel = !isUnlocked
+              ? idx === 1
+                ? "2. Secret Gift"
+                : idx === 2
+                ? "3. Next Surprise"
+                : `Step ${slot.stepNumber}`
+              : slot.tabLabel;
+
             return (
               <button
                 key={slot.id}
@@ -549,12 +567,12 @@ export default function FrameGiftSnaps({
                 }`}
                 title={
                   !isUnlocked
-                    ? `Complete ${slots[idx - 1]?.tabLabel} first!`
+                    ? "Complete previous step first to unlock! 🔒"
                     : slot.title
                 }
               >
-                <span>{slot.icon}</span>
-                <span className="font-semibold">{slot.tabLabel}</span>
+                <span>{displayIcon}</span>
+                <span className="font-semibold">{displayLabel}</span>
                 {isFilled ? (
                   <CheckCircle2
                     className={`w-3.5 h-3.5 ${
@@ -777,7 +795,9 @@ export default function FrameGiftSnaps({
                     ) : (
                       <>
                         <Camera className="w-4 h-4" />
-                        <span>Upload {currentSlot.tabLabel} Photo</span>
+                        <span>
+                          Upload {currentSlot.tabLabel.replace(/^\d+\.\s*/, "")} Photo
+                        </span>
                       </>
                     )}
                   </motion.button>
@@ -799,9 +819,7 @@ export default function FrameGiftSnaps({
                 setActiveSlotIndex(target);
                 setIsEditingCaption(false);
               } else {
-                setLockedToast(
-                  `Complete ${slots[target - 1]?.tabLabel} first to unlock this step! 🔒`
-                );
+                setLockedToast("Complete the previous step first to unlock this! 🔒");
                 setTimeout(() => setLockedToast(null), 3200);
               }
             }}
