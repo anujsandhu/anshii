@@ -65,7 +65,7 @@ export default function SendWhatsAppNotificationButton({
         const fallbackUrl =
           data.directUrl ||
           `https://wa.me/918278710552?text=${encodeURIComponent(
-            `Someone just opened the private page and clicked the WhatsApp button — ${new Date().toLocaleTimeString()}`
+            "Okay, what's the password? 👀"
           )}`;
         window.open(fallbackUrl, "_blank", "noopener,noreferrer");
         setStatus("sent");
@@ -73,7 +73,7 @@ export default function SendWhatsAppNotificationButton({
       }
     } catch (err) {
       const fallbackUrl = `https://wa.me/918278710552?text=${encodeURIComponent(
-        `Someone just opened the private page and clicked the WhatsApp button — ${new Date().toLocaleTimeString()}`
+        "Okay, what's the password? 👀"
       )}`;
       window.open(fallbackUrl, "_blank", "noopener,noreferrer");
       setStatus("sent");
