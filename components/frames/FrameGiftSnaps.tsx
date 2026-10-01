@@ -218,7 +218,10 @@ export default function FrameGiftSnaps({
       if (savedSnaps) {
         const parsed = JSON.parse(savedSnaps);
         setSnaps(parsed);
-        if (Object.keys(parsed).length > 0) {
+        // Only mark done if ALL preset slots have been uploaded
+        const presetIds = DEFAULT_GIFT_SLOTS.map((s) => s.id);
+        const allDone = presetIds.every((id) => Boolean(parsed[id]?.imageUrl));
+        if (allDone) {
           setTaskDone(true);
         }
       }
@@ -242,9 +245,12 @@ export default function FrameGiftSnaps({
             try {
               localStorage.setItem(STORAGE_KEY_SNAPS, JSON.stringify(merged));
             } catch {}
+            // Only mark done if ALL preset slots are now present
+            const presetIds = DEFAULT_GIFT_SLOTS.map((s) => s.id);
+            const allDone = presetIds.every((id) => Boolean(merged[id]?.imageUrl));
+            if (allDone) setTaskDone(true);
             return merged;
           });
-          setTaskDone(true);
         }
       })
       .catch((err) => {
@@ -331,9 +337,22 @@ export default function FrameGiftSnaps({
         });
       } catch {}
 
-      if (!taskDone) {
+      // Check if ALL preset slots now have images
+      const presetIds = DEFAULT_GIFT_SLOTS.map((s) => s.id);
+      const allPresetsDone = presetIds.every(
+        (id) => Boolean(updated[id]?.imageUrl)
+      );
+      if (allPresetsDone && !taskDone) {
         setTaskDone(true);
         onCompleteTask();
+        try {
+          confetti({
+            particleCount: 140,
+            spread: 110,
+            origin: { y: 0.5 },
+            colors: ["#fda4af", "#f43f5e", "#fed7aa", "#bbf7d0", "#d8b4fe"],
+          });
+        } catch {}
       }
 
       // 2. Upload to Cloudinary via server-side /api/upload
@@ -877,23 +896,16 @@ export default function FrameGiftSnaps({
 
         {/* Task Completion Banner */}
         <div className="mt-3 text-center max-w-sm z-10">
-          {!taskDone ? (
-            <div className="p-2.5 rounded-2xl bg-[#fffaf5] border border-[#eddccc] text-center">
-              <span className="text-xs text-[#786457] font-sans">
-                Task: Complete <strong>Step 1</strong> by uploading your closed box photo! 📦
+          {/* Show upload progress hint when not yet done */}
+          <div className="p-2.5 rounded-2xl bg-[#fffaf5] border border-[#eddccc] text-center">
+            <span className="text-xs text-[#786457] font-sans">
+              Upload all <strong>{DEFAULT_GIFT_SLOTS.length} photos</strong> to unlock the next chapter! 📸
+              <span className="block mt-0.5 text-[#be185d] font-semibold">
+                {uploadedCount} of {DEFAULT_GIFT_SLOTS.length} uploaded
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setTaskDone(true);
-                  onCompleteTask();
-                }}
-                className="block mx-auto mt-1 text-[11px] text-[#a89080] hover:text-[#be185d] font-sans underline cursor-pointer"
-              >
-                Upload later (Skip task for now) →
-              </button>
-            </div>
-          ) : (
+            </span>
+          </div>
+          {taskDone ? (
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -901,10 +913,10 @@ export default function FrameGiftSnaps({
             >
               <div className="flex items-center gap-1.5 font-sans font-semibold text-xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
-                <span>TASK COMPLETE ✓ Unboxing Memory Saved</span>
+                <span>ALL {DEFAULT_GIFT_SLOTS.length} PHOTOS CAPTURED ✓</span>
               </div>
               <p className="text-[11px] font-sans text-[#047857]">
-                &ldquo;You look adorable! First gift memory captured.&rdquo;
+                &ldquo;Every unboxing moment is saved! 🎁📸&rdquo;
               </p>
               <button
                 onClick={onNext}
@@ -914,7 +926,7 @@ export default function FrameGiftSnaps({
                 <span className="text-base leading-none">↓</span>
               </button>
             </motion.div>
-          )}
+          ) : null}
         </div>
       </div>
 
