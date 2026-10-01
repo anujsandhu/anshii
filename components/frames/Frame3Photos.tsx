@@ -21,34 +21,53 @@ interface Frame3PhotosProps {
   onNext: () => void;
 }
 
-// ── Photo data ─────────────────────────────────────────────────────────────
-const SCRAPBOOK_PREVIEWS = [
+// ── Photo & Video data for Digital Scrapbook ────────────────────────────────
+export interface ScrapbookItem {
+  id: number;
+  type: "image" | "video";
+  src: string;
+  badge: string;
+  badgeIcon: string;
+  caption: string;
+  sub: string;
+  rotation: number;
+  tape: string;
+  hasHeart: boolean;
+}
+
+const SCRAPBOOK_PREVIEWS: ScrapbookItem[] = [
   {
     id: 1,
-    imageId: "coffee-date-syntax",
-    src: "/photos/photo1.jpg",
-    caption: "This one deserved its own page.",
-    sub: "You on a good day — which is most days tbh",
-    rotation: -2.5,
+    type: "image",
+    src: "/1st-msg-ss.png",
+    badge: "The Beginning",
+    badgeIcon: "✨",
+    caption: "The first few messages.",
+    sub: "Before all the random conversations, there was just... this.",
+    rotation: -2.4,
     tape: "washi-tape-pink",
     hasHeart: true,
   },
   {
     id: 2,
-    imageId: "anshika-moment",
-    src: "/photos/photo2.jpg",
-    caption: "Okay this photo is just unfair.",
-    sub: "No notes. Genuinely no notes.",
-    rotation: 2.2,
+    type: "video",
+    src: "/1st-snap.mp4",
+    badge: "First Snap",
+    badgeIcon: "📸",
+    caption: "One of the first snaps.",
+    sub: "Somewhere along the way, the conversation became memories.",
+    rotation: 2.1,
     tape: "washi-tape-blue",
     hasHeart: false,
   },
   {
     id: 3,
-    imageId: "golden-hour-moment",
-    src: "/photos/photo3.jpg",
-    caption: "A certified Anshika moment.",
-    sub: "The kind of day I'd remember for no reason",
+    type: "video",
+    src: "/my-fav-snap.mp4",
+    badge: "Favorite Snap",
+    badgeIcon: "♡",
+    caption: "Some memories just stay.",
+    sub: "Not everything needs an explanation. Some moments are just favorites.",
     rotation: -1.8,
     tape: "washi-tape-yellow",
     hasHeart: false,
@@ -131,15 +150,16 @@ export default function Frame3Photos({
               <button
                 key={item.id}
                 onClick={() => setActiveMobileIdx(idx)}
-                className={`px-3 py-1 rounded-full text-[11px] font-sans font-semibold transition-all cursor-pointer shadow-2xs ${
+                className={`px-3 py-1 rounded-full text-[11px] font-sans font-semibold transition-all cursor-pointer shadow-2xs flex items-center gap-1 ${
                   activeMobileIdx === idx
                     ? "bg-[#3f2e24] text-white scale-105 shadow-xs"
                     : "bg-white/85 border border-[#ebdcd0] text-[#786457] hover:bg-white"
                 }`}
               >
-                <span>Photo {idx + 1}</span>
+                <span>{item.badgeIcon}</span>
+                <span>{item.badge}</span>
                 {item.hasHeart && !taskDone && (
-                  <span className="ml-1 text-[10px]">💖</span>
+                  <span className="ml-0.5 text-[10px]">💖</span>
                 )}
               </button>
             ))}
@@ -181,19 +201,36 @@ export default function Frame3Photos({
                   <div className={activeMobileItem.tape} />
 
                   <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#eee7de] shadow-inner mt-2">
-                    <Image
-                      src={activeMobileItem.src}
-                      alt={activeMobileItem.caption}
-                      fill
-                      priority
-                      sizes="280px"
-                      className="object-cover"
-                    />
+                    {activeMobileItem.type === "image" ? (
+                      <Image
+                        src={activeMobileItem.src}
+                        alt={activeMobileItem.caption}
+                        fill
+                        priority
+                        sizes="280px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <video
+                        src={activeMobileItem.src}
+                        playsInline
+                        loop
+                        muted
+                        autoPlay
+                        preload="metadata"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
 
-                    <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-white/70 backdrop-blur-xs text-[#3f2e24]">
-                      <Maximize2 className="w-3 h-3" />
+                    {/* Media Type Badge */}
+                    <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[10px] font-sans font-medium flex items-center gap-1 shadow-xs z-10">
+                      <span>{activeMobileItem.badgeIcon}</span>
+                      <span>{activeMobileItem.badge}</span>
                     </div>
 
+                    <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-white/70 backdrop-blur-xs text-[#3f2e24] z-10">
+                      <Maximize2 className="w-3 h-3" />
+                    </div>
 
                     {/* Secret Heart Sticker */}
                     {activeMobileItem.hasHeart && (
@@ -267,7 +304,7 @@ export default function Frame3Photos({
           className="hidden sm:flex flex-nowrap items-center justify-center gap-5 max-w-4xl w-full z-10 my-1 overflow-x-auto py-2 px-4"
           style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
         >
-          {SCRAPBOOK_PREVIEWS.map((item, index) => (
+          {SCRAPBOOK_PREVIEWS.map((item) => (
             <motion.div
               key={item.id}
               onClick={() => setZoomPhoto(item)}
@@ -286,18 +323,35 @@ export default function Frame3Photos({
                 <div className={item.tape} />
 
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#eee7de] shadow-inner mt-2">
-                  <Image
-                    src={item.src}
-                    alt={item.caption}
-                    fill
-                    sizes="240px"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                  {item.type === "image" ? (
+                    <Image
+                      src={item.src}
+                      alt={item.caption}
+                      fill
+                      sizes="240px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <video
+                      src={item.src}
+                      playsInline
+                      loop
+                      muted
+                      autoPlay
+                      preload="metadata"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
 
-                  <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-white/70 backdrop-blur-xs text-[#3f2e24] opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Maximize2 className="w-2.5 h-2.5" />
+                  {/* Media Type Badge */}
+                  <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[9.5px] font-sans font-medium flex items-center gap-1 shadow-xs z-10">
+                    <span>{item.badgeIcon}</span>
+                    <span>{item.badge}</span>
                   </div>
 
+                  <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-white/70 backdrop-blur-xs text-[#3f2e24] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <Maximize2 className="w-2.5 h-2.5" />
+                  </div>
 
                   {/* Secret Heart Sticker for Task */}
                   {item.hasHeart && (
@@ -367,9 +421,7 @@ export default function Frame3Photos({
       </div>
       </div>
 
-
-
-      {/* Full Photo Lightbox Portaled to document.body */}
+      {/* Full Photo & Video Lightbox Portaled to document.body */}
       {mounted &&
         createPortal(
           <AnimatePresence>
@@ -410,42 +462,58 @@ export default function Frame3Photos({
                     <X className="w-4 h-4" />
                   </button>
 
-                  {/* Photo Frame */}
-                  <div
-                    className="relative w-full overflow-hidden rounded-2xl bg-[#eee7de] shadow-inner mt-2 mb-3"
-                    style={{ aspectRatio: "4/3" }}
-                  >
-                    <Image
-                      src={zoomPhoto.src}
-                      alt={zoomPhoto.caption}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 92vw, 440px"
-                      priority
-                    />
+                  {/* Photo or Video in Lightbox */}
+                  {zoomPhoto.type === "image" ? (
+                    <div
+                      className="relative w-full overflow-hidden rounded-2xl bg-[#eee7de] shadow-inner mt-2 mb-3"
+                      style={{ aspectRatio: "4/3", maxHeight: "60vh" }}
+                    >
+                      <Image
+                        src={zoomPhoto.src}
+                        alt={zoomPhoto.caption}
+                        fill
+                        className="object-contain"
+                        sizes="(max-width: 640px) 92vw, 440px"
+                        priority
+                      />
 
-                    {/* Secret Heart Sticker inside modal */}
-                    {zoomPhoto.hasHeart && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleHeartClick(e);
-                        }}
-                        className={`absolute bottom-2.5 right-2.5 p-2 rounded-full transition-all cursor-pointer z-20 min-w-[44px] min-h-[44px] flex items-center justify-center ${
-                          taskDone
-                            ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-sm"
-                            : "bg-white/95 hover:bg-white text-[#fda4af] shadow-md animate-bounce ring-2 ring-[#fda4af]"
-                        }`}
-                        title="Tap the secret heart sticker!"
-                      >
-                        <Heart
-                          className={`w-5 h-5 ${
-                            taskDone ? "fill-[#be185d]" : "fill-[#fda4af]"
+                      {/* Secret Heart Sticker inside modal */}
+                      {zoomPhoto.hasHeart && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleHeartClick(e);
+                          }}
+                          className={`absolute bottom-2.5 right-2.5 p-2 rounded-full transition-all cursor-pointer z-20 min-w-[44px] min-h-[44px] flex items-center justify-center ${
+                            taskDone
+                              ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-sm"
+                              : "bg-white/95 hover:bg-white text-[#fda4af] shadow-md animate-bounce ring-2 ring-[#fda4af]"
                           }`}
-                        />
-                      </button>
-                    )}
-                  </div>
+                          title="Tap the secret heart sticker!"
+                        >
+                          <Heart
+                            className={`w-5 h-5 ${
+                              taskDone ? "fill-[#be185d]" : "fill-[#fda4af]"
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      className="relative w-full max-w-[280px] mx-auto overflow-hidden rounded-2xl bg-black shadow-inner mt-2 mb-3"
+                      style={{ aspectRatio: "9/16", maxHeight: "62vh" }}
+                    >
+                      <video
+                        src={zoomPhoto.src}
+                        playsInline
+                        loop
+                        autoPlay
+                        controls
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  )}
 
                   <p className="font-handwriting text-2xl sm:text-3xl text-[#3f2e24] font-bold leading-tight">
                     &ldquo;{zoomPhoto.caption}&rdquo;
@@ -471,3 +539,4 @@ export default function Frame3Photos({
     </div>
   );
 }
+
