@@ -13,8 +13,6 @@ import {
   MessageCircle,
   Eye,
   X,
-  Volume2,
-  VolumeX,
   AlertOctagon,
   Radio,
 } from "lucide-react";
@@ -698,18 +696,6 @@ export default function BirthdayDateLock({
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  onClick={sirenActive ? stopSiren : startSiren}
-                  className={`px-2 py-0.5 rounded-full border text-[10px] flex items-center gap-1 cursor-pointer transition-colors ${
-                    sirenActive
-                      ? "bg-[#ef4444] text-white border-[#f87171] animate-pulse"
-                      : "bg-[#27101c] text-[#fca5a5] border-[#ef4444]/40"
-                  }`}
-                >
-                  {sirenActive ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
-                  <span>{sirenActive ? "Mute Siren" : "Test Siren"}</span>
-                </button>
-
                 <button
                   onClick={() => {
                     stopSiren();
