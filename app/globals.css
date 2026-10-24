@@ -71,6 +71,17 @@ body {
   padding-right: var(--sar);
 }
 
+/* Explicitly allow scrolling on admin dashboard */
+html:has(.admin-page-root),
+body:has(.admin-page-root),
+.admin-page-root {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  overscroll-behavior: auto !important;
+}
+
 /* Handwritten class helper */
 .font-handwriting {
   font-family: var(--font-handwriting), 'Caveat', cursive, sans-serif;
@@ -92,6 +103,35 @@ body {
     border: 2px solid #f5efe6;
   }
   ::-webkit-scrollbar-thumb:hover { background: #c8b9a6; }
+}
+
+/* Card-Specific Isolated Scrolling (distinct from full-screen chapter slider) */
+.card-scroll {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(251, 113, 133, 0.45) rgba(254, 242, 242, 0.2) !important;
+}
+
+.card-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: 5px !important;
+  height: 5px !important;
+}
+
+.card-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 250, 245, 0.4) !important;
+  border-radius: 9999px !important;
+}
+
+.card-scroll::-webkit-scrollbar-thumb {
+  background: rgba(251, 113, 133, 0.5) !important;
+  border-radius: 9999px !important;
+}
+
+.card-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 63, 94, 0.8) !important;
 }
 
 /* Handmade Paper Card Style */
@@ -203,6 +243,31 @@ body {
   background-image: linear-gradient(#e8dfd5 1px, transparent 1px);
   background-size: 100% 28px;
   line-height: 28px;
+}
+
+/* Washi tape foil shimmer & tactile hover tilt */
+@keyframes washiFoilGleam {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.08) drop-shadow(0 2px 6px rgba(251, 113, 133, 0.25)); }
+  100% { filter: brightness(1); }
+}
+
+.washi-tape-pink,
+.washi-tape-blue,
+.washi-tape-yellow,
+.washi-tape-green,
+.washi-tape-mint {
+  animation: washiFoilGleam 4.5s ease-in-out infinite;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+}
+
+.washi-tape-pink:hover,
+.washi-tape-blue:hover,
+.washi-tape-yellow:hover,
+.washi-tape-green:hover,
+.washi-tape-mint:hover {
+  transform: translateX(-50%) rotate(0deg) scale(1.08);
+  filter: brightness(1.15) drop-shadow(0 4px 10px rgba(80, 50, 30, 0.18));
 }
 
 /* Postage Stamp Border Effect */

@@ -164,19 +164,20 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
   // ── Completed state ─────────────────────────────────────────────────
   if (gameOver) {
     return (
-      <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
+      <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-[#fed7aa]/20 via-[#fbcfe8]/20 to-transparent rounded-full blur-[130px] pointer-events-none" />
 
         <motion.div
+          data-card="true"
           initial={{ opacity: 0, scale: 0.92, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-md paper-card-warm p-5 sm:p-9 rounded-3xl relative shadow-xl border border-[#ebdcd0] z-10 text-center my-auto"
+          className="w-full max-w-xl lg:max-w-2xl paper-card-warm p-6 sm:p-8 lg:p-9 rounded-3xl relative shadow-[0_20px_50px_rgba(80,50,30,0.14)] border border-[#ebdcd0] z-10 text-center my-auto"
         >
           <div className="washi-tape-yellow" />
 
           {/* Score stars */}
-          <div className="flex items-center justify-center gap-1.5 mb-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
             {QUESTIONS.map((_, i) => {
               const ans = answers[i];
               const ok = ans !== null && ans === QUESTIONS[i].correct;
@@ -186,7 +187,7 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: i * 0.12, type: "spring", stiffness: 400, damping: 18 }}
-                  className={`text-2xl ${ok ? "" : "grayscale opacity-40"}`}
+                  className={`text-2xl sm:text-3xl ${ok ? "" : "grayscale opacity-40"}`}
                 >
                   {ok ? "🌸" : "🌱"}
                 </motion.span>
@@ -194,29 +195,60 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
             })}
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46] font-sans text-xs mb-3 font-semibold">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46] font-sans text-xs mb-3 font-semibold shadow-2xs">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
             <span>WEB DEV TEST COMPLETE ✓</span>
           </div>
 
-          <h2 className="font-handwriting text-3xl sm:text-4xl font-bold text-[#3f2e24] leading-tight mb-1">
+          <h2 className="font-handwriting text-3xl sm:text-4xl lg:text-5xl font-bold text-[#3f2e24] leading-tight mb-1">
             {scoreMsg.headline}
           </h2>
-          <p className="text-sm text-[#786457] font-sans mb-4">{scoreMsg.sub}</p>
+          <p className="text-xs sm:text-sm text-[#786457] font-sans mb-4">{scoreMsg.sub}</p>
 
-          <div className="p-3 rounded-2xl bg-[#fffaf5] border border-[#eddccc] flex items-center justify-between text-xs font-sans text-[#786457] mb-5">
-            <span>Score</span>
-            <span className="font-bold text-[#be185d] text-lg font-handwriting">{score} / 5</span>
-            <span>{score === 5 ? "Perfect 🎉" : score >= 3 ? "Solid 👍" : "Participated 🎂"}</span>
+          {/* 3-column structured stats row */}
+          <div className="grid grid-cols-3 gap-2 p-3 sm:p-4 rounded-2xl bg-[#fffaf5] border border-[#eddccc] text-xs font-sans text-[#786457] mb-6 shadow-2xs">
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] sm:text-[11px] text-[#a0897a] uppercase font-bold tracking-wider">Questions</span>
+              <span className="font-bold text-[#3f2e24] text-sm sm:text-base font-mono mt-0.5">5 / 5</span>
+            </div>
+            <div className="flex flex-col items-center border-x border-[#eddccc]">
+              <span className="text-[10px] sm:text-[11px] text-[#a0897a] uppercase font-bold tracking-wider">Your Score</span>
+              <span className="font-bold text-[#be185d] text-base sm:text-lg font-mono mt-0.5">{score} / 5</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] sm:text-[11px] text-[#a0897a] uppercase font-bold tracking-wider">Status</span>
+              <span className="font-bold text-[#b45309] text-[11px] sm:text-xs font-sans mt-1">
+                {score === 5 ? "Perfect 🎉" : score >= 3 ? "Solid 👍" : "Participated 🎂"}
+              </span>
+            </div>
           </div>
 
-          <button
-            onClick={onNext}
-            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 btn-cute"
-          >
-            <span>Continue to Handwritten Letter</span>
-            <span className="text-base leading-none">↓</span>
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentQ(0);
+                setSelectedAnswer(null);
+                setShowReaction(false);
+                setGameOver(false);
+                setScore(0);
+                setTaskDone(false);
+                runningScoreRef.current = 0;
+                setAnswers(Array(QUESTIONS.length).fill(null));
+              }}
+              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white hover:bg-stone-50 text-[#786457] border border-[#ebdcd0] font-sans font-semibold text-xs shadow-sm transition-all duration-200 cursor-pointer inline-flex items-center justify-center gap-1.5"
+            >
+              <span>Retake Quiz</span>
+              <span>↺</span>
+            </button>
+            <button
+              onClick={onNext}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 btn-cute"
+            >
+              <span>Continue to Scratch Card</span>
+              <span className="text-base leading-none">↓</span>
+            </button>
+          </div>
         </motion.div>
       </div>
     );
@@ -224,32 +256,33 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
 
   // ── Active quiz ─────────────────────────────────────────────────────
   return (
-    <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
+    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
       {/* Ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-[#fed7aa]/20 via-[#fbcfe8]/20 to-transparent rounded-full blur-[130px] pointer-events-none" />
 
       <motion.div
+        data-card="true"
         key={currentQ}
         initial={{ opacity: 0, x: 28 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-lg paper-card-warm rounded-3xl relative shadow-lg border border-[#ebdcd0] z-10 overflow-hidden my-auto p-3.5 sm:p-6"
+        className="w-full max-w-lg lg:max-w-2xl paper-card-warm rounded-3xl relative shadow-[0_20px_50px_rgba(80,50,30,0.12)] border border-[#ebdcd0] z-10 overflow-hidden my-auto p-4 sm:p-6 lg:p-9"
       >
         <div className="washi-tape-yellow" />
 
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#fef3c7] border border-[#fde68a] text-[#92400e] font-sans text-xs font-semibold">
-            <Code2 className="w-3 h-3 text-[#d97706]" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef3c7] border border-[#fde68a] text-[#92400e] font-sans text-xs font-semibold shadow-2xs">
+            <Code2 className="w-3.5 h-3.5 text-[#d97706]" />
             <span>CS Mini Quiz</span>
           </div>
-          <span className="text-xs font-mono text-[#a0897a]">
+          <span className="text-xs font-mono font-bold text-[#be185d] bg-[#fdf2f4] px-2 py-0.5 rounded-md border border-[#fbcfe8]">
             {currentQ + 1} / {QUESTIONS.length}
           </span>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full h-1.5 bg-[#f0e4d6] rounded-full mb-4 overflow-hidden">
+        <div className="w-full h-2 bg-[#f0e4d6] rounded-full mb-4 overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-[#fda4af] to-[#f43f5e] rounded-full"
             animate={{ width: `${progress}%` }}
@@ -259,18 +292,18 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
 
         {/* Question tag */}
         <div className="mb-2">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono border ${q.tagColor}`}>
+          <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-[11px] font-bold font-mono border ${q.tagColor}`}>
             {q.tag}
           </span>
         </div>
 
         {/* Question text */}
-        <h2 className="font-handwriting text-lg sm:text-xl font-bold text-[#3f2e24] leading-snug mb-3">
+        <h2 className="font-handwriting text-xl sm:text-2xl lg:text-3xl font-bold text-[#3f2e24] leading-snug mb-4">
           {q.question}
         </h2>
 
-        {/* Options — always 1-col on mobile for large touch targets, 2-col on sm+ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2.5">
+        {/* Options — 1-col on mobile, 2-col on sm and lg */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 lg:gap-3.5 mb-3">
           {q.options.map((opt, idx) => {
             const isSelected = selectedAnswer === idx;
             const isCorrectOpt = idx === q.correct;
@@ -289,13 +322,13 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
                 onClick={() => handleAnswer(idx)}
                 whileHover={!revealed ? { scale: 1.02 } : {}}
                 whileTap={!revealed ? { scale: 0.98 } : {}}
-                className={`relative px-4 py-3 rounded-2xl border text-left font-sans font-medium transition-all duration-200 cursor-pointer leading-snug min-h-[48px] flex items-center text-sm ${optClass}`}
+                className={`relative px-4 py-3 lg:px-5 lg:py-3.5 rounded-2xl border text-left font-sans font-medium transition-all duration-200 cursor-pointer leading-snug min-h-[48px] lg:min-h-[56px] flex items-center text-sm lg:text-base ${optClass}`}
                 disabled={revealed}
               >
-                <span className="font-bold mr-2 font-mono text-[11px] shrink-0">
+                <span className="font-bold mr-2.5 font-mono text-xs lg:text-sm shrink-0">
                   {String.fromCharCode(65 + idx)})
                 </span>
-                <span>{opt}</span>
+                <span className="font-medium">{opt}</span>
                 {revealed && isCorrectOpt && (
                   <CheckCircle2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#10b981]" />
                 )}

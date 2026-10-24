@@ -41,7 +41,7 @@ export default function Frame2Birthday({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
+    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
 
       {/* ── Ambient Background Glow ── */}
       <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-gradient-to-tr from-[#fed7aa]/30 via-[#fbcfe8]/25 to-[#d8b4fe]/20 rounded-full blur-[130px] pointer-events-none" />
@@ -120,7 +120,7 @@ export default function Frame2Birthday({
       </div>
 
       {/* ── Main Layout: side-by-side on lg+, stacked on mobile ── */}
-      <div className="relative z-10 w-full max-w-4xl flex flex-col lg:flex-row items-center justify-center gap-3 lg:gap-8 px-2 sm:px-4 my-auto">
+      <div className="relative z-10 w-full max-w-4xl lg:max-w-5xl flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-10 px-2 sm:px-4 my-auto">
 
         {/* ══ LEFT: Childhood Polaroid Photo ══ */}
         <motion.div
@@ -138,20 +138,15 @@ export default function Frame2Birthday({
           >
             {/* Polaroid outer cream frame */}
             <div
-              className="relative bg-white rounded-sm shadow-[0_12px_40px_-8px_rgba(80,50,30,0.22),0_4px_12px_-2px_rgba(80,50,30,0.1)]"
-              style={{
-                padding: "6px 6px 16px 6px",
-                width: "min(125px, 32vw)",
-                boxShadow: "0 14px 44px -8px rgba(80,50,30,0.20), 0 4px 12px -2px rgba(80,50,30,0.10)",
-              }}
+              className="relative bg-white rounded-xl shadow-[0_16px_48px_-8px_rgba(80,50,30,0.22),0_4px_14px_-2px_rgba(80,50,30,0.12)] w-[140px] sm:w-[180px] lg:w-[240px] p-2 sm:p-2.5 lg:p-3.5 pb-3 sm:pb-4 lg:pb-5 border border-[#ede3d8]"
             >
               {/* Washi tape top-left */}
               <div
-                className="absolute -top-2.5 left-4 z-20"
+                className="absolute -top-3 left-4 z-20"
                 style={{
-                  width: 44,
-                  height: 15,
-                  background: "rgba(254,205,211,0.78)",
+                  width: 52,
+                  height: 18,
+                  background: "rgba(254,205,211,0.85)",
                   backdropFilter: "blur(1px)",
                   borderLeft: "1.5px dashed rgba(244,63,94,0.28)",
                   borderRight: "1.5px dashed rgba(244,63,94,0.28)",
@@ -161,20 +156,20 @@ export default function Frame2Birthday({
               />
 
               {/* The photo */}
-              <div className="relative overflow-hidden rounded-sm bg-[#f0e8de]" style={{ aspectRatio: "3/4" }}>
+              <div className="relative overflow-hidden rounded-lg bg-[#f0e8de] shadow-inner" style={{ aspectRatio: "3/4" }}>
                 <Image
                   src="/photos/childhood.jpg"
                   alt="Anshika as a child"
                   fill
-                  sizes="(max-width: 640px) 34vw, 180px"
-                  className="object-cover object-top"
+                  sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 240px"
+                  className="object-cover object-top hover:scale-105 transition-transform duration-500"
                   priority
                 />
               </div>
 
               {/* Polaroid bottom caption area */}
-              <div className="pt-1.5 pb-0 text-center flex flex-col items-center">
-                <p className="font-handwriting text-[#4a3528] leading-tight text-xs sm:text-sm">
+              <div className="pt-2 pb-0 text-center flex flex-col items-center">
+                <p className="font-handwriting text-[#4a3528] font-bold leading-tight text-xs sm:text-sm lg:text-base">
                   Look who grew up… ✨
                 </p>
               </div>
@@ -247,26 +242,26 @@ export default function Frame2Birthday({
           initial={{ opacity: 0, x: 28 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-          className="flex-1 min-w-0 max-w-md lg:max-w-xl w-full"
+          className="flex-1 min-w-0 max-w-md lg:max-w-xl xl:max-w-2xl w-full"
         >
           {/* Paper card */}
-          <div className="relative paper-card-warm rounded-3xl shadow-lg border border-[#ebdcd0] overflow-hidden p-3.5 sm:p-6 lg:p-7">
+          <div className="relative paper-card-warm rounded-3xl shadow-[0_20px_50px_rgba(80,50,30,0.12)] border border-[#ebdcd0] overflow-hidden p-4 sm:p-6 lg:p-8">
             <div className="washi-tape-pink" />
 
             {/* Date badge */}
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#fdf2f4] border border-[#fbcfe8] text-[#be185d] font-sans text-[11px] sm:text-xs mb-2">
-              <Heart className="w-3 h-3 fill-[#be185d]" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fdf2f4] border border-[#fbcfe8] text-[#be185d] font-sans text-xs mb-3 shadow-2xs">
+              <Heart className="w-3.5 h-3.5 fill-[#be185d]" />
               <span>28 OCTOBER 2026 // CHAPTER 19</span>
             </div>
 
             {/* Handwritten Heading */}
-            <h2 className="font-bold font-handwriting text-[#3f2e24] leading-tight mb-2 text-2xl sm:text-4xl lg:text-5xl">
+            <h2 className="font-bold font-handwriting text-[#3f2e24] leading-tight mb-2 text-3xl sm:text-4xl lg:text-5xl">
               Happy 19th Birthday,
               <span className="block text-[#be185d]">Anshika! 🌸</span>
             </h2>
 
             {/* Subtitle */}
-            <p className="text-[#6e5849] font-sans leading-relaxed mb-2.5 text-xs sm:text-sm max-w-sm">
+            <p className="text-[#6e5849] font-sans leading-relaxed mb-3 text-xs sm:text-sm lg:text-base max-w-lg">
               &ldquo;Some people become important without there ever being one specific moment when it happened. You&apos;re one of those people.&rdquo;
             </p>
 
@@ -286,7 +281,7 @@ export default function Frame2Birthday({
                     initial={{ opacity: 0, scale: 0.95, y: -4 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                    className="mt-2 p-2.5 sm:p-3.5 rounded-2xl bg-[#fffefc] border-2 border-dashed border-[#fda4af] shadow-xs max-h-[125px] overflow-y-auto no-scrollbar"
+                    className="mt-2 p-3 rounded-2xl bg-[#fffefc] border-2 border-dashed border-[#fda4af] shadow-xs overflow-hidden"
                   >
                     <p className="font-handwriting text-[#3f2e24] leading-relaxed text-sm sm:text-base">
                       Wishing you the kindest year yet — one where things feel a little easier,

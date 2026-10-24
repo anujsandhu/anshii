@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebaseAdmin";
+import { getAdminFirestore, handleFirestoreError } from "@/lib/firebaseAdmin";
 import { FieldValue } from "firebase-admin/firestore";
 
 // Simple IP-based rate limiting
@@ -41,39 +41,55 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const db = getAdminFirestore();
-    if (!db) {
-      return NextResponse.json({
-        success: false,
-        error: "Firestore not initialized",
-      });
-    }
-
     const nowIso = new Date().toISOString();
-    const sessionRef = db.collection("sessions").doc(sessionId);
-    const doc = await sessionRef.get();
 
-    if (!doc.exists) {
-      await sessionRef.set({
+    // 1. Always persist session to local store
+    try {
+      const { localSaveSession } = await import("@/lib/localStore");
+      localSaveSession({
         sessionId,
         startedAt: startedAt || nowIso,
         lastSeenAt: nowIso,
-        endedAt: null,
-        duration: 0,
         device: sanitizeString(device, 30),
         browser: sanitizeString(browser, 40),
         pagesVisited: [initialPage],
-        consentGiven: Boolean(consentGiven),
-        createdAt: FieldValue.serverTimestamp(),
       });
-    } else {
-      await sessionRef.set(
-        {
-          lastSeenAt: nowIso,
-          pagesVisited: FieldValue.arrayUnion(initialPage),
-        },
-        { merge: true }
-      );
+    } catch (localErr) {
+      console.warn("Could not save session to local store:", localErr);
+    }
+
+    // 2. Also save to Firestore if available and within quota
+    const db = getAdminFirestore();
+    if (db) {
+      try {
+        const sessionRef = db.collection("sessions").doc(sessionId);
+        const doc = await sessionRef.get();
+
+        if (!doc.exists) {
+          await sessionRef.set({
+            sessionId,
+            startedAt: startedAt || nowIso,
+            lastSeenAt: nowIso,
+            endedAt: null,
+            duration: 0,
+            device: sanitizeString(device, 30),
+            browser: sanitizeString(browser, 40),
+            pagesVisited: [initialPage],
+            consentGiven: Boolean(consentGiven),
+            createdAt: FieldValue.serverTimestamp(),
+          });
+        } else {
+          await sessionRef.set(
+            {
+              lastSeenAt: nowIso,
+              pagesVisited: FieldValue.arrayUnion(initialPage),
+            },
+            { merge: true }
+          );
+        }
+      } catch (dbErr: any) {
+        handleFirestoreError(dbErr, "session save");
+      }
     }
 
     return NextResponse.json({ success: true, sessionId });
@@ -99,26 +115,45 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const db = getAdminFirestore();
-    if (!db) {
-      return NextResponse.json({ success: false });
-    }
-
     const nowIso = new Date().toISOString();
-    const updateData: any = {
-      lastSeenAt: nowIso,
-      duration: Math.max(0, Math.round(Number(duration) || 0)),
-    };
+    const durNum = Math.max(0, Math.round(Number(duration) || 0));
 
-    if (endedAt) {
-      updateData.endedAt = nowIso;
+    // 1. Always update local store
+    try {
+      const { localSaveSession } = await import("@/lib/localStore");
+      localSaveSession({
+        sessionId,
+        duration: durNum,
+        lastSeenAt: nowIso,
+        endedAt: endedAt ? nowIso : null,
+        pagesVisited: page ? [sanitizeString(page, 50)] : [],
+      });
+    } catch (localErr) {
+      console.warn("Could not update session in local store:", localErr);
     }
 
-    if (page) {
-      updateData.pagesVisited = FieldValue.arrayUnion(sanitizeString(page, 50));
-    }
+    // 2. Also update Firestore if available
+    const db = getAdminFirestore();
+    if (db) {
+      try {
+        const updateData: any = {
+          lastSeenAt: nowIso,
+          duration: durNum,
+        };
 
-    await db.collection("sessions").doc(sessionId).set(updateData, { merge: true });
+        if (endedAt) {
+          updateData.endedAt = nowIso;
+        }
+
+        if (page) {
+          updateData.pagesVisited = FieldValue.arrayUnion(sanitizeString(page, 50));
+        }
+
+        await db.collection("sessions").doc(sessionId).set(updateData, { merge: true });
+      } catch (dbErr: any) {
+        handleFirestoreError(dbErr, "session heartbeat");
+      }
+    }
 
     return NextResponse.json({ success: true, sessionId });
   } catch (error: any) {

@@ -522,7 +522,7 @@ export default function FrameGiftSnaps({
   const uploadedCount = Object.keys(snaps).length;
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
+    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-6 select-none overflow-hidden pt-[max(56px,calc(var(--sat)+44px))] pb-[max(56px,calc(var(--sab)+44px))]">
       {/* Background Soft Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[680px] h-[340px] sm:h-[680px] bg-gradient-to-tr from-[#fed7aa]/25 via-[#fbcfe8]/25 to-[#bae6fd]/20 rounded-full blur-[140px] pointer-events-none" />
 
@@ -535,112 +535,30 @@ export default function FrameGiftSnaps({
         className="hidden"
       />
 
-      <div className="w-full max-w-4xl flex flex-col items-center my-auto z-10">
-        {/* Header */}
-        <div className="text-center mb-1.5 sm:mb-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#fef3c7] border border-[#fde68a] text-[#b45309] font-sans text-xs mb-1 shadow-2xs">
-            <span>🎁</span>
-            <span>Unboxing Journey</span>
-          </div>
-          <h2 className="text-xl sm:text-3xl font-bold font-handwriting text-[#3f2e24]">
-            Unboxing Your Birthday Gifts
-          </h2>
-          <p className="text-[11px] text-[#786457] font-sans max-w-md mx-auto">
-            Open your gifts step by step and capture each mystery moment one by one! ✨
-          </p>
-        </div>
-
-        {/* Step Selector Pills (Step 1, Step 2, Step 3, Step 4...) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto max-w-full px-2 py-1.5 no-scrollbar mb-2">
-          {slots.map((slot, idx) => {
-            const isFilled = Boolean(snaps[slot.id]?.imageUrl);
-            const isActive = activeSlotIndex === idx;
-            const isUnlocked = isSlotUnlocked(idx);
-
-            // Hide spoilers (bracelet text, teddy bear icon, etc.) until that step is unlocked!
-            const displayIcon = !isUnlocked ? "🎁" : slot.icon;
-            const displayLabel = !isUnlocked
-              ? idx === 1
-                ? "2. Secret Gift"
-                : idx === 2
-                ? "3. Next Surprise"
-                : `Step ${slot.stepNumber}`
-              : slot.tabLabel;
-
-            return (
-              <button
-                key={slot.id}
-                onClick={() => handleSelectSlot(idx)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-sans font-medium transition-all shrink-0 cursor-pointer shadow-2xs ${
-                  isActive
-                    ? "bg-[#3f2e24] text-white scale-105 shadow-sm"
-                    : isFilled
-                    ? "bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46] hover:bg-[#d1fae5]"
-                    : isUnlocked
-                    ? "bg-white/80 border border-[#ebdcd0] text-[#786457] hover:bg-white"
-                    : "bg-[#f5ece3]/70 border border-[#e5d8cc] text-[#a89080] opacity-80"
-                }`}
-                title={
-                  !isUnlocked
-                    ? "Complete previous step first to unlock! 🔒"
-                    : slot.title
-                }
-              >
-                <span>{displayIcon}</span>
-                <span className="font-semibold">{displayLabel}</span>
-                {isFilled ? (
-                  <CheckCircle2
-                    className={`w-3.5 h-3.5 ${
-                      isActive ? "text-[#86efac]" : "text-[#10b981]"
-                    }`}
-                  />
-                ) : !isUnlocked ? (
-                  <Lock className="w-3 h-3 text-[#a89080]" />
-                ) : null}
-              </button>
-            );
-          })}
-
-          {/* Add custom step button */}
-          <button
-            onClick={() => setShowAddSlotModal(true)}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/70 hover:bg-white border border-dashed border-[#ebdcd0] text-[#8c7465] text-xs font-sans transition-all shrink-0 cursor-pointer hover:border-[#fda4af]"
-            title="Add another unboxing step"
-          >
-            <Plus className="w-3 h-3" />
-            <span className="hidden sm:inline">Add Step</span>
-          </button>
-        </div>
-
-        {/* Locked Step Toast Banner */}
-        <AnimatePresence>
-          {lockedToast && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="mb-2 px-3 py-1 rounded-full bg-[#fef2f2] border border-[#fecaca] text-[#991b1b] text-xs font-sans flex items-center gap-1.5 shadow-xs"
-            >
-              <Lock className="w-3.5 h-3.5 text-[#ef4444]" />
-              <span>{lockedToast}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Main Active Slot Container */}
-        <div className="w-full flex items-center justify-center gap-2 sm:gap-4 my-1">
+      {/* ── ORGANIZED 2-COLUMN DESKTOP LAYOUT (FITTED IN ONE FRAME, ZERO SCROLL) ── */}
+      <div className="w-full max-w-4xl lg:max-w-5xl flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-10 my-auto z-10">
+        
+        {/* ══ LEFT: ACTIVE POLAROID CARD WITH PREV / NEXT ARROWS ══ */}
+        <div className="flex items-center justify-center gap-2 sm:gap-3 shrink-0">
           {/* Previous Arrow */}
           <button
             onClick={() => {
               const target =
                 activeSlotIndex > 0 ? activeSlotIndex - 1 : slots.length - 1;
               if (isSlotUnlocked(target)) {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(
+                    new CustomEvent("anshii_auto_save_before_back", {
+                      detail: { action: `unboxing_step_${activeSlotIndex}_to_${target}` },
+                    })
+                  );
+                }
                 setActiveSlotIndex(target);
                 setIsEditingCaption(false);
               }
             }}
             aria-label="Previous step"
-            className="p-1.5 sm:p-2.5 rounded-full bg-white/80 hover:bg-white border border-[#ebdcd0] text-[#786457] hover:text-[#3f2e24] shadow-xs cursor-pointer transition-all shrink-0"
+            className="p-2 sm:p-2.5 rounded-full bg-white/90 hover:bg-white border border-[#ebdcd0] text-[#786457] hover:text-[#3f2e24] shadow-xs cursor-pointer transition-all shrink-0"
           >
             <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
@@ -653,14 +571,14 @@ export default function FrameGiftSnaps({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -8 }}
               transition={{ duration: 0.22 }}
-              className="relative w-full max-w-sm sm:max-w-md flex flex-col items-center"
+              className="relative w-full max-w-[300px] sm:max-w-[330px] flex flex-col items-center"
             >
               {currentSnap ? (
                 /* ── FILLED POLAROID CARD ── */
                 <div
-                  className="polaroid-card rounded-2xl sm:rounded-3xl relative shadow-lg w-full max-w-[320px] sm:max-w-[340px] group transition-transform"
+                  className="polaroid-card rounded-2xl relative shadow-[0_16px_45px_-8px_rgba(80,50,30,0.18)] w-full max-w-[300px] sm:max-w-[330px] group transition-transform border border-[#ebdcd0]"
                   style={{
-                    padding: "12px 12px 28px 12px",
+                    padding: "12px 12px 24px 12px",
                     transform: `rotate(${currentSlot.rotation}deg)`,
                   }}
                 >
@@ -674,9 +592,9 @@ export default function FrameGiftSnaps({
                       alt={currentSnap.caption}
                       fill
                       unoptimized
+                      sizes="330px"
                       className="object-cover transition-transform duration-500 group-hover:scale-103"
                     />
-
 
                     {/* Cloud storage badge */}
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-xs border border-[#ebdcd0] text-[#4b5563] text-[9px] font-sans font-medium flex items-center gap-1 shadow-2xs">
@@ -687,7 +605,7 @@ export default function FrameGiftSnaps({
                   </div>
 
                   {/* Caption & Metadata */}
-                  <div className="pt-3 px-1 text-center">
+                  <div className="pt-2 px-1 text-center">
                     {isEditingCaption ? (
                       <div className="flex items-center gap-1 justify-center my-1">
                         <input
@@ -718,7 +636,7 @@ export default function FrameGiftSnaps({
                         className="group/cap inline-flex items-center justify-center gap-1 cursor-pointer"
                         title="Click to edit caption"
                       >
-                        <p className="font-handwriting text-lg sm:text-xl text-[#3f2e24] font-bold leading-tight">
+                        <p className="font-handwriting text-base sm:text-lg text-[#3f2e24] font-bold leading-tight">
                           &ldquo;{currentSnap.caption}&rdquo;
                         </p>
                         <Pencil className="w-3 h-3 text-[#a89080] opacity-0 group-hover/cap:opacity-100 transition-opacity" />
@@ -730,9 +648,7 @@ export default function FrameGiftSnaps({
                     </span>
 
                     {/* Action Bar */}
-                    <div className="flex items-center justify-center gap-2 mt-3 pt-2.5 border-t border-[#f0e4d6]">
-
-                      {/* Replace photo button */}
+                    <div className="flex items-center justify-center gap-2 mt-2 pt-2 border-t border-[#f0e4d6]">
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
@@ -742,7 +658,6 @@ export default function FrameGiftSnaps({
                         <RotateCw className="w-3.5 h-3.5" />
                       </button>
 
-                      {/* Delete photo button */}
                       <button
                         type="button"
                         onClick={() => handleDeleteSnap(currentSlot.id)}
@@ -752,55 +667,34 @@ export default function FrameGiftSnaps({
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-
-                    {/* Step-by-step next helper button */}
-                    {activeSlotIndex < slots.length - 1 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextIdx = activeSlotIndex + 1;
-                          if (isSlotUnlocked(nextIdx)) {
-                            setActiveSlotIndex(nextIdx);
-                            setIsEditingCaption(false);
-                          }
-                        }}
-                        className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fdf2f4] hover:bg-[#fce7eb] border border-[#fbcfe8] text-[#be185d] text-[11px] font-sans font-semibold transition-all cursor-pointer"
-                      >
-                        <span>Next: Open Step {activeSlotIndex + 2}</span>
-                        <span>→</span>
-                      </button>
-                    )}
                   </div>
                 </div>
               ) : (
                 /* ── EMPTY SCRAPBOOK UPLOAD PLACEHOLDER ── */
-                <div className="w-full max-w-[320px] sm:max-w-[340px] p-6 sm:p-7 rounded-3xl bg-[#fffdfa] border-2 border-dashed border-[#e2d5c5] shadow-md flex flex-col items-center text-center relative overflow-hidden">
-                  {/* Decorative Washi Tape */}
+                <div className="w-full max-w-[300px] sm:max-w-[330px] p-6 sm:p-7 rounded-3xl bg-[#fffdfa] border-2 border-dashed border-[#e2d5c5] shadow-[0_16px_45px_-8px_rgba(80,50,30,0.14)] flex flex-col items-center text-center relative overflow-hidden">
                   <div className={currentSlot.tapeClass} />
 
-                  {/* Big Gift Emoji Icon */}
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#fef3c7] via-[#fff0f3] to-[#f0fdf4] border border-[#fde68a] flex items-center justify-center text-3xl mb-3 shadow-inner animate-soft-pulse mt-2">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#fef3c7] via-[#fff0f3] to-[#f0fdf4] border border-[#fde68a] flex items-center justify-center text-2xl mb-2 shadow-inner animate-soft-pulse mt-1">
                     {currentSlot.icon}
                   </div>
 
                   <h3 className="font-handwriting text-xl sm:text-2xl font-bold text-[#3f2e24] leading-tight">
                     {currentSlot.title}
                   </h3>
-                  <span className="text-[11px] font-sans font-semibold text-[#be185d] mb-1">
+                  <span className="text-xs font-sans font-semibold text-[#be185d] mb-1">
                     {currentSlot.tagline}
                   </span>
-                  <p className="text-xs text-[#786457] font-sans leading-relaxed mb-4 max-w-xs">
+                  <p className="text-xs text-[#786457] font-sans leading-relaxed mb-3 max-w-xs">
                     {currentSlot.prompt}
                   </p>
 
-                  {/* Upload Trigger Button */}
                   <motion.button
                     type="button"
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     disabled={isUploading}
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer btn-cute disabled:opacity-50"
+                    className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer btn-cute disabled:opacity-50"
                   >
                     {isUploading ? (
                       <>
@@ -810,16 +704,10 @@ export default function FrameGiftSnaps({
                     ) : (
                       <>
                         <Camera className="w-4 h-4" />
-                        <span>
-                          Upload {currentSlot.tabLabel.replace(/^\d+\.\s*/, "")} Photo
-                        </span>
+                        <span>Upload Photo</span>
                       </>
                     )}
                   </motion.button>
-
-                  <span className="text-[10px] text-[#a89080] font-sans mt-2">
-                    Snap a live selfie or pick from camera roll 📸
-                  </span>
                 </div>
               )}
             </motion.div>
@@ -839,57 +727,128 @@ export default function FrameGiftSnaps({
               }
             }}
             aria-label="Next step"
-            className="p-1.5 sm:p-2.5 rounded-full bg-white/80 hover:bg-white border border-[#ebdcd0] text-[#786457] hover:text-[#3f2e24] shadow-xs cursor-pointer transition-all shrink-0"
+            className="p-2 sm:p-2.5 rounded-full bg-white/90 hover:bg-white border border-[#ebdcd0] text-[#786457] hover:text-[#3f2e24] shadow-xs cursor-pointer transition-all shrink-0"
           >
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
-        {/* Counter indicator */}
-        <div className="text-[11px] font-sans font-medium text-[#8c7465] mt-1">
-          Step {activeSlotIndex + 1} of {slots.length}:{" "}
-          <strong className="text-[#3f2e24]">{currentSlot.title}</strong> •{" "}
-          <span className="text-[#be185d]">
-            {uploadedCount} of {slots.length} unboxed
-          </span>
-        </div>
+        {/* ══ RIGHT: ORGANIZED DASHBOARD / MILESTONES PANEL ══ */}
+        <div className="w-full max-w-md lg:max-w-lg flex flex-col justify-between p-4 sm:p-6 rounded-3xl paper-card-warm border border-[#ebdcd0] shadow-[0_16px_45px_-8px_rgba(80,50,30,0.12)]">
+          {/* Header */}
+          <div className="mb-2.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#fef3c7] border border-[#fde68a] text-[#b45309] font-sans text-xs mb-1 shadow-2xs font-semibold">
+              <span>🎁</span>
+              <span>Chapter 04 • Unboxing Journey</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold font-handwriting text-[#3f2e24] leading-tight">
+              Unboxing Your Birthday Gifts
+            </h2>
+            <p className="text-xs text-[#786457] font-sans mt-0.5">
+              Open your gifts step by step and capture each mystery moment! ✨
+            </p>
+          </div>
 
-        {/* Task Completion Banner */}
-        <div className="mt-3 text-center max-w-sm z-10">
-          {/* Show upload progress hint when not yet done */}
-          <div className="p-2.5 rounded-2xl bg-[#fffaf5] border border-[#eddccc] text-center">
-            <span className="text-xs text-[#786457] font-sans">
-              Upload all <strong>{DEFAULT_GIFT_SLOTS.length} photos</strong> to unlock the next chapter! 📸
-              <span className="block mt-0.5 text-[#be185d] font-semibold">
-                {uploadedCount} of {DEFAULT_GIFT_SLOTS.length} uploaded
-              </span>
+          {/* 4 Milestones Cards (2x2 Grid) */}
+          <div className="grid grid-cols-2 gap-2 my-2">
+            {slots.map((slot, idx) => {
+              const isFilled = Boolean(snaps[slot.id]?.imageUrl);
+              const isActive = activeSlotIndex === idx;
+              const isUnlocked = isSlotUnlocked(idx);
+
+              const displayIcon = !isUnlocked ? "🎁" : slot.icon;
+              const displayLabel = !isUnlocked
+                ? idx === 1
+                  ? "2. Secret Gift"
+                  : idx === 2
+                  ? "3. Next Surprise"
+                  : `Step ${slot.stepNumber}`
+                : slot.tabLabel;
+
+              return (
+                <button
+                  key={slot.id}
+                  onClick={() => handleSelectSlot(idx)}
+                  className={`p-2.5 rounded-2xl text-left transition-all duration-200 cursor-pointer border flex flex-col justify-between min-h-[64px] ${
+                    isActive
+                      ? "bg-[#3f2e24] text-white shadow-sm ring-2 ring-[#3f2e24]/20 scale-102"
+                      : isFilled
+                      ? "bg-[#ecfdf5] border-[#a7f3d0] text-[#065f46] hover:bg-[#d1fae5]"
+                      : isUnlocked
+                      ? "bg-white border-[#ebdcd0] text-[#786457] hover:bg-[#fcfaf7]"
+                      : "bg-[#f5ede4]/60 border-[#e3d3c4] text-[#a0897a] opacity-75"
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-base">{displayIcon}</span>
+                    {isFilled ? (
+                      <CheckCircle2
+                        className={`w-3.5 h-3.5 ${
+                          isActive ? "text-[#86efac]" : "text-[#10b981]"
+                        }`}
+                      />
+                    ) : !isUnlocked ? (
+                      <Lock className="w-3 h-3 text-[#a0897a]" />
+                    ) : (
+                      <span className="text-[10px] font-sans text-[#fda4af]">Ready</span>
+                    )}
+                  </div>
+                  <span className="font-semibold text-xs truncate mt-1">
+                    {displayLabel}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Counter pill */}
+          <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#fffdfa] border border-[#ebdcd0] text-xs font-sans text-[#786457] my-1">
+            <span>Progress</span>
+            <span className="font-mono font-bold text-[#be185d]">
+              {uploadedCount} of {slots.length} unboxed
             </span>
           </div>
-          {taskDone ? (
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="p-3 rounded-2xl bg-[#ecfdf5] border border-[#a7f3d0] flex flex-col items-center gap-1 text-[#065f46]"
-            >
-              <div className="flex items-center gap-1.5 font-sans font-semibold text-xs">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
-                <span>ALL {DEFAULT_GIFT_SLOTS.length} PHOTOS CAPTURED ✓</span>
-              </div>
-              <p className="text-[11px] font-sans text-[#047857]">
-                &ldquo;Every unboxing moment is saved! 🎁📸&rdquo;
-              </p>
-              <button
-                onClick={() => {
-                  onCompleteTask();
-                  onNext();
-                }}
-                className="mt-2 px-7 py-2.5 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 btn-cute"
+
+          {/* Locked Step Toast Banner */}
+          <AnimatePresence>
+            {lockedToast && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="my-1 px-3 py-1 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-[#991b1b] text-xs font-sans flex items-center gap-1.5 shadow-xs"
               >
-                <span>Continue to Birthday Mixtape</span>
-                <span className="text-base leading-none">↓</span>
-              </button>
-            </motion.div>
-          ) : null}
+                <Lock className="w-3.5 h-3.5 text-[#ef4444]" />
+                <span>{lockedToast}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Task Completion or Hint */}
+          <div className="mt-2 pt-2 border-t border-[#f0e4da]">
+            {taskDone ? (
+              <div className="flex flex-col gap-2">
+                <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46] text-xs font-sans font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
+                  <span>ALL {DEFAULT_GIFT_SLOTS.length} PHOTOS CAPTURED ✓</span>
+                </div>
+                <button
+                  onClick={() => {
+                    onCompleteTask();
+                    onNext();
+                  }}
+                  className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 btn-cute"
+                >
+                  <span>Continue to CS Quiz</span>
+                  <span className="text-base leading-none">↓</span>
+                </button>
+              </div>
+            ) : (
+              <p className="text-[11px] text-center text-[#8c7465] font-sans">
+                Upload all 4 moments to unlock the CS Quiz chapter 📸
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

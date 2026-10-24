@@ -19,10 +19,10 @@ import Frame1Welcome from "./frames/Frame1Welcome";
 import Frame2Birthday from "./frames/Frame2Birthday";
 import Frame3Photos from "./frames/Frame3Photos";
 import FrameGiftSnaps from "./frames/FrameGiftSnaps";
-import Frame4Song from "./frames/Frame4Song";
 import Frame5Memory from "./frames/Frame5Memory";
 import Frame6Scratch from "./frames/Frame6Scratch";
 import Frame7Letter from "./frames/Frame6Letter";
+import FrameMadamJiKeepsake from "./frames/FrameMadamJiKeepsake";
 import Frame8Final from "./frames/Frame7Final";
 import MusicPlayer from "./MusicPlayer";
 import { BIRTHDAY_SOUNDTRACKS, getSongForFrame } from "@/data/musicConfig";
@@ -31,8 +31,13 @@ import PetalParticles from "./flowers/PetalParticles";
 import FlowerBurst from "./flowers/FlowerBurst";
 import LockedSkipTransition from "./transitions/LockedSkipTransition";
 import ChapterCurtainTransition from "./transitions/ChapterCurtainTransition";
+import PageTurnShimmer from "./transitions/PageTurnShimmer";
 
 import { trackEvent } from "@/lib/analyticsClient";
+import InteractiveScrapbookCanvas from "./canvas/InteractiveScrapbookCanvas";
+import GsapSvgFlourishes from "./canvas/GsapSvgFlourishes";
+import AnimatedButterflies from "./canvas/AnimatedButterflies";
+import AnimatedCanvasDoodles from "./canvas/AnimatedCanvasDoodles";
 
 export interface FrameMeta {
   id: number;
@@ -79,34 +84,34 @@ export const SCRAPBOOK_FRAMES: FrameMeta[] = [
   {
     id: 4,
     chapter: "05",
-    title: "Soundtrack",
-    vibe: "Birthday Mixtape 🎵",
-    flowerName: "🌻",
-    bgGradient: "from-[#f8fafc] via-[#f0f9ff] to-[#faf7f2]",
-  },
-  {
-    id: 5,
-    chapter: "06",
     title: "CS Quiz",
     vibe: "Web Dev Mini Quiz 💻",
     flowerName: "💐",
     bgGradient: "from-[#fefcf8] via-[#fef3c7]/20 to-[#faf7f2]",
   },
   {
-    id: 6,
-    chapter: "07",
+    id: 5,
+    chapter: "06",
     title: "Scratch Card",
     vibe: "Hidden Birthday Secret 🎟️",
     flowerName: "✨",
     bgGradient: "from-[#fdf8ff] via-[#fbcfe8]/15 to-[#faf7f2]",
   },
   {
-    id: 7,
-    chapter: "08",
+    id: 6,
+    chapter: "07",
     title: "Letter",
     vibe: "Handwritten Note 💌",
     flowerName: "🌺",
     bgGradient: "from-[#fffaf5] via-[#fdf2f8] to-[#faf7f2]",
+  },
+  {
+    id: 7,
+    chapter: "08",
+    title: "Madam Ji's Keepsake",
+    vibe: "Before You Go 🤍",
+    flowerName: "💌",
+    bgGradient: "from-[#fff9f6] via-[#fef3c7]/25 to-[#faf7f2]",
   },
   {
     id: 8,
@@ -132,38 +137,86 @@ interface ScrapbookPagerProps {
 
 export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPagerProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
-  const [completedFrames, setCompletedFrames] = useState<Set<number>>(() => {
-    const initial = new Set<number>();
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("anshii_completed_frames");
-        if (saved) {
-          const arr = JSON.parse(saved);
-          if (Array.isArray(arr)) arr.forEach((idx) => initial.add(idx));
+
+  // Tester mode bypass for Anuj (anuj88)
+  const [isTester, setIsTester] = useState<boolean>(false);
+
+  // Completed frames: For Anuj (tester), all frames 0-8 are unlocked.
+  // For Anshii (anshii19), strict progression is enforced: she starts at 0 and cannot advance without completing each task.
+  const [completedFrames, setCompletedFrames] = useState<Set<number>>(
+    () => new Set<number>()
+  );
+
+  useEffect(() => {
+    // Check if user requested a fresh reset/clear
+    try {
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        const shouldClear =
+          url.searchParams.get("clear") === "true" ||
+          url.searchParams.get("reset") === "true";
+        if (shouldClear) {
+          localStorage.removeItem("anshii_completed_frames");
+          localStorage.removeItem("anshii_madam_ji_answers");
+          localStorage.removeItem("anshii_madam_ji_keepsake_v2");
+          localStorage.removeItem("anshii_gift_snaps_v4");
+          localStorage.removeItem("anshii_gift_slots_v4");
+          localStorage.removeItem("anshii_gift_slots_v5");
+          localStorage.removeItem("anshii_wishes_key_v2");
+          localStorage.removeItem("anshii_last_frame");
+          setCompletedFrames(new Set<number>());
         }
-        // Auto-unlock frame 3 if all 4 gift snaps are in localStorage
-        const savedSnaps = localStorage.getItem("anshii_gift_snaps_v4");
-        if (savedSnaps) {
-          const parsed = JSON.parse(savedSnaps);
-          const presetKeys = ["step-1", "step-2", "step-3", "step-4"];
-          if (presetKeys.every((k) => Boolean(parsed[k]?.imageUrl))) {
-            initial.add(3);
+      }
+    } catch {}
+
+    const isAnuj =
+      localStorage.getItem("anshii_user_role") === "anuj" ||
+      localStorage.getItem("anshii_tester_bypass") === "true" ||
+      sessionStorage.getItem("anshii_user_role") === "anuj" ||
+      sessionStorage.getItem("anshii_tester_bypass") === "true";
+
+    if (isAnuj) {
+      setIsTester(true);
+      // NOTE: Tester (anuj88) has free navigation anywhere, but tasks themselves
+      // (scratch card, quiz, keepsake, gifts) start clean so they can be interactively tested.
+    } else {
+      try {
+        const stored = localStorage.getItem("anshii_completed_frames");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setCompletedFrames(new Set<number>(parsed));
           }
         }
       } catch {}
     }
-    return initial;
-  });
+  }, []);
 
-  // Persist completedFrames to localStorage
+  // Listen to auth events to activate tester bypass for Anuj
   useEffect(() => {
+    const handleAuthEvent = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const isAnuj = detail?.isTester || detail?.role === "anuj";
+      if (isAnuj) {
+        setIsTester(true);
+      }
+    };
+    window.addEventListener("anshii_auth_success", handleAuthEvent);
+    return () => {
+      window.removeEventListener("anshii_auth_success", handleAuthEvent);
+    };
+  }, []);
+
+  // Persist completedFrames to localStorage only for real user (Anshii)
+  useEffect(() => {
+    if (isTester) return;
     try {
       localStorage.setItem(
         "anshii_completed_frames",
         JSON.stringify(Array.from(completedFrames))
       );
     } catch {}
-  }, [completedFrames]);
+  }, [completedFrames, isTester]);
 
   // On mount, also check if Firestore has all 4 gift snaps uploaded
   useEffect(() => {
@@ -186,13 +239,21 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
   }, []);
 
   const [activeTrackIndex, setActiveTrackIndex] = useState(0);
-  const [musicTriggered, setMusicTriggered] = useState(autoStartMusic);
+  const [musicTriggered, setMusicTriggered] = useState(true);
 
+  // Auto-play music automatically across the whole scrapbook
   useEffect(() => {
-    if (autoStartMusic) {
-      setMusicTriggered(true);
-    }
-  }, [autoStartMusic]);
+    setMusicTriggered(true);
+    const triggerAudio = () => setMusicTriggered(true);
+    window.addEventListener("click", triggerAudio, { once: true });
+    window.addEventListener("touchstart", triggerAudio, { once: true });
+    window.addEventListener("keydown", triggerAudio, { once: true });
+    return () => {
+      window.removeEventListener("click", triggerAudio);
+      window.removeEventListener("touchstart", triggerAudio);
+      window.removeEventListener("keydown", triggerAudio);
+    };
+  }, []);
   const [easterEggOpen, setEasterEggOpen] = useState(false);
   const [titleClicks, setTitleClicks] = useState(0);
 
@@ -244,6 +305,7 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
   const touchStartTimeRef = useRef(0);
   const touchStartXRef = useRef(0);
   const touchTargetScrollableRef = useRef<Element | null>(null);
+  const touchTargetIsCardScrollRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
 
   useEffect(() => {
@@ -299,7 +361,7 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
       if (targetIndex < 0 || targetIndex >= SCRAPBOOK_FRAMES.length) return;
       if (targetIndex === currentFrame) return;
 
-      // Advancing to next frame
+      // Advancing to next frame (strictly linear progression: prior task must be completed)
       if (targetIndex > currentFrame) {
         // Must have completed the current frame's task!
         if (!completedFrames.has(currentFrame)) {
@@ -344,12 +406,21 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
         setActiveTrackIndex(songIdx);
       }
 
+      // Notify ReactionCam of current chapter for live streaming monitoring
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("anshii_chapter_changed", {
+            detail: { chapter: targetIndex + 1 },
+          })
+        );
+      }
+
       const transitionDelay = prefersReducedMotionRef.current ? 50 : 950;
       setTimeout(() => {
         isTransitioningRef.current = false;
       }, transitionDelay);
     },
-    [currentFrame, completedFrames, triggerLockedAlert]
+    [currentFrame, completedFrames, isTester, triggerLockedAlert]
   );
 
   const handleNext = useCallback(() => {
@@ -411,9 +482,33 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
   const handleReplay = useCallback(() => {
     setCurrentFrame(0);
     setCompletedFrames(new Set());
+    try {
+      localStorage.removeItem("anshii_completed_frames");
+      localStorage.removeItem("anshii_madam_ji_answers");
+      localStorage.removeItem("anshii_madam_ji_keepsake_v2");
+      localStorage.removeItem("anshii_gift_snaps_v4");
+      localStorage.removeItem("anshii_gift_slots_v4");
+      localStorage.removeItem("anshii_gift_slots_v5");
+      localStorage.removeItem("anshii_wishes_key_v2");
+    } catch {}
     setActiveTrackIndex(0);
-    showToast("Replaying scrapbook from Chapter 01 🌸", "info", undefined, 2500);
+    showToast("Starting fresh from Chapter 01 🌸", "info", undefined, 2500);
   }, [showToast]);
+
+  // Helper: check if element or its ancestor is an internal card scroll container
+  const getCardScrollParent = (el: Element | null): Element | null => {
+    while (el && el !== document.body) {
+      if (
+        el.hasAttribute?.("data-card-scroll") ||
+        el.classList?.contains("card-scroll") ||
+        el.tagName === "TEXTAREA"
+      ) {
+        return el;
+      }
+      el = el.parentElement;
+    }
+    return null;
+  };
 
   // Helper: find the closest scrollable ancestor of an element
   const getScrollableParent = (el: Element | null): Element | null => {
@@ -427,11 +522,21 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
     return null;
   };
 
-  // Wheel & Trackpad Listener (strict 1-frame-per-gesture)
+  // Wheel & Trackpad Listener (strict 1-frame-per-gesture with Card Isolation)
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      // If the wheel target is inside a scrollable frame container, let it scroll naturally
-      const scrollable = getScrollableParent(e.target as Element);
+      const targetEl = e.target as Element | null;
+
+      // 1. If target is inside an internal card scroll area (letter text, Madam Ji answers review, textarea, etc.)
+      const cardScrollEl = getCardScrollParent(targetEl);
+      if (cardScrollEl) {
+        // Strict card isolation: Let the card scroll naturally with its own momentum and contained overscroll.
+        // DO NOT intercept or trigger full-screen chapter transitions, even when reaching the boundaries!
+        return;
+      }
+
+      // 2. If target is inside a general frame scrollable container (e.g. mobile viewport wrapper)
+      const scrollable = getScrollableParent(targetEl);
       if (scrollable) {
         const atTop = scrollable.scrollTop <= 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 2;
@@ -440,14 +545,15 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
         if (e.deltaY < 0 && !atTop) return;
       }
 
+      // 3. Full-screen gesture: navigate between chapters
       e.preventDefault();
       if (isTransitioningRef.current) return;
 
       const now = Date.now();
-      if (now - lastScrollTimeRef.current < 750) return;
+      if (now - lastScrollTimeRef.current < 550) return;
 
-      // Filter out micro-jitters (10 works for trackpads, 28 was too aggressive)
-      if (Math.abs(e.deltaY) < 10) return;
+      // Filter out micro-jitters
+      if (Math.abs(e.deltaY) < 16) return;
 
       lastScrollTimeRef.current = now;
 
@@ -462,18 +568,26 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
     return () => window.removeEventListener("wheel", handleWheel);
   }, [handleNext, handlePrev]);
 
-  // Touch & Swipe Listener (Mobile / Tablet)
+  // Touch & Swipe Listener (Mobile / Tablet with Card Isolation)
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
       touchStartYRef.current = e.touches[0].clientY;
       touchStartXRef.current = e.touches[0].clientX;
       touchStartTimeRef.current = Date.now();
-      // Record the scrollable container (if any) where the touch started
-      touchTargetScrollableRef.current = getScrollableParent(e.target as Element);
+
+      const targetEl = e.target as Element | null;
+      touchTargetIsCardScrollRef.current = Boolean(getCardScrollParent(targetEl));
+      touchTargetScrollableRef.current = getScrollableParent(targetEl);
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       if (isTransitioningRef.current) return;
+
+      // If swipe started inside an internal card scroll area, isolate it strictly to the card!
+      // This prevents accidental chapter flips while she is reading the letter or writing answers.
+      if (touchTargetIsCardScrollRef.current) {
+        return;
+      }
 
       const touchEndY = e.changedTouches[0].clientY;
       const touchEndX = e.changedTouches[0].clientX;
@@ -492,9 +606,9 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           const atTop = scrollable.scrollTop <= 2;
           const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 2;
           // Swipe-down (deltaY < 0 = finger moved down) = scrolling up in content
-          if (deltaY < 0 && !atTop) return; // inner content can still scroll up
+          if (deltaY < 0 && !atTop) return;
           // Swipe-up (deltaY > 0 = finger moved up) = scrolling down in content
-          if (deltaY > 0 && !atBottom) return; // inner content can still scroll down
+          if (deltaY > 0 && !atBottom) return;
         }
 
         const now = Date.now();
@@ -549,11 +663,26 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
     }
   };
 
-  const isCurrentTaskDone = completedFrames.has(currentFrame);
+  const isCurrentTaskDone = isTester || completedFrames.has(currentFrame);
   const activeFrameMeta = SCRAPBOOK_FRAMES[currentFrame];
 
   return (
     <div className="w-screen h-[100dvh] overflow-hidden relative bg-[#faf7f2] select-none">
+      {/* Page Turn Shimmer & Sunlight Sweep on chapter transition */}
+      <PageTurnShimmer currentFrame={currentFrame} />
+
+      {/* Interactive HTML5 Canvas: Stardust, cursor sparkles & watercolor ripples */}
+      <InteractiveScrapbookCanvas />
+
+      {/* GSAP-Powered SVG Ink-Drawing Flourishes & 3D Parallax Tilt */}
+      <GsapSvgFlourishes currentFrame={currentFrame} />
+
+      {/* Dynamic Animated Canvas Doodles & Annotations tailored to each chapter */}
+      <AnimatedCanvasDoodles currentFrame={currentFrame} />
+
+      {/* Whimsical 3D Flapping SVG Butterflies floating across canvas */}
+      <AnimatedButterflies />
+
       {/* Ambient Floating Petals across the whole scrapbook */}
       <PetalParticles count={14} />
 
@@ -567,82 +696,119 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
 
       {/* TOP SCRAPBOOK HEADER RIBBON */}
       <header
-        className="fixed top-0 inset-x-0 z-40 px-3 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between pointer-events-none"
-        style={{ paddingTop: "max(8px, var(--sat))" }}
+        className="fixed top-0 inset-x-0 z-40 px-3 sm:px-6 lg:px-8 py-2 sm:py-3.5 flex items-center justify-between pointer-events-none"
+        style={{ paddingTop: "max(10px, var(--sat))" }}
       >
-        {/* Left: Chapter & Title Badge */}
+        {/* Left: Chapter & Title Badge with Handcrafted Stamp */}
         <div className="pointer-events-auto flex items-center gap-2">
           <motion.button
             onClick={handleTitleClick}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#e8ded1] shadow-xs text-[#3f2e24] cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-[0_4px_20px_-2px_rgba(90,60,40,0.08)] text-[#3f2e24] cursor-pointer group"
             title="A handmade digital card by Anuj (click 5x for Easter Egg)"
           >
-            <span className="font-mono text-[10px] sm:text-xs font-bold text-[#be185d] bg-[#fdf2f4] px-1.5 py-0.5 rounded-md">
+            <span className="font-mono text-xs font-bold text-[#be185d] bg-[#fdf2f4] px-2 py-0.5 rounded-md border border-[#fbcfe8]">
               {activeFrameMeta.chapter} / {SCRAPBOOK_FRAMES.length.toString().padStart(2, "0")}
             </span>
-            <span className="font-handwriting text-base sm:text-xl font-bold hidden sm:inline">
+            <span className="font-handwriting text-lg lg:text-xl font-bold text-[#3f2e24] group-hover:text-[#be185d] transition-colors">
               {activeFrameMeta.title}
+            </span>
+            <span className="hidden xl:inline text-xs text-[#8c7465] font-sans border-l border-[#ebdcd0] pl-2">
+              For Anshika 🌸
             </span>
           </motion.button>
         </div>
 
-        {/* Center: 9 Botanical Progress Flowers */}
-        <div className="pointer-events-auto flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#e8ded1] shadow-xs">
+        {/* Center: 9 Botanical Progress Flowers (Desktop Scrapbook Tabs) */}
+        <div className="pointer-events-auto flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-[0_4px_20px_-2px_rgba(90,60,40,0.08)]">
           {SCRAPBOOK_FRAMES.map((frame) => {
             const isCompleted = completedFrames.has(frame.id);
             const isCurrent = currentFrame === frame.id;
-            const isLocked = !isCompleted && !isCurrent;
+            const isAccessible = isCompleted || isCurrent;
+            const isLocked = !isAccessible;
 
             return (
               <button
                 key={frame.id}
                 onClick={() => {
-                  if (isCompleted || isCurrent) {
+                  if (isAccessible) {
                     navigateToFrame(frame.id);
                   } else {
                     triggerLockedAlert();
                   }
                 }}
-                className={`relative rounded-full transition-all cursor-pointer flex items-center justify-center min-w-[20px] sm:min-w-[24px] min-h-[26px] sm:min-h-[32px] p-0.5 ${
+                className={`group relative rounded-full transition-all cursor-pointer flex items-center justify-center min-w-[26px] lg:min-w-[32px] min-h-[30px] lg:min-h-[36px] px-1.5 ${
                   isCurrent
-                    ? "scale-115 text-[#be185d] ring-2 ring-[#fda4af] bg-[#fdf2f4]"
+                    ? "scale-110 text-[#be185d] font-bold"
                     : isCompleted
                     ? "text-[#10b981] hover:scale-110"
                     : "text-[#d1c5b8] hover:text-[#a89687]"
                 }`}
                 title={`Chapter ${frame.chapter}: ${frame.title} ${
-                  isLocked ? "(Locked)" : isCompleted ? "(Completed)" : "(Current)"
+                  isCompleted ? "(Completed)" : isCurrent ? "(Current)" : "(Locked - Complete prior chapters first)"
                 }`}
               >
-                <span className="text-[10px] sm:text-sm block leading-none">
+                {isCurrent && (
+                  <motion.div
+                    layoutId="activeChapterPill"
+                    className="absolute inset-0 rounded-full bg-[#fdf2f4] border border-[#fbcfe8] shadow-xs z-0"
+                    transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                  />
+                )}
+                <span className="text-xs lg:text-sm block leading-none relative z-10">
                   {isCurrent ? "🌷" : isCompleted ? "🌸" : "🌱"}
+                </span>
+                <span className="hidden xl:inline text-[11px] font-mono ml-1 font-semibold opacity-85 relative z-10">
+                  {frame.chapter}
+                </span>
+
+                {/* Floating tooltip on hover (large screen) */}
+                <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md bg-[#3f2e24] text-white text-[10px] font-sans font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-md z-50">
+                  Ch {frame.chapter}: {frame.title}
                 </span>
               </button>
             );
           })}
         </div>
 
-        {/* Right: Sound Indicator Pill */}
+        {/* Right: Sound Equalizer & Desktop Keyboard Shortcut Pill */}
         <div className="pointer-events-auto flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#e8ded1] shadow-xs text-xs font-sans text-[#786457]">
-            <Music2 className="w-3.5 h-3.5 text-[#f43f5e] animate-pulse" />
-            <span className="font-medium truncate max-w-[110px]">
-              {BIRTHDAY_SOUNDTRACKS[activeTrackIndex]?.title || "Soundtrack"}
+          {/* Keyboard hint for laptops */}
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-md border border-[#ebdcd0] text-[11px] font-sans text-[#786457] shadow-2xs">
+            <span className="text-[10px] font-mono font-bold bg-[#f5ede4] px-1.5 py-0.5 rounded text-[#4a3528] border border-[#e3d3c4]">
+              ↑ / ↓
+            </span>
+            <span className="text-[10px] text-[#a0897a]">or</span>
+            <span className="text-[10px] font-mono font-bold bg-[#f5ede4] px-1.5 py-0.5 rounded text-[#4a3528] border border-[#e3d3c4]">
+              Space
+            </span>
+            <span className="text-[#8c7465]">to flip</span>
+          </div>
+
+          {/* Equalizer Visualizer */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-xs text-xs font-sans text-[#786457]">
+            <div className="flex items-end gap-0.5 h-3">
+              <span className="w-0.5 h-3 bg-[#f43f5e] rounded-full animate-pulse" />
+              <span className="w-0.5 h-2 bg-[#fda4af] rounded-full animate-bounce" />
+              <span className="w-0.5 h-3.5 bg-[#f43f5e] rounded-full animate-pulse delay-75" />
+              <span className="w-0.5 h-1.5 bg-[#fda4af] rounded-full animate-bounce delay-100" />
+            </div>
+            <span className="text-[11px] font-sans font-medium text-[#be185d]">
+              Music Playing 🎵
             </span>
           </div>
         </div>
       </header>
 
-      {/* CONTINUOUS VERTICAL FRAME SLIDER */}
+      {/* CONTINUOUS VERTICAL FRAME SLIDER WITH 3D DEPTH PARALLAX */}
       <motion.div
         animate={{
           y: `calc(-${currentFrame * 100}dvh + ${nudgeY}px)`,
         }}
         transition={{
-          duration: prefersReducedMotionRef.current ? 0.05 : 0.95,
-          ease: [0.22, 1, 0.36, 1],
+          duration: prefersReducedMotionRef.current ? 0.05 : 0.82,
+          ease: [0.16, 1, 0.3, 1],
         }}
         className={`w-full flex flex-col will-change-transform ${
           isWiggling ? "animate-wiggle" : ""
@@ -651,123 +817,209 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
       >
         {/* FRAME 01: WELCOME */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <Frame1Welcome
-            isCompleted={completedFrames.has(0)}
-            onCompleteTask={() =>
-              handleTaskComplete(
-                0,
-                "✓ Welcome! Birthday unlocked 🌷 Let's celebrate!"
-              )
-            }
-            onNext={handleNext}
-          />
+          <motion.div
+            animate={{
+              scale: currentFrame === 0 ? 1 : 0.94,
+              opacity: currentFrame === 0 ? 1 : 0.35,
+              y: currentFrame === 0 ? 0 : 0 < currentFrame ? -25 : 25,
+            }}
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full"
+          >
+            <Frame1Welcome
+              isCompleted={completedFrames.has(0)}
+              onCompleteTask={() =>
+                handleTaskComplete(
+                  0,
+                  "✓ Welcome! Birthday unlocked 🌷 Let's celebrate!"
+                )
+              }
+              onNext={handleNext}
+            />
+          </motion.div>
         </section>
 
         {/* FRAME 02: BIRTHDAY */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <Frame2Birthday
-            isCompleted={completedFrames.has(1)}
-            onCompleteTask={() =>
-              handleTaskComplete(
-                1,
-                "🌸 Flower bloomed! Attendance marked ✓"
-              )
-            }
-            onNext={handleNext}
-          />
+          <motion.div
+            animate={{
+              scale: currentFrame === 1 ? 1 : 0.94,
+              opacity: currentFrame === 1 ? 1 : 0.35,
+              y: currentFrame === 1 ? 0 : 1 < currentFrame ? -25 : 25,
+            }}
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full"
+          >
+            <Frame2Birthday
+              isCompleted={completedFrames.has(1)}
+              onCompleteTask={() =>
+                handleTaskComplete(
+                  1,
+                  "🌸 Flower bloomed! Attendance marked ✓"
+                )
+              }
+              onNext={handleNext}
+            />
+          </motion.div>
         </section>
 
         {/* FRAME 03: PHOTOS */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <Frame3Photos
-            isCompleted={completedFrames.has(2)}
-            onCompleteTask={() =>
-              handleTaskComplete(
-                2,
-                "💖 Secret heart found! Photo chapter complete!"
-              )
-            }
-            onNext={handleNext}
-          />
+          <motion.div
+            animate={{
+              scale: currentFrame === 2 ? 1 : 0.94,
+              opacity: currentFrame === 2 ? 1 : 0.35,
+              y: currentFrame === 2 ? 0 : 2 < currentFrame ? -25 : 25,
+            }}
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full"
+          >
+            <Frame3Photos
+              isCompleted={completedFrames.has(2)}
+              onCompleteTask={() =>
+                handleTaskComplete(
+                  2,
+                  "💖 Secret heart found! Photo chapter complete!"
+                )
+              }
+              onNext={handleNext}
+            />
+          </motion.div>
         </section>
 
         {/* FRAME 04: GIFT SNAPS */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <FrameGiftSnaps
-            isCompleted={completedFrames.has(3)}
-            onCompleteTask={() =>
-              handleTaskComplete(
-                3,
-                "🧸 Gift snaps saved! Beautiful memories ✓"
-              )
-            }
-            onNext={handleNext}
-          />
-        </section>
-
-        {/* FRAME 05: SONG */}
-        <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <Frame4Song
-            isCompleted={completedFrames.has(4)}
-            onCompleteTask={() =>
-              handleTaskComplete(
-                4,
-                "🎵 Soundtrack set for your 19th year!"
-              )
-            }
-            onNext={handleNext}
-            activeTrackIndex={activeTrackIndex}
-            onSelectTrack={(idx) => {
-              setActiveTrackIndex(idx);
+          <motion.div
+            animate={{
+              scale: currentFrame === 3 ? 1 : 0.94,
+              opacity: currentFrame === 3 ? 1 : 0.35,
+              y: currentFrame === 3 ? 0 : 3 < currentFrame ? -25 : 25,
             }}
-          />
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full"
+          >
+            <FrameGiftSnaps
+              isCompleted={completedFrames.has(3)}
+              onCompleteTask={() =>
+                handleTaskComplete(
+                  3,
+                  "🧸 Gift snaps saved! Beautiful memories ✓"
+                )
+              }
+              onNext={handleNext}
+            />
+          </motion.div>
         </section>
 
-        {/* FRAME 06: CS QUIZ */}
+        {/* FRAME 05: CS QUIZ */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <Frame5Memory
-            isCompleted={completedFrames.has(5)}
-            onCompleteTask={() =>
-              handleTaskComplete(
-                5,
-                "🧠 CS Quiz done! Web dev certified ✓"
-              )
-            }
-            onNext={handleNext}
-          />
+          <motion.div
+            animate={{
+              scale: currentFrame === 4 ? 1 : 0.94,
+              opacity: currentFrame === 4 ? 1 : 0.35,
+              y: currentFrame === 4 ? 0 : 4 < currentFrame ? -25 : 25,
+            }}
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full"
+          >
+            <Frame5Memory
+              isCompleted={completedFrames.has(4)}
+              onCompleteTask={() =>
+                handleTaskComplete(
+                  4,
+                  "🧠 CS Quiz done! Web dev certified ✓"
+                )
+              }
+              onNext={handleNext}
+            />
+          </motion.div>
         </section>
 
-        {/* FRAME 07: SCRATCH CARD */}
+        {/* FRAME 06: SCRATCH CARD */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <Frame6Scratch
-            isCompleted={completedFrames.has(6)}
-            onCompleteTask={() =>
-              handleTaskComplete(
-                6,
-                "🎟️ Scratch card revealed! Secret unlocked ✓"
-              )
-            }
-            onNext={handleNext}
-          />
+          <motion.div
+            animate={{
+              scale: currentFrame === 5 ? 1 : 0.94,
+              opacity: currentFrame === 5 ? 1 : 0.35,
+              y: currentFrame === 5 ? 0 : 5 < currentFrame ? -25 : 25,
+            }}
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full"
+          >
+            <Frame6Scratch
+              isCompleted={completedFrames.has(5)}
+              onCompleteTask={() =>
+                handleTaskComplete(
+                  5,
+                  "🎟️ Scratch card revealed! Secret unlocked ✓"
+                )
+              }
+              onNext={handleNext}
+            />
+          </motion.div>
         </section>
 
-        {/* FRAME 08: LETTER */}
+        {/* FRAME 07: LETTER */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <Frame7Letter
-            isCompleted={completedFrames.has(7)}
-            onCompleteTask={() =>
-              handleTaskComplete(
-                7,
-                "💌 Letter opened! Grand finale unlocked ✓"
-              )
-            }
-            onNext={handleNext}
-          />
+          <motion.div
+            animate={{
+              scale: currentFrame === 6 ? 1 : 0.94,
+              opacity: currentFrame === 6 ? 1 : 0.35,
+              y: currentFrame === 6 ? 0 : 6 < currentFrame ? -25 : 25,
+            }}
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full"
+          >
+            <Frame7Letter
+              isCompleted={completedFrames.has(6)}
+              onCompleteTask={() =>
+                handleTaskComplete(
+                  6,
+                  "💌 Letter opened! Keepsake chapter unlocked ✓"
+                )
+              }
+              onNext={handleNext}
+            />
+          </motion.div>
         </section>
 
-        {/* FRAME 09: FINAL */}
+        {/* FRAME 08: MADAM JI'S KEEPSAKE */}
         <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
-          <Frame8Final onReplay={handleReplay} />
+          <motion.div
+            animate={{
+              scale: currentFrame === 7 ? 1 : 0.94,
+              opacity: currentFrame === 7 ? 1 : 0.35,
+              y: currentFrame === 7 ? 0 : 7 < currentFrame ? -25 : 25,
+            }}
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full"
+          >
+            <FrameMadamJiKeepsake
+              isCompleted={completedFrames.has(7)}
+              onCompleteTask={() =>
+                handleTaskComplete(
+                  7,
+                  "🤍 All 4 memories sealed! Grand finale unlocked ✓"
+                )
+              }
+              onNext={handleNext}
+            />
+          </motion.div>
+        </section>
+
+        {/* FRAME 09: GRAND FINALE */}
+        <section className="w-screen h-[100dvh] shrink-0 relative overflow-hidden">
+          <motion.div
+            animate={{
+              scale: currentFrame === 8 ? 1 : 0.94,
+              opacity: currentFrame === 8 ? 1 : 0.35,
+              y: currentFrame === 8 ? 0 : 8 < currentFrame ? -25 : 25,
+            }}
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full"
+          >
+            <Frame8Final onReplay={handleReplay} />
+          </motion.div>
         </section>
       </motion.div>
 
@@ -780,6 +1032,17 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
         {currentFrame > 0 && (
           <motion.button
             onClick={handlePrev}
+            onPointerDown={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(
+                  new CustomEvent("anshii_auto_save_before_back", {
+                    detail: {
+                      action: `touch_prev_button_chapter_${currentFrame}`,
+                    },
+                  })
+                );
+              }
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="pointer-events-auto flex items-center justify-center p-2.5 sm:px-3.5 sm:py-2.5 rounded-2xl bg-white/90 hover:bg-white backdrop-blur-md border border-[#ebdcd0] text-[#786457] hover:text-[#3f2e24] text-xs font-sans font-semibold shadow-sm transition-all cursor-pointer min-h-[40px] sm:min-h-[44px]"

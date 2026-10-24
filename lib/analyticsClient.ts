@@ -66,7 +66,9 @@ export interface TrackEventParams {
     | "image_upload"
     | "error"
     | "song_play"
-    | "task_complete";
+    | "task_complete"
+    | "reaction_video_recorded"
+    | "madam_ji_note";
   page?: string;
   elementId?: string;
   elementText?: string;
@@ -164,6 +166,10 @@ export function initAnalytics(initialPage = "welcome") {
 
   // 4. Session end listener
   const handleUnload = () => {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
+    }
     if (isAnalyticsOptedOut()) return;
     const durationSec = Math.round((Date.now() - startMs) / 1000);
     const endPayload = JSON.stringify({

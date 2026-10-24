@@ -60,7 +60,7 @@ const SCRAPBOOK_PREVIEWS: ScrapbookItem[] = [
     id: 2,
     type: "video",
     src: "/1st-snap.mp4",
-    badge: "One of her snaps",
+    badge: "One of your snaps",
     badgeIcon: "📸",
     caption: "One of the first snaps I saw.",
     sub: "I don't know why, but this one just stayed in my mind.",
@@ -175,7 +175,7 @@ export default function Frame3Photos({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
+    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
       {/* Background Soft Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[680px] h-[340px] sm:h-[680px] bg-gradient-to-tr from-[#fbcfe8]/25 via-[#fed7aa]/20 to-[#bae6fd]/20 rounded-full blur-[140px] pointer-events-none" />
 
@@ -361,8 +361,7 @@ export default function Frame3Photos({
 
         {/* ── DESKTOP VIEW (sm:flex): 3 Prominent Polaroids side-by-side ── */}
         <div
-          className="hidden sm:flex flex-nowrap items-center justify-center gap-6 max-w-5xl w-full z-10 my-1 overflow-x-auto py-3 px-4"
-          style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+          className="hidden sm:flex flex-nowrap items-center justify-center gap-5 lg:gap-7 max-w-5xl lg:max-w-6xl w-full z-10 my-1 py-2 px-2"
         >
           {SCRAPBOOK_PREVIEWS.map((item) => (
             <motion.div
@@ -371,14 +370,12 @@ export default function Frame3Photos({
               whileHover={{ scale: 1.05, rotate: 0, zIndex: 20 }}
               style={{
                 transform: `rotate(${item.rotation}deg)`,
-                minWidth: "260px",
-                maxWidth: "290px",
               }}
-              className="shrink-0 cursor-pointer group relative"
+              className="shrink-0 cursor-pointer group relative w-[270px] lg:w-[320px]"
             >
               <div
-                className="polaroid-card rounded-2xl relative shadow-md hover:shadow-xl transition-shadow duration-300"
-                style={{ padding: "12px 12px 30px 12px" }}
+                className="polaroid-card rounded-2xl relative shadow-[0_14px_40px_-8px_rgba(80,50,30,0.18)] hover:shadow-[0_24px_55px_-10px_rgba(80,50,30,0.25)] transition-all duration-300 border border-[#ebdcd0]"
+                style={{ padding: "14px 14px 32px 14px" }}
               >
                 <div className={item.tape} />
 
@@ -388,7 +385,7 @@ export default function Frame3Photos({
                       src={item.src}
                       alt={item.caption}
                       fill
-                      sizes="290px"
+                      sizes="(max-width: 1024px) 270px, 340px"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
@@ -411,14 +408,14 @@ export default function Frame3Photos({
                   )}
 
                   {/* Media Type Badge */}
-                  <div className="absolute top-1.5 left-1.5 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[10px] font-sans font-medium flex items-center gap-1 shadow-xs z-10">
+                  <div className="absolute top-2 left-2 px-3 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[11px] font-sans font-medium flex items-center gap-1 shadow-xs z-10">
                     <span>{item.badgeIcon}</span>
                     <span>{item.badge}</span>
                   </div>
 
                   {/* Zoom indicator hover pill */}
-                  <div className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full bg-white/80 backdrop-blur-xs text-[#3f2e24] opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center gap-1 text-[10px] font-sans font-semibold shadow-xs">
-                    <Maximize2 className="w-2.5 h-2.5" />
+                  <div className="absolute top-2 right-2 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-xs text-[#3f2e24] opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center gap-1 text-[11px] font-sans font-semibold shadow-xs">
+                    <Maximize2 className="w-3 h-3" />
                     <span>Zoom</span>
                   </div>
 
@@ -428,7 +425,7 @@ export default function Frame3Photos({
                       onClick={handleHeartClick}
                       whileHover={{ scale: 1.3 }}
                       whileTap={{ scale: 0.85 }}
-                      className={`absolute bottom-2 right-2 p-2 rounded-full transition-all cursor-pointer z-20 min-w-[38px] min-h-[38px] flex items-center justify-center ${
+                      className={`absolute bottom-2.5 right-2.5 p-2 rounded-full transition-all cursor-pointer z-20 min-w-[42px] min-h-[42px] flex items-center justify-center ${
                         taskDone
                           ? "bg-[#fda4af] text-[#be185d] scale-110 shadow-xs"
                           : "bg-white/90 hover:bg-white text-[#fda4af] shadow-md animate-bounce ring-2 ring-[#fda4af]"
@@ -436,7 +433,7 @@ export default function Frame3Photos({
                       title="A little secret..."
                     >
                       <Heart
-                        className={`w-4 h-4 ${
+                        className={`w-4 h-4 lg:w-5 lg:h-5 ${
                           taskDone ? "fill-[#be185d]" : "fill-[#fda4af]"
                         }`}
                       />
@@ -444,11 +441,11 @@ export default function Frame3Photos({
                   )}
                 </div>
 
-                <div className="pt-2.5 text-center">
-                  <p className="font-handwriting text-xl text-[#3f2e24] font-bold leading-tight truncate">
+                <div className="pt-3 text-center">
+                  <p className="font-handwriting text-xl lg:text-2xl text-[#3f2e24] font-bold leading-tight truncate">
                     &ldquo;{item.caption}&rdquo;
                   </p>
-                  <span className="text-[11px] text-[#8c7465] font-sans block mt-0.5">
+                  <span className="text-xs lg:text-sm text-[#8c7465] font-sans block mt-1 line-clamp-1">
                     {item.sub}
                   </span>
                 </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebaseAdmin";
+import { getAdminFirestore, handleFirestoreError } from "@/lib/firebaseAdmin";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { FieldValue } from "firebase-admin/firestore";
 
@@ -134,7 +134,30 @@ export async function POST(req: NextRequest) {
       .toString(36)
       .substring(2, 8)}`;
 
-    // ── 3. Store Metadata in Firestore (No Image Binaries in Firestore) ──
+    // 3. Persist to local store
+    try {
+      const { localSaveUpload } = await import("@/lib/localStore");
+      localSaveUpload({
+        uploadId,
+        sessionId,
+        cloudinaryPublicId: cloudRes.publicId,
+        cloudinaryUrl: cloudRes.url,
+        uploadedAt,
+        page,
+        caption,
+        type: "image",
+        metadata: {
+          width: cloudRes.width || null,
+          height: cloudRes.height || null,
+          format: cloudRes.format || "jpg",
+          sizeBytes: cloudRes.bytes || fileSizeApprox,
+        },
+      });
+    } catch (localErr) {
+      console.warn("Could not save upload to local store:", localErr);
+    }
+
+    // 4. Store Metadata in Firestore (No Image Binaries in Firestore)
     const db = getAdminFirestore();
     let firestoreSaved = false;
 
@@ -198,8 +221,8 @@ export async function POST(req: NextRequest) {
         }
 
         firestoreSaved = true;
-      } catch (fErr) {
-        console.error("Firestore upload metadata error:", fErr);
+      } catch (fErr: any) {
+        handleFirestoreError(fErr, "upload metadata save");
       }
     }
 
@@ -231,12 +254,15 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ── GET: Retrieve uploads list from Firestore ─────────────────────────────────
+// ── GET: Retrieve uploads list from Firestore with Local Fallback ────────────
 export async function GET(req: NextRequest) {
+  const { localGetAllUploads } = await import("@/lib/localStore");
+  const localList = localGetAllUploads();
+
   try {
     const db = getAdminFirestore();
     if (!db) {
-      return NextResponse.json({ success: true, uploads: [] });
+      return NextResponse.json({ success: true, uploads: localList });
     }
 
     const { searchParams } = new URL(req.url);
@@ -253,15 +279,25 @@ export async function GET(req: NextRequest) {
       uploads.push(doc.data());
     });
 
+    // Merge local uploads
+    const existingIds = new Set(uploads.map((u) => u.uploadId));
+    for (const lu of localList) {
+      if (!existingIds.has(lu.uploadId)) {
+        uploads.push(lu);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       uploads,
       count: uploads.length,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    handleFirestoreError(error, "upload list fetch");
+    return NextResponse.json({
+      success: true,
+      uploads: localList,
+      count: localList.length,
+    });
   }
 }

@@ -53,3 +53,8 @@ next-env.d.ts
 
 # raw instagram dump
 instagram-anujsandhuu-*/
+
+# local analytics data & test recordings
+data/localAnalytics.json
+data/recordings/
+.vscode/

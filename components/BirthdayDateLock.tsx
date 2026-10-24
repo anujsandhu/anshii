@@ -110,8 +110,8 @@ export default function BirthdayDateLock({
     return calculateTimeRemaining(effectiveNow);
   });
 
-  // Scary hacker prank layer visibility (initial layer before reveal)
-  const [showHackerLayer, setShowHackerLayer] = useState(true);
+  // Scary hacker prank layer visibility (disabled / removed)
+  const [showHackerLayer, setShowHackerLayer] = useState(false);
   const [glitchActive, setGlitchActive] = useState(false);
   const [prankAlert, setPrankAlert] = useState<string | null>(null);
   const [sirenActive, setSirenActive] = useState(false);
@@ -133,6 +133,12 @@ export default function BirthdayDateLock({
   const [lockWiggle, setLockWiggle] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // ── Tester Bypass State (anuj88) ──
+  const [showTesterModal, setShowTesterModal] = useState(false);
+  const [testerInput, setTesterInput] = useState("");
+  const [isBypassing, setIsBypassing] = useState(false);
+  const [testerError, setTesterError] = useState("");
 
   // Audio Context Ref for Buzzer Siren
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -280,78 +286,15 @@ export default function BirthdayDateLock({
   // Step tracker for two-tone alternating siren
   const sirenStepRef = useRef(0);
 
-  // Realistic Alarm Buzzer Sound Synthesizer (FULL VOLUME + Dynamic Compression)
+  // Realistic Alarm Buzzer Sound Synthesizer (DISABLED / REMOVED)
   const playRealisticBuzzer = useCallback(() => {
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new AudioCtx();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") {
-        ctx.resume().catch(() => {});
-      }
-
-      const now = ctx.currentTime;
-      const isHigh = sirenStepRef.current % 2 === 0;
-      sirenStepRef.current++;
-
-      // Compressor Node for maximum perceived loudness without digital distortion
-      const compressor = ctx.createDynamicsCompressor();
-      compressor.threshold.setValueAtTime(-6, now);
-      compressor.knee.setValueAtTime(8, now);
-      compressor.ratio.setValueAtTime(12, now);
-      compressor.attack.setValueAtTime(0.002, now);
-      compressor.release.setValueAtTime(0.08, now);
-
-      // Master Gain at FULL 100% MAXIMUM VOLUME (1.0)
-      const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime(1.0, now);
-
-      compressor.connect(masterGain);
-      masterGain.connect(ctx.destination);
-
-      // Primary harsh alarm oscillator (Sawtooth with piercing glide at full volume)
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = "sawtooth";
-      osc1.frequency.setValueAtTime(isHigh ? 920 : 660, now);
-      osc1.frequency.exponentialRampToValueAtTime(isHigh ? 660 : 920, now + 0.22);
-      gain1.gain.setValueAtTime(0.75, now);
-      gain1.gain.exponentialRampToValueAtTime(0.02, now + 0.25);
-      osc1.connect(gain1);
-      gain1.connect(compressor);
-      osc1.start(now);
-      osc1.stop(now + 0.25);
-
-      // Secondary low-frequency buzzer drone (Square, intense acoustic bite)
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = "square";
-      osc2.frequency.setValueAtTime(isHigh ? 240 : 180, now);
-      gain2.gain.setValueAtTime(0.4, now);
-      gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
-      osc2.connect(gain2);
-      gain2.connect(compressor);
-      osc2.start(now);
-      osc2.stop(now + 0.22);
-    } catch {}
+    // Siren removed completely
   }, []);
 
-  // Start Repeating Alarm Siren at Full Volume & High-Intensity Vibration
+  // Start Repeating Alarm Siren at Full Volume & High-Intensity Vibration (DISABLED / REMOVED)
   const startSiren = useCallback(() => {
-    setSirenActive(true);
-    triggerPhoneVibrate([500, 50, 500, 50, 700, 80, 600]);
-    playRealisticBuzzer();
-
-    if (sirenIntervalRef.current) clearInterval(sirenIntervalRef.current);
-    sirenIntervalRef.current = setInterval(() => {
-      playRealisticBuzzer();
-      triggerPhoneVibrate([450, 40, 450, 40, 600]);
-    }, 400);
-  }, [playRealisticBuzzer]);
+    // Siren removed completely
+  }, []);
 
   // Stop Repeating Alarm Siren
   const stopSiren = useCallback(() => {
@@ -479,42 +422,10 @@ export default function BirthdayDateLock({
     return () => clearInterval(interval);
   }, [disarmCooldown]);
 
-  // Automatic Siren Trigger on Mount & Immediate User Interaction Fallback
+  // Siren disabled
   useEffect(() => {
-    if (!showHackerLayer) return;
-
-    // 1. Attempt immediate autoplay on mount
-    startSiren();
-
-    // 2. Fallback for browser autoplay policies: unpause AudioContext on any interaction
-    const unlockAndPlay = () => {
-      if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
-        audioCtxRef.current.resume().catch(() => {});
-      }
-      startSiren();
-    };
-
-    const interactionEvents = [
-      "pointerdown",
-      "touchstart",
-      "touchend",
-      "click",
-      "keydown",
-      "scroll",
-      "mousemove",
-    ];
-
-    interactionEvents.forEach((event) => {
-      window.addEventListener(event, unlockAndPlay, { passive: true });
-    });
-
-    return () => {
-      interactionEvents.forEach((event) => {
-        window.removeEventListener(event, unlockAndPlay);
-      });
-      stopSiren();
-    };
-  }, [showHackerLayer, startSiren, stopSiren]);
+    stopSiren();
+  }, [stopSiren]);
 
   const handleOpenSecretVault = useCallback(() => {
     stopSiren();
@@ -682,6 +593,93 @@ export default function BirthdayDateLock({
       }
     }, 4200);
   };
+
+  // ── Tester bypass handler (anuj88) ──
+  const triggerTesterBypass = useCallback(
+    async (passcode: string) => {
+      setIsBypassing(true);
+      setTesterError("");
+      try {
+        const res = await fetch("/api/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: passcode.trim() }),
+        });
+        const data = await res.json();
+        if (res.ok && data.isTester) {
+          localStorage.setItem("anshii_auth_session", "true");
+          localStorage.setItem("anshii_user_role", "anuj");
+          localStorage.setItem("anshii_tester_bypass", "true");
+          sessionStorage.setItem("anshii_auth_session", "true");
+          sessionStorage.setItem("anshii_user_role", "anuj");
+          sessionStorage.setItem("anshii_tester_bypass", "true");
+          window.dispatchEvent(
+            new CustomEvent("anshii_auth_success", {
+              detail: { role: "anuj", isTester: true },
+            })
+          );
+          setShowTesterModal(false);
+          stopSiren();
+          setIsUnlocked(true);
+          if (onUnlock) onUnlock();
+          return true;
+        } else {
+          setTesterError("Incorrect tester password.");
+          return false;
+        }
+      } catch {
+        setTesterError("Connection error checking tester key.");
+        return false;
+      } finally {
+        setIsBypassing(false);
+      }
+    },
+    [onUnlock, stopSiren]
+  );
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Check URL param ?pass=anuj88 or ?tester=anuj88
+      const urlParams = new URLSearchParams(window.location.search);
+      const pass = urlParams.get("pass") || urlParams.get("tester");
+      if (pass && pass.toLowerCase() === "anuj88") {
+        triggerTesterBypass(pass);
+      }
+    }
+
+    // Keyboard buffer listener for typing "anuj88"
+    let typedBuffer = "";
+    let bufferClearTimeout: NodeJS.Timeout | null = null;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+      if (e.key.length === 1) {
+        typedBuffer += e.key.toLowerCase();
+        if (typedBuffer.length > 10) {
+          typedBuffer = typedBuffer.slice(-10);
+        }
+        if (typedBuffer.endsWith("anuj88")) {
+          typedBuffer = "";
+          triggerTesterBypass("anuj88");
+        }
+        if (bufferClearTimeout) clearTimeout(bufferClearTimeout);
+        bufferClearTimeout = setTimeout(() => {
+          typedBuffer = "";
+        }, 3000);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (bufferClearTimeout) clearTimeout(bufferClearTimeout);
+    };
+  }, [triggerTesterBypass]);
 
   // Playful interaction on clicking lock or cards in the cute layout
   const triggerAttemptInteraction = () => {
@@ -1121,6 +1119,7 @@ export default function BirthdayDateLock({
               <Lock className="w-3.5 h-3.5 text-[#f43f5e]" />
               <span>Check Door</span>
             </button>
+
           </div>
 
           {/* ── AUTHENTIC EMBOSSED CRIMSON WAX SEAL (Bottom Right) ───────────── */}
@@ -1216,9 +1215,9 @@ export default function BirthdayDateLock({
         </p>
       </footer>
 
-      {/* ── THE EXTRA LAYER: REALISTIC SECURITY BREACH & SIREN BUZZER PRANK ──── */}
+      {/* ── THE EXTRA LAYER: REALISTIC SECURITY BREACH & SIREN BUZZER PRANK (DISABLED) ──── */}
       <AnimatePresence>
-        {showHackerLayer && !isUnlocked && (
+        {false && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1378,9 +1377,9 @@ export default function BirthdayDateLock({
         )}
       </AnimatePresence>
 
-      {/* ── PRANK REVEAL MODAL: TRIGGERED WHEN TRYING TO BACK OR CLOSE TAB ──── */}
+      {/* ── PRANK REVEAL MODAL: TRIGGERED WHEN TRYING TO BACK OR CLOSE TAB (DISABLED) ──── */}
       <AnimatePresence>
-        {showPrankRevealModal && (
+        {false && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1702,6 +1701,7 @@ export default function BirthdayDateLock({
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CheckCircle2, ArrowDown } from "lucide-react";
+import { Sparkles, CheckCircle2 } from "lucide-react";
 import { FrameMeta } from "../ScrapbookPager";
 
 interface ChapterCurtainTransitionProps {

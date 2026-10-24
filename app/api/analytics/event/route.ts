@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebaseAdmin";
+import { getAdminFirestore, handleFirestoreError } from "@/lib/firebaseAdmin";
 import { FieldValue } from "firebase-admin/firestore";
 
 // Valid event types per specification
@@ -7,6 +7,7 @@ const VALID_EVENT_TYPES = [
   "session_start",
   "session_end",
   "page_view",
+  "chapter_view",
   "navigation",
   "click",
   "image_view",
@@ -14,6 +15,8 @@ const VALID_EVENT_TYPES = [
   "error",
   "song_play",
   "task_complete",
+  "reaction_video_recorded",
+  "madam_ji_note",
 ];
 
 // Sliding window rate limiter: 80 events per minute per IP
@@ -74,14 +77,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const db = getAdminFirestore();
-    if (!db) {
-      return NextResponse.json({
-        success: false,
-        error: "Firestore not initialized",
-      });
-    }
-
     const nowIso = timestamp || new Date().toISOString();
     const eventId = `ev_${Date.now()}_${Math.random()
       .toString(36)
@@ -90,37 +85,62 @@ export async function POST(req: NextRequest) {
     // Sanitize elementText to prevent capturing private text or passwords
     const sanitizedText = sanitizeInput(elementText, 120);
     const sanitizedPage = sanitizeInput(page, 50);
+    const sanitizedMeta = sanitizeMetadata(metadata);
 
-    // Save event in sessions/{sessionId}/events/{eventId}
-    const eventRef = db
-      .collection("sessions")
-      .doc(sessionId)
-      .collection("events")
-      .doc(eventId);
+    // 1. Always save event in local store
+    try {
+      const { localSaveEvent } = await import("@/lib/localStore");
+      localSaveEvent({
+        eventId,
+        sessionId,
+        type: eventType,
+        timestamp: nowIso,
+        page: sanitizedPage,
+        elementId: sanitizeInput(elementId, 60),
+        elementText: sanitizedText,
+        metadata: sanitizedMeta,
+      });
+    } catch (localErr) {
+      console.warn("Could not save event to local store:", localErr);
+    }
 
-    await eventRef.set({
-      eventId,
-      type: eventType,
-      timestamp: nowIso,
-      page: sanitizedPage,
-      elementId: sanitizeInput(elementId, 60),
-      elementText: sanitizedText,
-      metadata: sanitizeMetadata(metadata),
-      createdAt: FieldValue.serverTimestamp(),
-    });
+    // 2. Also save event in Firestore if available
+    const db = getAdminFirestore();
+    if (db) {
+      try {
+        const eventRef = db
+          .collection("sessions")
+          .doc(sessionId)
+          .collection("events")
+          .doc(eventId);
 
-    // Update parent session document with lastSeenAt & pagesVisited
-    await db
-      .collection("sessions")
-      .doc(sessionId)
-      .set(
-        {
-          lastSeenAt: nowIso,
-          pagesVisited: FieldValue.arrayUnion(sanitizedPage),
-          eventCount: FieldValue.increment(1),
-        },
-        { merge: true }
-      );
+        await eventRef.set({
+          eventId,
+          type: eventType,
+          timestamp: nowIso,
+          page: sanitizedPage,
+          elementId: sanitizeInput(elementId, 60),
+          elementText: sanitizedText,
+          metadata: sanitizedMeta,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+
+        // Update parent session document with lastSeenAt & pagesVisited
+        await db
+          .collection("sessions")
+          .doc(sessionId)
+          .set(
+            {
+              lastSeenAt: nowIso,
+              pagesVisited: FieldValue.arrayUnion(sanitizedPage),
+              eventCount: FieldValue.increment(1),
+            },
+            { merge: true }
+          );
+      } catch (dbErr: any) {
+        handleFirestoreError(dbErr, "event save");
+      }
+    }
 
     return NextResponse.json({
       success: true,

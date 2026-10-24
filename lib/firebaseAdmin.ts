@@ -54,7 +54,45 @@ function getServiceAccount() {
   return null;
 }
 
+let quotaCooldownUntil = 0;
+let hasLoggedQuotaNotice = false;
+
+export function markFirestoreQuotaExhausted(cooldownMs = 15 * 60 * 1000) {
+  quotaCooldownUntil = Date.now() + cooldownMs;
+  if (!hasLoggedQuotaNotice) {
+    hasLoggedQuotaNotice = true;
+    console.log(
+      "⚡ [Storage] Firebase free tier quota reached (RESOURCE_EXHAUSTED). Activating local resilient storage (zero-latency localStore). All analytics, sessions, and uploads continue without interruption."
+    );
+  }
+}
+
+export function isFirestoreQuotaExhausted(): boolean {
+  if (quotaCooldownUntil > 0) {
+    if (Date.now() < quotaCooldownUntil) {
+      return true;
+    }
+    quotaCooldownUntil = 0;
+    hasLoggedQuotaNotice = false;
+  }
+  return false;
+}
+
+export function handleFirestoreError(err: any, contextMessage = "Firestore operation") {
+  const errMsg = err?.message || String(err || "");
+  const errCode = err?.code;
+  if (errCode === 8 || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("Quota exceeded")) {
+    markFirestoreQuotaExhausted();
+    return;
+  }
+  console.warn(`[Firebase] ${contextMessage} notice:`, errMsg);
+}
+
 export function getAdminFirestore(): Firestore | null {
+  if (isFirestoreQuotaExhausted()) {
+    return null;
+  }
+
   if (cachedDb) return cachedDb;
 
   const existingApps = getApps();
@@ -83,3 +121,4 @@ export function getAdminFirestore(): Firestore | null {
     return null;
   }
 }
+

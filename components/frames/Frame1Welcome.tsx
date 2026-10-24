@@ -51,7 +51,7 @@ export default function Frame1Welcome({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center px-4 sm:px-6 select-none overflow-y-auto overflow-x-hidden no-scrollbar pt-[max(58px,calc(var(--sat)+50px))] pb-[max(72px,calc(var(--sab)+64px))]">
+    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
       {/* Background Soft Doodles & Pastel Polka Dots */}
       <div
         className="absolute inset-0 opacity-40 pointer-events-none"
@@ -77,45 +77,50 @@ export default function Frame1Welcome({
 
       {/* Handmade Card Container */}
       <motion.div
+        data-card="true"
         initial={{ opacity: 0, y: 25, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md paper-card-warm rounded-3xl relative text-center shadow-lg border border-[#e8ded1] z-10 my-auto p-4 sm:p-8"
+        className="w-full max-w-md lg:max-w-xl xl:max-w-2xl paper-card-warm rounded-3xl relative text-center shadow-[0_20px_50px_rgba(80,50,30,0.12)] border border-[#e8ded1] z-10 my-auto p-5 sm:p-8 lg:p-10"
       >
-        <div className="washi-tape-pink" />
+        <div className="washi-tape-pink shrink-0 !top-1" />
 
-        {/* Top Stamp */}
-        <div className="absolute -top-3 -right-3 rotate-6 stamp-border rounded-lg shadow-xs hidden sm:block">
-          <div className="text-[10px] font-mono text-[#8b5cf6] font-bold px-1.5 py-0.5">
+        {/* Top Stamp & Wax Seal */}
+        <div className="absolute -top-3.5 -right-3.5 rotate-6 stamp-border rounded-lg shadow-sm hidden sm:block">
+          <div className="text-[11px] font-mono text-[#8b5cf6] font-bold px-2 py-0.5">
             OCT 28 &apos;26
           </div>
         </div>
 
         {/* Badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef2f2] border border-[#fecaca] text-[#b91c1c] text-xs font-sans mb-2.5">
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#fef2f2] border border-[#fecaca] text-[#b91c1c] text-xs font-sans mb-3 shadow-2xs">
           <Sparkles className="w-3.5 h-3.5 text-[#f87171]" />
           <span>Something I Made For You, Anshika</span>
         </div>
 
         {/* Handwritten Heading */}
         <h1
-          className="font-bold font-handwriting text-[#3f2e24] leading-tight"
-          style={{ fontSize: "clamp(26px, 8vw, 48px)" }}
+          className="font-bold font-handwriting text-[#3f2e24] leading-tight text-3xl sm:text-4xl lg:text-5xl"
         >
           Hello there, Anshika!
         </h1>
-        <p className="font-handwriting text-[#8c7465] mt-0.5" style={{ fontSize: "clamp(15px, 4.5vw, 20px)" }}>
+        <p className="font-handwriting text-[#8c7465] mt-1 text-base sm:text-xl lg:text-2xl">
           &mdash; yes, you! ✨
         </p>
 
         {/* Card Prompt Note */}
-        <div className="mt-3 p-3 sm:p-4 rounded-2xl bg-[#fff9f2] border border-[#f3e7d7]">
-          <p className="text-sm sm:text-base text-[#4a3528] font-sans font-medium leading-relaxed">
+        <div className="mt-4 p-4 sm:p-5 lg:p-6 rounded-2xl bg-[#fff9f2] border border-[#f3e7d7] text-left">
+          <p className="text-sm sm:text-base lg:text-lg text-[#4a3528] font-sans font-medium leading-relaxed">
             &ldquo;So I built you a birthday website. A proper one. Because a plain &apos;hbd&apos; text felt too ordinary for someone who became unusually important.&rdquo;
           </p>
-          <p className="text-xs text-[#8c7465] mt-1.5 font-sans">
-            Sound on recommended 🎧 &nbsp;&bull;&nbsp; Give it a few minutes, it&apos;s worth it
-          </p>
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#ebdcd0]/60">
+            <p className="text-xs text-[#8c7465] font-sans">
+              Sound on recommended 🎧 &nbsp;&bull;&nbsp; Take your time, it&apos;s worth it
+            </p>
+            <span className="hidden sm:inline text-xs font-handwriting text-[#be185d] font-bold">
+              Chapter 01
+            </span>
+          </div>
         </div>
 
         {/* Interactive Buttons */}
@@ -126,9 +131,9 @@ export default function Frame1Welcome({
                 onClick={handleYes}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-[#fda4af] hover:bg-[#fb7185] text-[#4c0519] font-sans font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 btn-cute"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#fda4af] hover:bg-[#fb7185] text-[#4c0519] font-sans font-bold text-xs sm:text-sm lg:text-base shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 btn-cute"
               >
-                <Heart className="w-4 h-4 fill-[#be185d] text-[#be185d]" />
+                <Heart className="w-4 h-4 lg:w-5 lg:h-5 fill-[#be185d] text-[#be185d]" />
                 <span>Okay, I&apos;m curious ✨</span>
               </motion.button>
 

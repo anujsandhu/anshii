@@ -12,6 +12,12 @@ import {
   MessageCircle,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import {
+  getAnonymousSessionId,
+  detectDevice,
+  detectBrowser,
+  trackEvent,
+} from "@/lib/analyticsClient";
 
 interface SecretGiftGateProps {
   children: React.ReactNode;
@@ -83,12 +89,40 @@ export default function SecretGiftGate({ children }: SecretGiftGateProps) {
 
     // Allow manual relock via URL (?lock=true or ?reset=true)
     if (urlParams.get("lock") === "true" || urlParams.get("reset") === "true") {
+      localStorage.removeItem("anshii_tester_bypass");
+      localStorage.removeItem("anshii_user_role");
+      sessionStorage.removeItem("anshii_tester_bypass");
+      sessionStorage.removeItem("anshii_user_role");
+      sessionStorage.removeItem("anshii_auth_session");
       handleLockAgain();
       return;
     }
 
     const checkActiveSession = async () => {
       try {
+        const pass =
+          urlParams.get("pass") ||
+          urlParams.get("bypass") ||
+          urlParams.get("key") ||
+          urlParams.get("tester");
+        if (
+          pass &&
+          (pass.toLowerCase() === "anuj88" || pass.toLowerCase() === "anuj19")
+        ) {
+          sessionStorage.setItem("anshii_tester_bypass", "true");
+          sessionStorage.setItem("anshii_user_role", "anuj");
+          setStage("unlocked");
+          return;
+        }
+
+        if (
+          sessionStorage.getItem("anshii_tester_bypass") === "true" ||
+          sessionStorage.getItem("anshii_user_role") === "anuj"
+        ) {
+          setStage("unlocked");
+          return;
+        }
+
         const cached = sessionStorage.getItem(SESSION_STORAGE_KEY);
         if (cached) {
           try {
@@ -105,6 +139,9 @@ export default function SecretGiftGate({ children }: SecretGiftGateProps) {
 
         if (data.authenticated && data.expiresAt && Date.now() < data.expiresAt) {
           scheduleExpiration(data.expiresAt);
+          if (data.role) {
+            sessionStorage.setItem("anshii_user_role", data.role);
+          }
           setStage("unlocked");
           return;
         }
@@ -115,9 +152,17 @@ export default function SecretGiftGate({ children }: SecretGiftGateProps) {
       setStage("locked");
     };
 
+    const handleAuthEvent = (e: Event) => {
+      setStage("unlocked");
+    };
+    window.addEventListener("anshii_auth_success", handleAuthEvent);
+
     checkActiveSession();
 
-    return () => clearExpirationTimer();
+    return () => {
+      window.removeEventListener("anshii_auth_success", handleAuthEvent);
+      clearExpirationTimer();
+    };
   }, []);
 
   // Autofocus input when locked screen appears
@@ -176,15 +221,22 @@ export default function SecretGiftGate({ children }: SecretGiftGateProps) {
     setErrorMsg("");
 
     try {
+      const sessionId = getAnonymousSessionId();
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: entered }),
+        body: JSON.stringify({
+          password: entered,
+          sessionId,
+          device: detectDevice(),
+          browser: detectBrowser(),
+        }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
+        const isAnuj = data.role === "anuj" || data.isTester;
         // Save session locally
         try {
           sessionStorage.setItem(
@@ -194,9 +246,35 @@ export default function SecretGiftGate({ children }: SecretGiftGateProps) {
               expiresAt: data.expiresAt,
             })
           );
+          sessionStorage.setItem("anshii_user_role", isAnuj ? "anuj" : "anshii");
+          if (isAnuj) {
+            localStorage.setItem("anshii_user_role", "anuj");
+            localStorage.setItem("anshii_tester_bypass", "true");
+            sessionStorage.setItem("anshii_tester_bypass", "true");
+          }
+          window.dispatchEvent(
+            new CustomEvent("anshii_auth_success", {
+              detail: { role: isAnuj ? "anuj" : "anshii", isTester: isAnuj },
+            })
+          );
         } catch {}
 
         scheduleExpiration(data.expiresAt);
+
+        // Track unlock login event
+        trackEvent({
+          type: "session_start",
+          page: "password_gate",
+          elementText: isAnuj
+            ? "Unlocked website with tester password ANUJ88"
+            : "Unlocked website with birthday password ANSHII19",
+          metadata: {
+            authSuccess: true,
+            role: isAnuj ? "anuj" : "anshii",
+            userName: data.userName || (isAnuj ? "Anuj (Tester)" : "Anshii"),
+            unlockTimestamp: new Date().toISOString(),
+          },
+        });
 
         // Smooth unlock sequence: Granted playful animation (1.3s)
         setStage("granted");

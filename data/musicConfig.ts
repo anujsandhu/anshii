@@ -42,7 +42,11 @@ const CANDIDATE_MAP: Record<string, string[]> = {
   apna_bana_le: [
     "/music/Apna_Bana_Le.mp3",
     "/music/apna-bana-le.mp3",
+    "/music/song.mp3",
+  ],
+  kalank: [
     "/music/Sanjay_S_Yadav_Slickmusix_-_Kalank_Lofi_Reverb_(mp3.pm).mp3",
+    "/music/Kalank.mp3",
   ],
   until_i_found_you: [
     "/music/Until_I_Found_You.mp3",
@@ -96,7 +100,7 @@ export const BIRTHDAY_SOUNDTRACKS: SongConfig[] = [
     movieOrArtist: "Lauv",
     src: resolveAudioSource("i_like_me_better"),
     startTime: 0,
-    frameId: 3, // Frame 4: Soundtrack Mixtape
+    frameId: 3, // Frame 4: Gift Snaps
     vibe: "🎧 Nostalgic late night study vibes",
   },
   {
@@ -132,11 +136,21 @@ export const BIRTHDAY_SOUNDTRACKS: SongConfig[] = [
   {
     id: "song-8",
     order: 8,
+    title: "Kalank (Lofi)",
+    movieOrArtist: "Arijit Singh",
+    src: resolveAudioSource("kalank"),
+    startTime: 20,
+    frameId: 7, // Frame 8: Madam Ji's Keepsake
+    vibe: "🤍 Quiet, honest heartfelt words",
+  },
+  {
+    id: "song-9",
+    order: 9,
     title: "Until I Found You",
     movieOrArtist: "Stephen Sanchez",
     src: resolveAudioSource("until_i_found_you"),
     startTime: 45,
-    frameId: 7, // Frame 8: Grand Finale Bloom
+    frameId: 8, // Frame 9: Grand Finale Bloom
     vibe: "🌷 Cinematic final birthday climax",
   },
 ];
@@ -153,15 +167,15 @@ export function getSongForFrame(frameIndex: number): SongConfig {
     case 3:
       return BIRTHDAY_SOUNDTRACKS[3]; // I Like Me Better — Gift Snaps
     case 4:
-      return BIRTHDAY_SOUNDTRACKS[4]; // Heeriye — Soundtrack
+      return BIRTHDAY_SOUNDTRACKS[4]; // Heeriye — CS Quiz
     case 5:
-      return BIRTHDAY_SOUNDTRACKS[1]; // Ilahi — CS Quiz
-    case 6:
       return BIRTHDAY_SOUNDTRACKS[5]; // Kho Gaye Hum Kahan — Scratch Card
-    case 7:
+    case 6:
       return BIRTHDAY_SOUNDTRACKS[6]; // Apna Bana Le — Letter
+    case 7:
+      return BIRTHDAY_SOUNDTRACKS[7]; // Kalank (Lofi) — Madam Ji's Keepsake
     case 8:
-      return BIRTHDAY_SOUNDTRACKS[7]; // Until I Found You — Grand Finale
+      return BIRTHDAY_SOUNDTRACKS[8]; // Until I Found You — Grand Finale
     default:
       return BIRTHDAY_SOUNDTRACKS[0];
   }

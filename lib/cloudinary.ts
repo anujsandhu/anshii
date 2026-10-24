@@ -4,8 +4,8 @@ export function isCloudinaryConfigured(): boolean {
   if (process.env.CLOUDINARY_URL) return true;
   return Boolean(
     process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
   );
 }
 
@@ -43,12 +43,13 @@ export interface CloudinaryUploadResult {
 }
 
 /**
- * Server-side upload to Cloudinary.
+ * Server-side upload to Cloudinary (image or auto).
  * Never exposes API secret to frontend.
  */
 export async function uploadToCloudinary(
   base64OrUrl: string,
-  folder = "anshii_birthday_uploads"
+  folder = "anshii_birthday_uploads",
+  resourceType: "image" | "video" | "auto" = "image"
 ): Promise<CloudinaryUploadResult | null> {
   if (!isCloudinaryConfigured()) {
     console.warn(
@@ -56,25 +57,31 @@ export async function uploadToCloudinary(
     );
     // Safe deterministic fallback when keys haven't been added yet
     const fallbackId = `local_mock_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const ext = resourceType === "video" ? "mp4" : "jpg";
     return {
-      url: `https://res.cloudinary.com/demo/image/upload/v1/${folder}/${fallbackId}.jpg`,
+      url: `https://res.cloudinary.com/demo/${resourceType === "video" ? "video" : "image"}/upload/v1/${folder}/${fallbackId}.${ext}`,
       publicId: `${folder}/${fallbackId}`,
       width: 1200,
       height: 900,
-      format: "jpg",
+      format: ext,
       bytes: 124500,
     };
   }
 
   try {
     ensureCloudinaryConfig();
-    const result = await cloudinary.uploader.upload(base64OrUrl, {
+    const uploadOptions: Record<string, any> = {
       folder,
-      resource_type: "image",
-      transformation: [
+      resource_type: resourceType,
+    };
+
+    if (resourceType === "image") {
+      uploadOptions.transformation = [
         { quality: "auto:good", fetch_format: "auto" },
-      ],
-    });
+      ];
+    }
+
+    const result = await cloudinary.uploader.upload(base64OrUrl, uploadOptions);
 
     return {
       url: result.secure_url,
@@ -86,6 +93,68 @@ export async function uploadToCloudinary(
     };
   } catch (error) {
     console.error("Cloudinary upload error:", error);
+    return null;
+  }
+}
+
+/**
+ * Server-side video upload stream to Cloudinary for live reaction recordings.
+ */
+export async function uploadVideoToCloudinary(
+  buffer: Buffer,
+  folder = "anshii_birthday_reactions",
+  publicId?: string
+): Promise<CloudinaryUploadResult | null> {
+  if (!isCloudinaryConfigured()) {
+    console.warn("[Cloudinary] Credentials not configured. Using fallback video mock.");
+    const fallbackId = publicId || `mock_vid_${Date.now()}`;
+    return {
+      url: `https://res.cloudinary.com/demo/video/upload/v1/${folder}/${fallbackId}.mp4`,
+      publicId: `${folder}/${fallbackId}`,
+      width: 720,
+      height: 1280,
+      format: "mp4",
+      bytes: buffer.length,
+    };
+  }
+
+  try {
+    ensureCloudinaryConfig();
+    return new Promise((resolve) => {
+      const uploadOptions: Record<string, any> = {
+        folder,
+        resource_type: "video",
+        chunk_size: 6000000,
+      };
+
+      if (publicId) {
+        uploadOptions.public_id = publicId;
+        uploadOptions.overwrite = true;
+        uploadOptions.invalidate = true;
+      }
+
+      const uploadStream = cloudinary.uploader.upload_stream(
+        uploadOptions,
+        (error, result) => {
+          if (error || !result) {
+            console.error("Cloudinary video upload stream error:", error);
+            resolve(null);
+            return;
+          }
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id,
+            width: result.width,
+            height: result.height,
+            format: result.format,
+            bytes: result.bytes,
+          });
+        }
+      );
+      uploadStream.end(buffer);
+    });
+  } catch (error) {
+    console.error("Cloudinary video upload stream catch error:", error);
     return null;
   }
 }

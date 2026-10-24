@@ -1,18 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebaseAdmin";
+import { getAdminFirestore, handleFirestoreError } from "@/lib/firebaseAdmin";
+import { localResetAll } from "@/lib/localStore";
+import fs from "fs";
+import path from "path";
 
-const ADMIN_SECRET =
-  process.env.ADMIN_KEY || process.env.SITE_PASSWORD || "ANSHII19";
+const VALID_ADMIN_KEYS = [
+  "ANSHII19",
+  "ANUJ88",
+  "ANUJ19",
+  (process.env.ADMIN_KEY || "").trim().toUpperCase(),
+  (process.env.SITE_PASSWORD || "").trim().toUpperCase(),
+].filter(Boolean);
 
 function isAuthorized(req: NextRequest): boolean {
-  const headerKey = req.headers.get("x-admin-key");
+  const headerKey = req.headers.get("x-admin-key")?.trim().toUpperCase();
   const url = new URL(req.url);
-  const queryKey = url.searchParams.get("key");
-  const authHeader = req.headers.get("authorization");
+  const queryKey = url.searchParams.get("key")?.trim().toUpperCase();
+  const authHeader = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "")?.trim().toUpperCase();
 
   if (
-    headerKey?.trim().toUpperCase() === ADMIN_SECRET.trim().toUpperCase() ||
-    queryKey?.trim().toUpperCase() === ADMIN_SECRET.trim().toUpperCase()
+    (headerKey && VALID_ADMIN_KEYS.includes(headerKey)) ||
+    (queryKey && VALID_ADMIN_KEYS.includes(queryKey)) ||
+    (authHeader && VALID_ADMIN_KEYS.includes(authHeader))
   ) {
     return true;
   }
@@ -26,6 +35,15 @@ function isAuthorized(req: NextRequest): boolean {
   return false;
 }
 
+import {
+  localGetSession,
+  localGetSessionEvents,
+  localGetAllSessions,
+  localGetAllUploads,
+  localGetAllLogins,
+  localGetLiveMonitor,
+} from "@/lib/localStore";
+
 export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) {
     return NextResponse.json(
@@ -34,70 +52,168 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const db = getAdminFirestore();
-  if (!db) {
-    return NextResponse.json(
-      { success: false, error: "Firestore not initialized." },
-      { status: 500 }
-    );
-  }
-
   const url = new URL(req.url);
   const requestedSessionId = url.searchParams.get("sessionId");
+  const db = getAdminFirestore();
 
-  try {
-    // ── Single Session Drilldown with Chronological Timeline ──
-    if (requestedSessionId) {
-      const sessionDoc = await db
-        .collection("sessions")
-        .doc(requestedSessionId)
-        .get();
+  // ── Single Session Drilldown with Chronological Timeline ──
+  if (requestedSessionId) {
+    let session: any = null;
+    let events: any[] = [];
+    let uploads: any[] = [];
 
-      if (!sessionDoc.exists) {
-        return NextResponse.json(
-          { success: false, error: "Session not found." },
-          { status: 404 }
-        );
+    // 1. Try fetching from Firestore
+    if (db) {
+      try {
+        const sessionDoc = await db
+          .collection("sessions")
+          .doc(requestedSessionId)
+          .get();
+
+        if (sessionDoc.exists) {
+          session = sessionDoc.data();
+
+          const eventsSnap = await db
+            .collection("sessions")
+            .doc(requestedSessionId)
+            .collection("events")
+            .orderBy("timestamp", "asc")
+            .get();
+
+          eventsSnap.forEach((doc) => events.push(doc.data()));
+
+          const uploadsSnap = await db
+            .collection("uploads")
+            .where("sessionId", "==", requestedSessionId)
+            .get();
+
+          uploadsSnap.forEach((doc) => uploads.push(doc.data()));
+        }
+      } catch (dbErr: any) {
+        handleFirestoreError(dbErr, "admin drilldown");
       }
-
-      const session = sessionDoc.data();
-
-      // Fetch chronological events
-      const eventsSnap = await db
-        .collection("sessions")
-        .doc(requestedSessionId)
-        .collection("events")
-        .orderBy("timestamp", "asc")
-        .get();
-
-      const events: any[] = [];
-      eventsSnap.forEach((doc) => events.push(doc.data()));
-
-      // Fetch uploads by this session
-      const uploadsSnap = await db
-        .collection("uploads")
-        .where("sessionId", "==", requestedSessionId)
-        .get();
-
-      const uploads: any[] = [];
-      uploadsSnap.forEach((doc) => uploads.push(doc.data()));
-
-      return NextResponse.json({
-        success: true,
-        session,
-        events,
-        uploads,
-      });
     }
 
-    // ── Overview List of All Sessions & Stats ──
-    const sessionsSnap = await db
-      .collection("sessions")
-      .orderBy("lastSeenAt", "desc")
-      .limit(60)
-      .get();
+    // 2. Fall back to / merge with Local Store
+    const localSess = localGetSession(requestedSessionId);
+    if (!session && localSess) {
+      session = localSess;
+    }
+    const localEvs = localGetSessionEvents(requestedSessionId);
+    if (events.length === 0 && localEvs.length > 0) {
+      events = localEvs;
+    }
+    const localUps = localGetAllUploads().filter(
+      (u) => u.sessionId === requestedSessionId
+    );
+    if (uploads.length === 0 && localUps.length > 0) {
+      uploads = localUps;
+    }
 
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "Session not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      session,
+      events,
+      uploads,
+    });
+  }
+
+  // ── Overview List of All Sessions & Stats ──
+  try {
     const sessions: any[] = [];
+    const recentUploads: any[] = [];
+    const logins: any[] = [];
+    let liveMonitor: any = null;
+
+    // 1. Try fetching from Firestore
+    if (db) {
+      try {
+        const sessionsSnap = await db
+          .collection("sessions")
+          .orderBy("lastSeenAt", "desc")
+          .limit(60)
+          .get();
+
+        sessionsSnap.forEach((doc) => sessions.push(doc.data()));
+
+        const uploadsSnap = await db
+          .collection("uploads")
+          .orderBy("uploadedAt", "desc")
+          .limit(60)
+          .get();
+
+        uploadsSnap.forEach((doc) => recentUploads.push(doc.data()));
+
+        const liveDoc = await db.collection("system").doc("live_monitor").get();
+        if (liveDoc.exists) {
+          liveMonitor = liveDoc.data();
+        }
+
+        const loginsSnap = await db
+          .collection("logins")
+          .orderBy("timestamp", "desc")
+          .limit(40)
+          .get();
+        loginsSnap.forEach((doc) => logins.push(doc.data()));
+      } catch (dbErr: any) {
+        handleFirestoreError(dbErr, "admin overview query");
+      }
+    }
+
+    // 2. Merge localStore data seamlessly (guaranteeing no data is lost during quota limits)
+    const localSessList = localGetAllSessions();
+    const existingSessionIds = new Set(sessions.map((s) => s.sessionId));
+    for (const ls of localSessList) {
+      if (!existingSessionIds.has(ls.sessionId)) {
+        sessions.push(ls);
+      }
+    }
+
+    const localUps = localGetAllUploads();
+    const existingUploadIds = new Set(recentUploads.map((u) => u.uploadId));
+    for (const lu of localUps) {
+      if (!existingUploadIds.has(lu.uploadId)) {
+        recentUploads.push(lu);
+      }
+    }
+
+    const localLogs = localGetAllLogins();
+    const existingLoginIds = new Set(logins.map((l) => l.loginId));
+    for (const ll of localLogs) {
+      if (!existingLoginIds.has(ll.loginId)) {
+        logins.push(ll);
+      }
+    }
+
+    if (!liveMonitor) {
+      liveMonitor = localGetLiveMonitor();
+    }
+
+    // Sort combined lists
+    sessions.sort(
+      (a, b) =>
+        new Date(b.lastSeenAt || b.startedAt).getTime() -
+        new Date(a.lastSeenAt || a.startedAt).getTime()
+    );
+
+    recentUploads.sort(
+      (a, b) =>
+        new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+    );
+
+    logins.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    // Compute aggregated metrics
     let totalEvents = 0;
     let totalDuration = 0;
     const deviceCount: Record<string, number> = {};
@@ -105,14 +221,10 @@ export async function GET(req: NextRequest) {
     const now = Date.now();
     let activeSessionsCount = 0;
 
-    sessionsSnap.forEach((doc) => {
-      const s = doc.data();
-      sessions.push(s);
-
+    sessions.forEach((s) => {
       totalEvents += Number(s.eventCount) || 0;
       totalDuration += Number(s.duration) || 0;
 
-      // Active in last 10 minutes
       const lastSeenMs = new Date(s.lastSeenAt || s.startedAt).getTime();
       if (now - lastSeenMs < 10 * 60 * 1000) {
         activeSessionsCount += 1;
@@ -125,17 +237,8 @@ export async function GET(req: NextRequest) {
       browserCount[brow] = (browserCount[brow] || 0) + 1;
     });
 
-    // Fetch recent uploads (up to 30)
-    const uploadsSnap = await db
-      .collection("uploads")
-      .orderBy("uploadedAt", "desc")
-      .limit(30)
-      .get();
-
-    const recentUploads: any[] = [];
-    uploadsSnap.forEach((doc) => recentUploads.push(doc.data()));
-
     const totalSessions = sessions.length;
+    const totalLogins = logins.length || totalSessions;
     const avgDuration =
       totalSessions > 0 ? Math.round(totalDuration / totalSessions) : 0;
 
@@ -143,6 +246,7 @@ export async function GET(req: NextRequest) {
       success: true,
       stats: {
         totalSessions,
+        totalLogins,
         activeSessionsCount,
         totalEvents,
         totalUploads: recentUploads.length,
@@ -150,6 +254,8 @@ export async function GET(req: NextRequest) {
         deviceCount,
         browserCount,
       },
+      liveMonitor,
+      logins,
       sessions,
       recentUploads,
     });
@@ -157,6 +263,84 @@ export async function GET(req: NextRequest) {
     console.error("Error in admin analytics GET:", error);
     return NextResponse.json(
       { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// ── DELETE: Purge all testing data, recordings, and task progress ───────────
+export async function DELETE(req: NextRequest) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized. Provide valid admin credentials." },
+      { status: 401 }
+    );
+  }
+
+  try {
+    // 1. Reset local analytics and task store
+    localResetAll();
+
+    // 2. Clean local recordings folder
+    const recordingsDir = path.resolve(process.cwd(), "data", "recordings");
+    if (fs.existsSync(recordingsDir)) {
+      try {
+        const files = fs.readdirSync(recordingsDir);
+        for (const file of files) {
+          if (
+            file.endsWith(".webm") ||
+            file.endsWith(".mp4") ||
+            file.startsWith("full_reaction_")
+          ) {
+            try {
+              fs.unlinkSync(path.join(recordingsDir, file));
+            } catch {}
+          }
+        }
+      } catch {}
+    }
+
+    // 3. Purge Firestore collections if available
+    const db = getAdminFirestore();
+    let firestorePurged = false;
+    if (db) {
+      try {
+        const collections = [
+          "sessions",
+          "uploads",
+          "logins",
+          "system",
+          "gift_snaps",
+          "madam_ji_notes",
+        ];
+        for (const col of collections) {
+          const snap = await db.collection(col).get();
+          for (const doc of snap.docs) {
+            if (col === "sessions") {
+              try {
+                const evSnap = await doc.ref.collection("events").get();
+                for (const evDoc of evSnap.docs) {
+                  await evDoc.ref.delete();
+                }
+              } catch {}
+            }
+            await doc.ref.delete();
+          }
+        }
+        firestorePurged = true;
+      } catch (dbErr: any) {
+        handleFirestoreError(dbErr, "admin purge");
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "All testing data, recordings, and task progress have been wiped clean.",
+      firestorePurged,
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: err.message || "Failed to purge data" },
       { status: 500 }
     );
   }

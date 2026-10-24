@@ -15,7 +15,8 @@ interface CustomCursorProps {
   mode?: "cute" | "hacker";
 }
 
-const CUTE_CLICK_EMOJIS = ["💖", "✨", "🌸", "🌷", "🎀", "🧸"];
+const CUTE_CLICK_EMOJIS = ["💖", "💕", "💓", "💗", "🌸", "✨", "💝", "🎀"];
+const SPRINKLE_HEART_EMOJIS = ["💖", "💕", "💓", "💗", "✨", "🌸"];
 const HACKER_CLICK_EMOJIS = ["⚡", "🚨", "🛑", "01", "💥", "⚠"];
 
 export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
@@ -30,8 +31,10 @@ export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
   const [isClicking, setIsClicking] = useState(false);
   const [isCelebrating, setIsCelebrating] = useState(false);
 
-  // Floating click particles
+  // Floating click particles & movement sprinkles
   const [particles, setParticles] = useState<ClickParticle[]>([]);
+  const lastSprinkleTimeRef = useRef(0);
+  const lastSprinklePosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     // Only enable on desktop with fine mouse pointer and hover capability
@@ -43,11 +46,13 @@ export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
     }
 
     setIsDesktop(true);
-    document.body.classList.add("custom-cursor-active");
 
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
-      if (!isVisible) setIsVisible(true);
+      setIsVisible(true);
+      if (!document.body.classList.contains("custom-cursor-active")) {
+        document.body.classList.add("custom-cursor-active");
+      }
 
       const target = e.target as HTMLElement | null;
       if (!target) {
@@ -75,6 +80,33 @@ export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
         target.tagName === "IMG";
       setIsHoveringPhoto(!!isPhoto);
 
+      // Active heart sprinkle trail on cursor motion
+      const now = performance.now();
+      const dist = Math.hypot(
+        e.clientX - lastSprinklePosRef.current.x,
+        e.clientY - lastSprinklePosRef.current.y
+      );
+
+      if (dist > 16 && now - lastSprinkleTimeRef.current > 65) {
+        lastSprinkleTimeRef.current = now;
+        lastSprinklePosRef.current = { x: e.clientX, y: e.clientY };
+
+        const emoji =
+          SPRINKLE_HEART_EMOJIS[
+            Math.floor(Math.random() * SPRINKLE_HEART_EMOJIS.length)
+          ];
+
+        const sprinkle: ClickParticle = {
+          id: Date.now() + Math.random(),
+          x: e.clientX + (Math.random() - 0.5) * 12,
+          y: e.clientY + (Math.random() - 0.5) * 12,
+          emoji,
+          angle: (Math.random() - 0.5) * 35,
+        };
+
+        setParticles((prev) => [...prev.slice(-16), sprinkle]);
+      }
+
       // Check if hovering interactive buttons/links
       const isInteractive =
         target.closest("button") ||
@@ -88,8 +120,14 @@ export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
 
     const handleMouseDown = () => setIsClicking(true);
     const handleMouseUp = () => setIsClicking(false);
-    const handleMouseLeave = () => setIsVisible(false);
-    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseLeave = () => {
+      setIsVisible(false);
+      document.body.classList.remove("custom-cursor-active");
+    };
+    const handleMouseEnter = () => {
+      setIsVisible(true);
+      document.body.classList.add("custom-cursor-active");
+    };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("mousedown", handleMouseDown);
@@ -158,7 +196,7 @@ export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
   if (!isDesktop || !isVisible) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[99999] overflow-hidden select-none">
+    <div className="pointer-events-none fixed inset-0 z-[99999999] overflow-hidden select-none">
       {/* Click Particles */}
       <AnimatePresence>
         {particles.map((p) => (
@@ -184,8 +222,8 @@ export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
       {/* Main Cursor Container */}
       <motion.div
         animate={{
-          x: mode === "hacker" ? position.x : position.x - 6,
-          y: mode === "hacker" ? position.y : position.y - 6,
+          x: position.x - 6,
+          y: position.y - 6,
           scale: isClicking
             ? 0.88
             : isCelebrating
@@ -205,51 +243,8 @@ export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
         className="absolute pointer-events-none origin-top-left"
         style={{ left: 0, top: 0 }}
       >
-        {/* ── HACKER / SECURITY MODE CURSOR ─────────────────────────────────── */}
-        {mode === "hacker" ? (
-          <div className="relative w-10 h-10 flex items-center justify-center -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            {/* Outer Target Corner Brackets */}
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-              <div className="flex justify-between w-full">
-                <div className="w-2 h-2 border-t-2 border-l-2 border-[#ef4444]" />
-                <div className="w-2 h-2 border-t-2 border-r-2 border-[#ef4444]" />
-              </div>
-              <div className="flex justify-between w-full">
-                <div className="w-2 h-2 border-b-2 border-l-2 border-[#ef4444]" />
-                <div className="w-2 h-2 border-b-2 border-r-2 border-[#ef4444]" />
-              </div>
-            </div>
-
-            {/* Rotating Segmented Ring */}
-            <motion.div
-              animate={{ rotate: isHoveringButton ? 360 : [0, 90, 180, 270, 360] }}
-              transition={{
-                repeat: Infinity,
-                duration: isHoveringButton ? 0.75 : 4,
-                ease: "linear",
-              }}
-              className="absolute w-7 h-7 rounded-full border border-dashed border-[#ef4444] shadow-[0_0_14px_rgba(239,68,68,0.9)]"
-            />
-
-            {/* Crosshair Lines */}
-            <div className="absolute w-full h-[1.5px] bg-[#ef4444]/90 shadow-[0_0_6px_#ef4444]" />
-            <div className="absolute h-full w-[1.5px] bg-[#ef4444]/90 shadow-[0_0_6px_#ef4444]" />
-
-            {/* Center Pulsing Laser Core */}
-            <div className="w-2 h-2 rounded-full bg-[#ef4444] shadow-[0_0_10px_#ef4444] animate-ping" />
-            <div className="absolute w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_#fff]" />
-
-            {/* Target Coordinate / Lock Badge */}
-            <div className="absolute -bottom-5 left-5 px-1.5 py-0.5 rounded bg-[#180811]/95 border border-[#ef4444]/80 text-[8px] font-mono text-[#fca5a5] whitespace-nowrap shadow-[0_2px_8px_rgba(0,0,0,0.8)] backdrop-blur-xs flex items-center gap-1">
-              <span className={`w-1.5 h-1.5 rounded-full ${isHoveringButton ? "bg-[#22c55e]" : "bg-[#ef4444] animate-pulse"}`} />
-              {isHoveringButton
-                ? "TARGET_LOCKED 🔒"
-                : `TRK // [${Math.round(position.x)}, ${Math.round(position.y)}]`}
-            </div>
-          </div>
-        ) : (
-          /* ── ORIGINAL CUTE TEDDY BEAR CURSOR ─────────────────────────────── */
-          <motion.div
+        {/* ── CUTE TEDDY BEAR CURSOR ─────────────────────────────── */}
+        <motion.div
             animate={{
               rotate: isCelebrating
                 ? [0, -14, 14, -10, 0]
@@ -268,6 +263,19 @@ export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
           >
             {/* Tiny Click Tip Sparkle Point */}
             <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-[#fda4af] shadow-[0_0_6px_#f43f5e] opacity-80" />
+
+            {/* Pulsating Mini Heart Floating above Teddy */}
+            <motion.span
+              animate={{
+                scale: [1, 1.28, 1],
+                y: [-2, 2, -2],
+                rotate: [-6, 6, -6],
+              }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -top-3.5 -right-2 text-xs select-none pointer-events-none filter drop-shadow-xs"
+            >
+              💖
+            </motion.span>
 
             {/* Hand-Drawn SVG Teddy Bear */}
             <svg
@@ -385,7 +393,6 @@ export default function CustomCursor({ mode = "cute" }: CustomCursorProps) {
               </motion.div>
             )}
           </motion.div>
-        )}
       </motion.div>
     </div>
   );
