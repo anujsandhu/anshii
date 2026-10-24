@@ -26,7 +26,6 @@ export default function ClientHome({
   // Date Lock State: SSR starts at initialIsLocked to prevent hydration mismatch.
   // Tester Anuj (anuj88) bypass evaluates inside useEffect on client mount.
   const [isLocked, setIsLocked] = useState<boolean>(initialIsLocked);
-  const [isPrankActive, setIsPrankActive] = useState(false);
 
   useEffect(() => {
     try {
@@ -134,7 +133,7 @@ export default function ClientHome({
       {/* Screen Size Gate: Mandatory Laptop / Large Screen Only */}
       <ScreenSizeGate>
         {/* Dynamic Desktop Cursor */}
-        <CustomCursor mode={isLocked && isPrankActive ? "hacker" : "cute"} />
+        <CustomCursor mode="cute" />
 
         {/* Global Continuous Reaction Camera & Live Stream (Entry to Exit) */}
         <ReactionCam autoStartOnMount={true} />
@@ -147,7 +146,6 @@ export default function ClientHome({
           <BirthdayDateLock
             onUnlock={handleUnlock}
             initialServerTime={initialServerTime}
-            onPrankLayerChange={setIsPrankActive}
           />
         ) : (
           /* SECOND LAYER (after 28 Oct): Password Verification Gate */

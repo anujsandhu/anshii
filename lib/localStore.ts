@@ -143,7 +143,7 @@ function readStore(): LocalStoreSchema {
 }
 
 function writeStore(data: LocalStoreSchema) {
-  let storePath = getStoreFilePath();
+  const storePath = getStoreFilePath();
   try {
     const dir = path.dirname(storePath);
     if (!fs.existsSync(dir)) {

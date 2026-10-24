@@ -6,18 +6,9 @@ import {
   Lock,
   Unlock,
   Sparkles,
-  ShieldAlert,
-  Terminal,
-  Skull,
-  Flame,
   MessageCircle,
-  Eye,
   X,
-  AlertOctagon,
-  Radio,
-  ShieldCheck,
   CheckCircle2,
-  ArrowRight,
   Heart,
   Key,
   Shield,
@@ -41,14 +32,6 @@ interface BirthdayDateLockProps {
   initialServerTime?: number;
   onPrankLayerChange?: (active: boolean) => void;
 }
-
-// 4 Options for "When did we talk for the first time?" (Exact date from chat archive: 14 August 2026)
-const FIRST_TALK_OPTIONS = [
-  { id: 0, date: "10 August", fullDate: "10 August 2026", isCorrect: false },
-  { id: 1, date: "14 August", fullDate: "14 August 2026", isCorrect: true },
-  { id: 2, date: "18 August", fullDate: "18 August 2026", isCorrect: false },
-  { id: 3, date: "24 August", fullDate: "24 August 2026", isCorrect: false },
-];
 
 // Curated calm background soundtracks for the countdown card
 const CALM_SOUNDTRACKS = [
@@ -83,17 +66,7 @@ const CALM_SOUNDTRACKS = [
 ];
 
 
-const HACKER_PRANK_MESSAGES = [
-  "Nice try! Even NASA can't bypass this before the 28th. 😂",
-  "🚨 ALERT: Unauthorized visitor caught snooping around the secret vault!",
-  "Access Denied: Protected by Anuj's anti-snooper firewall. 🛡️",
-  "Error 403: Snooper detected. Go away and come back on Oct 28! 👀",
-  "Decryption attempt failed. Security level: MAXIMUM ANUJ DEFENSE. 😂",
-  "Bro, it's NOT opening early. Stop pressing the button! 😭",
-  "October 28. Mark your calendar. Not today! 🌷",
-  "Your IP has been logged into the 'Impatient People Hall of Fame' 🏆😂",
-  "Trying to break into the secret vault? Nice try. 😂",
-];
+
 
 export default function BirthdayDateLock({
   onUnlock,
@@ -110,22 +83,6 @@ export default function BirthdayDateLock({
     return calculateTimeRemaining(effectiveNow);
   });
 
-  // Scary hacker prank layer visibility (disabled / removed)
-  const [showHackerLayer, setShowHackerLayer] = useState(false);
-  const [glitchActive, setGlitchActive] = useState(false);
-  const [prankAlert, setPrankAlert] = useState<string | null>(null);
-  const [sirenActive, setSirenActive] = useState(false);
-  const [showPrankRevealModal, setShowPrankRevealModal] = useState(false);
-
-  // Disarm Game State: "When did we talk for the first time?" (4 options, strictly 2 attempts)
-  const [disarmAttemptsLeft, setDisarmAttemptsLeft] = useState<number>(2);
-  const [disarmWrongSelected, setDisarmWrongSelected] = useState<number[]>([]);
-  const [disarmSuccess, setDisarmSuccess] = useState<boolean>(false);
-  const [disarmShake, setDisarmShake] = useState<boolean>(false);
-  const [disarmMessage, setDisarmMessage] = useState<string | null>(null);
-  const [disarmCooldown, setDisarmCooldown] = useState<number>(0);
-  const disarmSectionRef = useRef<HTMLDivElement | null>(null);
-
   // Normal scrapbook countdown states
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [unlockStep, setUnlockStep] = useState<0 | 1 | 2 | 3>(0);
@@ -140,9 +97,7 @@ export default function BirthdayDateLock({
   const [isBypassing, setIsBypassing] = useState(false);
   const [testerError, setTesterError] = useState("");
 
-  // Audio Context Ref for Buzzer Siren
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const sirenIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── CALM BACKGROUND MUSIC (Plays on Countdown Card) ───────────────
   const calmAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -165,8 +120,7 @@ export default function BirthdayDateLock({
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
 
-    // If countdown card screen is active, start playing immediately
-    if (!showHackerLayer && !isCalmMuted) {
+    if (!isCalmMuted) {
       audio.play().catch(() => {});
     }
 
@@ -178,25 +132,10 @@ export default function BirthdayDateLock({
     };
   }, [currentTrackIdx]);
 
-  // Coordinate Calm Music with Siren (Pause during siren, resume on countdown card)
-  useEffect(() => {
-    if (showHackerLayer) {
-      if (calmAudioRef.current && !calmAudioRef.current.paused) {
-        calmAudioRef.current.pause();
-      }
-    } else {
-      if (calmAudioRef.current && calmAudioRef.current.paused && !isCalmMuted) {
-        calmAudioRef.current.play().catch(() => {});
-      }
-    }
-  }, [showHackerLayer, isCalmMuted]);
-
   // Global user gesture unblock listener for browser autoplay policy
   useEffect(() => {
-    if (showHackerLayer) return;
-
     const handleFirstGesture = () => {
-      if (calmAudioRef.current && calmAudioRef.current.paused && !isCalmMuted && !showHackerLayer) {
+      if (calmAudioRef.current && calmAudioRef.current.paused && !isCalmMuted) {
         calmAudioRef.current.play().catch(() => {});
       }
     };
@@ -208,7 +147,7 @@ export default function BirthdayDateLock({
       window.removeEventListener("click", handleFirstGesture);
       window.removeEventListener("touchstart", handleFirstGesture);
     };
-  }, [showHackerLayer, isCalmMuted]);
+  }, [isCalmMuted]);
 
   // Calm Music Control Handlers
   const toggleCalmPlayPause = useCallback(() => {
@@ -234,31 +173,10 @@ export default function BirthdayDateLock({
     });
   }, [calmMusicVolume]);
 
-
-  // Simulated live hacker terminal logs (ZERO CLUES)
-  const [terminalLogs, setTerminalLogs] = useState<string[]>([
-    "INITIALIZING SYSTEM LOCKDOWN PROTOCOL...",
-    "Connection flagged: [VISITOR_DEVICE] (Access Unverified)",
-    "Bypassing security certificates... ACCESS DENIED",
-    "Target personal archives... [ENCRYPTED - AES-256 GCM]",
-  ]);
-  const [hackProgress, setHackProgress] = useState(65);
-
-  const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Enforce zero-clue mysterious title before Oct 28
   useEffect(() => {
-    if (showHackerLayer) {
-      document.title = "🚨 SECURITY WARNING // ACCESS RESTRICTED";
-    } else {
-      document.title = "Not yet. 👀";
-    }
-  }, [showHackerLayer]);
-
-  // Sync prank layer status with parent for cursor mode switching
-  useEffect(() => {
-    onPrankLayerChange?.(showHackerLayer);
-  }, [showHackerLayer, onPrankLayerChange]);
+    document.title = "Not yet. 👀";
+    onPrankLayerChange?.(false);
+  }, [onPrankLayerChange]);
 
   // Check prefers-reduced-motion
   useEffect(() => {
@@ -272,223 +190,14 @@ export default function BirthdayDateLock({
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  // High-Intensity Phone Vibration
-  const triggerPhoneVibrate = (
-    pattern: number[] = [450, 40, 450, 40, 600, 60, 500, 40, 500]
-  ) => {
+  // Soft Phone Vibration for interactions
+  const triggerPhoneVibrate = (pattern: number[] = [80, 40, 80]) => {
     try {
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(pattern);
       }
     } catch {}
   };
-
-  // Step tracker for two-tone alternating siren
-  const sirenStepRef = useRef(0);
-
-  // Realistic Alarm Buzzer Sound Synthesizer (DISABLED / REMOVED)
-  const playRealisticBuzzer = useCallback(() => {
-    // Siren removed completely
-  }, []);
-
-  // Start Repeating Alarm Siren at Full Volume & High-Intensity Vibration (DISABLED / REMOVED)
-  const startSiren = useCallback(() => {
-    // Siren removed completely
-  }, []);
-
-  // Stop Repeating Alarm Siren
-  const stopSiren = useCallback(() => {
-    setSirenActive(false);
-    if (sirenIntervalRef.current) {
-      clearInterval(sirenIntervalRef.current);
-      sirenIntervalRef.current = null;
-    }
-  }, []);
-
-  // Low-frequency error buzz on wrong date attempt
-  const playErrorBuzz = useCallback(() => {
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") ctx.resume().catch(() => {});
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(140, now);
-      osc.frequency.linearRampToValueAtTime(70, now + 0.32);
-      gain.gain.setValueAtTime(0.55, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.32);
-    } catch {}
-  }, []);
-
-  // Sweet victory chime on correct first talk date
-  const playVictoryChime = useCallback(() => {
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") ctx.resume().catch(() => {});
-      const now = ctx.currentTime;
-      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
-      notes.forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
-        gain.gain.setValueAtTime(0.35, now + idx * 0.12);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.5);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + idx * 0.12);
-        osc.stop(now + idx * 0.12 + 0.55);
-      });
-    } catch {}
-  }, []);
-
-  // Handle Disarm Question: "When did we talk for the first time?" (4 options, strictly 2 attempts)
-  const handleSelectFirstTalkDate = useCallback(
-    (optionId: number) => {
-      if (disarmAttemptsLeft <= 0 || disarmSuccess || disarmWrongSelected.includes(optionId)) {
-        return;
-      }
-
-      const selected = FIRST_TALK_OPTIONS.find((o) => o.id === optionId);
-      if (!selected) return;
-
-      if (selected.isCorrect) {
-        // Correct date! Disarm emergency siren & lockdown
-        stopSiren();
-        playVictoryChime();
-        triggerPhoneVibrate([150, 40, 150, 40, 350]);
-        setDisarmSuccess(true);
-        setDisarmMessage("🎉 IDENTITY VERIFIED! You remembered 14 August 2026! ❤️");
-        try {
-          confetti({
-            particleCount: 90,
-            spread: 95,
-            origin: { y: 0.5 },
-            colors: ["#fda4af", "#34d399", "#fed7aa", "#f43f5e", "#38bdf8"],
-          });
-        } catch {}
-      } else {
-        // Wrong date selected
-        playErrorBuzz();
-        triggerPhoneVibrate([240, 60, 240]);
-        setDisarmShake(true);
-        setTimeout(() => setDisarmShake(false), 500);
-
-        const remaining = disarmAttemptsLeft - 1;
-        setDisarmAttemptsLeft(remaining);
-        setDisarmWrongSelected((prev) => [...prev, optionId]);
-
-        if (remaining === 1) {
-          setDisarmMessage(
-            "❌ WRONG DATE! 🚨 Only 1 ATTEMPT REMAINING! Think carefully... how could you forget when we first talked?! 😭"
-          );
-        } else {
-          // 0 attempts remaining -> Lockdown penalty
-          setDisarmMessage(
-            "🚨 2 FAILED ATTEMPTS! ACCESS LOCKED! 🚨 How could you forget?! 😭💔 Siren will KEEP PLAYING!"
-          );
-          setDisarmCooldown(15);
-        }
-      }
-    },
-    [disarmAttemptsLeft, disarmSuccess, disarmWrongSelected, stopSiren, playVictoryChime, playErrorBuzz]
-  );
-
-  // Cooldown countdown if both attempts are exhausted
-  useEffect(() => {
-    if (disarmCooldown <= 0) return;
-    const interval = setInterval(() => {
-      setDisarmCooldown((c) => {
-        if (c <= 1) {
-          setDisarmAttemptsLeft(2);
-          setDisarmWrongSelected([]);
-          setDisarmMessage("💡 Cooldown expired. You have 2 fresh attempts. Think carefully! 🌷");
-          return 0;
-        }
-        return c - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [disarmCooldown]);
-
-  // Siren disabled
-  useEffect(() => {
-    stopSiren();
-  }, [stopSiren]);
-
-  const handleOpenSecretVault = useCallback(() => {
-    stopSiren();
-    setShowPrankRevealModal(false);
-    setShowHackerLayer(false);
-  }, [stopSiren]);
-
-  // Intercept Back button, Tab Close, and Exit Intent to reveal the prank
-  useEffect(() => {
-    if (!showHackerLayer || isUnlocked) return;
-
-    // 1. History state push to catch browser back button / swipe back
-    try {
-      window.history.pushState({ prankActive: true }, "", window.location.href);
-    } catch {}
-
-    const handlePopState = () => {
-      setShowPrankRevealModal(true);
-      try {
-        window.history.pushState({ prankActive: true }, "", window.location.href);
-      } catch {}
-    };
-
-    // 2. BeforeUnload (when closing tab / browser window)
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      setShowPrankRevealModal(true);
-      e.preventDefault();
-      e.returnValue = "Wait! It's just a little prank by Anuj! 😂 Answer the question to stop the siren!";
-      return "Wait! It's just a little prank by Anuj! 😂 Answer the question to stop the siren!";
-    };
-
-    // 3. Desktop exit intent (mouse moves up toward tabs / close button)
-    const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 15) {
-        setShowPrankRevealModal(true);
-      }
-    };
-
-    // 4. Mobile tab switch / app minimize (visibilitychange)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        stopSiren();
-      } else if (document.visibilityState === "visible") {
-        if (!disarmSuccess) {
-          startSiren();
-          setShowPrankRevealModal(true);
-        }
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    document.addEventListener("mouseleave", handleMouseLeave);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("mouseleave", handleMouseLeave);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [showHackerLayer, isUnlocked, stopSiren]);
 
   // Sync clock authoritative from /api/date-lock on mount and periodically
   const syncServerTime = useCallback(async () => {
@@ -539,35 +248,9 @@ export default function BirthdayDateLock({
     return () => clearInterval(timer);
   }, [isUnlocked]);
 
-  // Terminal log simulation in prank layer (NO BIRTHDAY MENTIONS)
-  useEffect(() => {
-    const stream = [
-      "Accessing personal photo archives... [LOCKED]",
-      "Security firewall engaged: ANUJ-SEC-V2",
-      "Manual crack attempt: ACCESS_OVERRIDE -> FAILED [403]",
-      "Defense status: System locked until Oct 28 00:00 IST",
-    ];
-
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < stream.length && stream[i]) {
-        const nextLog = stream[i];
-        setTerminalLogs((prev) => [...prev.slice(-4), nextLog]);
-        setHackProgress((p) => Math.min(99, p + 11));
-        i++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 2400);
-
-    return () => clearInterval(interval);
-  }, []);
-
   // Unlock sequence animation when timer reaches zero on 28 Oct
   const handleUnlockSequence = () => {
-    stopSiren();
     setIsUnlocked(true);
-    setShowHackerLayer(false);
     document.title = "Happy 19th Birthday, Anshika ✨ | Made with ❤️ by Anuj";
 
     setUnlockStep(1); // "Okay..."
@@ -619,7 +302,6 @@ export default function BirthdayDateLock({
             })
           );
           setShowTesterModal(false);
-          stopSiren();
           setIsUnlocked(true);
           if (onUnlock) onUnlock();
           return true;
@@ -634,7 +316,7 @@ export default function BirthdayDateLock({
         setIsBypassing(false);
       }
     },
-    [onUnlock, stopSiren]
+    [onUnlock]
   );
 
   useEffect(() => {
@@ -685,17 +367,11 @@ export default function BirthdayDateLock({
   const triggerAttemptInteraction = () => {
     if (isUnlocked) return;
 
-    triggerPhoneVibrate([100, 50, 100]);
-    playRealisticBuzzer();
-
+    triggerPhoneVibrate([80, 40, 80]);
     setLockWiggle(true);
     setTimeout(() => setLockWiggle(false), 500);
 
-    const msg =
-      HACKER_PRANK_MESSAGES[
-        Math.floor(Math.random() * HACKER_PRANK_MESSAGES.length)
-      ];
-    setAttemptMessage(msg);
+    setAttemptMessage("A little surprise is waiting for you... Opens 28 October! 🌸✨");
 
     if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
     messageTimeoutRef.current = setTimeout(() => {
@@ -719,29 +395,6 @@ export default function BirthdayDateLock({
     messageTimeoutRef.current = setTimeout(() => {
       setAttemptMessage(null);
     }, 3200);
-  };
-
-  // Trigger funny hacker crack attempt inside the prank layer
-  const handleBypassAttempt = () => {
-    startSiren();
-    setGlitchActive(true);
-    setTimeout(() => setGlitchActive(false), 600);
-
-    const randomMsg =
-      HACKER_PRANK_MESSAGES[
-        Math.floor(Math.random() * HACKER_PRANK_MESSAGES.length)
-      ];
-    setPrankAlert(randomMsg);
-
-    setTerminalLogs((prev) => [
-      ...prev.slice(-3),
-      `> INTRUSION ALERT: MANUAL OVERRIDE REJECTED ❌`,
-      `> ${randomMsg}`,
-    ]);
-
-    setTimeout(() => {
-      setPrankAlert(null);
-    }, 3600);
   };
 
   // Floating background petals & celestial sparkles
@@ -1107,19 +760,6 @@ export default function BirthdayDateLock({
               <MessageCircle className="w-4 h-4 text-white" />
               <span>Ask Anuj on WhatsApp</span>
             </a>
-
-            {/* Door Check Button */}
-            <button
-              onClick={() => {
-                setShowHackerLayer(true);
-                startSiren();
-              }}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-white/95 hover:bg-[#fff0f3] border border-[#ebdcd0] hover:border-[#fbcfe8] text-xs font-sans font-medium text-[#786457] hover:text-[#be185d] transition-all cursor-pointer shadow-2xs active:scale-95"
-            >
-              <Lock className="w-3.5 h-3.5 text-[#f43f5e]" />
-              <span>Check Door</span>
-            </button>
-
           </div>
 
           {/* ── AUTHENTIC EMBOSSED CRIMSON WAX SEAL (Bottom Right) ───────────── */}
@@ -1214,494 +854,6 @@ export default function BirthdayDateLock({
           See you on the other side. 🌷
         </p>
       </footer>
-
-      {/* ── THE EXTRA LAYER: REALISTIC SECURITY BREACH & SIREN BUZZER PRANK (DISABLED) ──── */}
-      <AnimatePresence>
-        {false && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.3 }}
-            className={`fixed inset-0 z-50 bg-[#070508]/98 backdrop-blur-xl flex flex-col justify-between items-center p-3 sm:p-6 font-mono text-[#f3f4f6] overflow-y-auto ${
-              glitchActive ? "translate-x-2 filter invert hue-rotate-180" : ""
-            } ${sirenActive ? "border-4 border-[#ef4444] shadow-[inset_0_0_80px_rgba(239,68,68,0.5)] animate-high-intensity-vibrate" : ""}`}
-            style={{
-              backgroundImage: `radial-gradient(circle at 50% 12%, rgba(239, 68, 68, 0.28) 0%, transparent 65%),
-                                repeating-linear-gradient(0deg, rgba(0,0,0,0.6) 0px, rgba(0,0,0,0.6) 1px, transparent 2px, transparent 4px)`,
-            }}
-          >
-            {/* Crisp Red & White Emergency Strobe in Full Brightness */}
-            <div className="pointer-events-none fixed inset-0 z-[70] animate-crisp-red-white-strobe mix-blend-screen" />
-            <div className="pointer-events-none fixed inset-0 z-[69] animate-crisp-beacon" />
-
-            {/* Top Red Security Siren Lightbar */}
-            <div className="w-full max-w-2xl mx-auto flex items-center justify-between py-2 px-3 rounded-2xl bg-black/60 border border-[#3b172a] backdrop-blur-md mb-2">
-              <div className="flex items-center gap-2.5">
-                <div className="relative flex items-center justify-center">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] animate-ping absolute" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-[10px] sm:text-xs font-bold text-[#fca5a5] tracking-widest uppercase font-mono">
-                    INCIDENT #SEC-9842 // THREAT LEVEL: MAXIMUM
-                  </span>
-                  <span className="text-[9px] text-[#f87171]/70 font-mono">
-                    TARGET: UNAUTHORIZED VISITOR // VAULT LOCKDOWN ACTIVE
-                  </span>
-                </div>
-              </div>
-
-              {/* Audio Equalizer visualizer */}
-              {/* Audio Equalizer visualizer */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 h-5 px-2.5 py-0.5 rounded-full bg-black/70 border border-[#ef4444]/40">
-                  <Volume2 className="w-3 h-3 text-[#ef4444] animate-pulse" />
-                  <span className="w-1 h-3 rounded-full bg-[#ef4444] animate-audio-bar-1" />
-                  <span className="w-1 h-4 rounded-full bg-[#f43f5e] animate-audio-bar-2" />
-                  <span className="w-1 h-2 rounded-full bg-[#fb7185] animate-audio-bar-3" />
-                  <span className="w-1 h-5 rounded-full bg-[#ef4444] animate-audio-bar-4" />
-                  <span className="text-[9px] font-mono text-[#fca5a5] font-bold ml-1">SIREN 100%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Hacker Card Modal */}
-            <div className="w-full max-w-lg mx-auto my-auto py-2">
-              {/* Alert Header Strobe Banner */}
-              <div className="w-full mb-3 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[#350d18] border-2 border-[#ef4444] text-center shadow-[0_0_30px_rgba(239,68,68,0.4)] animate-pulse">
-                <AlertOctagon className="w-5 h-5 text-[#ef4444] shrink-0 animate-bounce" />
-                <span className="text-xs sm:text-sm font-extrabold text-[#fecaca] tracking-wide uppercase">
-                  ⚠ CRITICAL SECURITY INTRUSION DETECTED ⚠
-                </span>
-              </div>
-
-              {/* Realistic Cyber Terminal Snippet */}
-              <div className="w-full mb-3 rounded-2xl bg-[#09060c] border border-[#3b172a] p-3 text-[11px] text-[#9ca3af] shadow-inner text-left">
-                <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-[#210f1c] text-[10px] text-[#6b7280]">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-[#ef4444]" />
-                    <div className="w-2 h-2 rounded-full bg-[#f59e0b]" />
-                    <div className="w-2 h-2 rounded-full bg-[#10b981]" />
-                    <span className="ml-1 text-[#f43f5e] font-semibold font-mono">
-                      sec-monitor@anuj-vault:~# ./quarantine_device
-                    </span>
-                  </div>
-                  <span className="text-[#ef4444] font-bold font-mono">DEFENSE: {hackProgress}%</span>
-                </div>
-
-                <div className="space-y-1 leading-relaxed font-mono">
-                  {terminalLogs
-                    .filter((log): log is string => typeof log === "string" && Boolean(log))
-                    .map((log, index) => {
-                      const isFailed = log.includes("DENIED") || log.includes("FAILED");
-                      const isSuccess = log.includes("LOCKDOWN") || log.includes("ENCRYPTED");
-                      return (
-                        <div
-                          key={index}
-                          className={
-                            isFailed
-                              ? "text-[#f87171] font-bold"
-                              : isSuccess
-                              ? "text-[#fbbf24]"
-                              : "text-[#d1d5db]"
-                          }
-                        >
-                          <span className="text-[#f43f5e] mr-1.5">&gt;</span>
-                          {log}
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* Playful Prank Alert Toast */}
-              <AnimatePresence>
-                {prankAlert && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="w-full mb-3 px-3.5 py-2 rounded-xl bg-[#450a0a] border border-[#ef4444] text-[#fecaca] text-xs font-sans font-bold flex items-center gap-2 text-left"
-                  >
-                    <Flame className="w-4 h-4 text-[#f87171] shrink-0 animate-bounce" />
-                    <span>{prankAlert}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* ── QUARANTINE CONTAINMENT CARD (NO QUESTION & NO REDIRECT HERE) ── */}
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#1b0a1d]/95 via-[#120514]/95 to-[#09020b]/95 border-2 border-[#ef4444] shadow-[0_0_50px_rgba(239,68,68,0.4)] p-6 sm:p-8 text-center transition-all">
-                {/* Glowing neon top accent line */}
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#ef4444] to-transparent opacity-90 animate-pulse" />
-
-                <div className="w-16 h-16 rounded-full bg-[#350d18] border-2 border-[#ef4444] mx-auto flex items-center justify-center text-3xl mb-3 shadow-[0_0_30px_rgba(239,68,68,0.6)] animate-pulse">
-                  🔒
-                </div>
-
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ef4444]/20 border border-[#ef4444]/60 text-[#fca5a5] text-xs font-bold uppercase tracking-wider font-mono mb-2">
-                  <Skull className="w-3.5 h-3.5 text-[#ef4444]" />
-                  <span>TOTAL QUARANTINE // INESCAPABLE CONTAINMENT</span>
-                </div>
-
-                <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
-                  SYSTEM LOCKED BY ANUJ 🚨
-                </h2>
-
-                <p className="font-sans text-xs sm:text-sm text-[#fca5a5] leading-relaxed max-w-sm mx-auto mb-4 font-mono">
-                  Siren is locked on 100% volume. Root access is blocked until 28 October 2026.
-                </p>
-
-                <div className="p-3 rounded-2xl bg-black/60 border border-[#ef4444]/40 max-w-sm mx-auto mb-5 text-left font-mono text-[11px] text-[#9ca3af] space-y-1">
-                  <div className="text-[#f87171] font-bold">&gt; BYPASS ATTEMPTS: REJECTED ❌</div>
-                  <div className="text-[#fbbf24]">&gt; AUDIO SIREN: UNMUTABLE 🔊</div>
-                  <div className="text-[#d1d5db]">&gt; TARGET: VISITOR_DEVICE // 0 PRIVILEGES</div>
-                </div>
-
-                {/* Mobile / Direct Escape Attempt Button (triggers question modal) */}
-                <button
-                  onClick={() => setShowPrankRevealModal(true)}
-                  className="w-full sm:w-auto px-6 py-3 rounded-full bg-gradient-to-r from-[#2c0b16] to-[#1c081e] hover:from-[#3d1222] hover:to-[#280c2b] border border-[#ef4444]/60 text-xs font-mono font-bold text-[#fca5a5] hover:text-white flex items-center justify-center gap-2 mx-auto cursor-pointer transition-all active:scale-95 shadow-[0_0_15px_rgba(239,68,68,0.25)]"
-                >
-                  <X className="w-3.5 h-3.5 text-[#f87171]" />
-                  <span>Try to Exit / Close Tab</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Bottom Disclaimer */}
-            <div className="py-2 text-[10px] text-[#6b7280]">
-              *Security lock strictly active until 28 October 2026 00:00 IST. Nice try though! 😂
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── PRANK REVEAL MODAL: TRIGGERED WHEN TRYING TO BACK OR CLOSE TAB (DISABLED) ──── */}
-      <AnimatePresence>
-        {false && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 selection:bg-[#fda4af]/40"
-          >
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 15 }}
-              transition={{ type: "spring", stiffness: 380, damping: 25 }}
-              className={`w-full max-w-lg rounded-3xl bg-[#140816]/95 border-2 ${
-                disarmSuccess
-                  ? "border-[#10b981] shadow-[0_0_60px_rgba(16,185,129,0.45)]"
-                  : disarmShake
-                  ? "border-[#ef4444] animate-shake-error shadow-[0_0_50px_rgba(239,68,68,0.7)]"
-                  : "border-[#fda4af]/60 shadow-[0_0_50px_rgba(253,164,175,0.35)]"
-              } p-5 sm:p-7 text-center relative overflow-hidden my-auto`}
-            >
-              {/* Cute glowing background orbs */}
-              <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-[#f43f5e]/25 blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-[#fda4af]/20 blur-2xl pointer-events-none" />
-
-              {disarmSuccess ? (
-                /* ── SUCCESS STATE: SIREN DISARMED // 14 AUGUST VERIFIED ── */
-                <div className="space-y-3">
-                  <div className="w-14 h-14 rounded-full bg-[#10b981]/20 border border-[#34d399] mx-auto flex items-center justify-center text-3xl shadow-[0_0_24px_rgba(16,185,129,0.6)]">
-                    ❤️
-                  </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10b981]/20 border border-[#10b981]/50 text-[#34d399] text-xs font-bold uppercase tracking-wider font-mono">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>IDENTITY VERIFIED // SIREN SILENCED</span>
-                  </div>
-                  <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                    YOU REMEMBERED! 🥹
-                  </h2>
-                  <p className="font-sans text-xs sm:text-sm text-[#a7f3d0] leading-relaxed max-w-sm mx-auto">
-                    Yes! We talked for the very first time on{" "}
-                    <span className="font-bold text-white underline decoration-[#34d399] decoration-2">
-                      14 August 2026
-                    </span>
-                    .
-                  </p>
-
-                  {/* Styled authentic WhatsApp memory transcript snippet */}
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0c1317] border border-[#10b981]/50 text-left max-w-sm mx-auto mb-3 space-y-2.5 shadow-2xl relative overflow-hidden">
-                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500" />
-                    <div className="text-[10px] font-sans font-semibold text-[#8696a0] flex items-center justify-between pb-2 border-b border-[#202c33]">
-                      <span className="flex items-center gap-1.5 text-[#25d366]">
-                        <Lock className="w-3 h-3 text-[#25d366]" />
-                        WhatsApp Archive • 14 Aug 2026
-                      </span>
-                      <span className="text-[#8696a0] font-mono text-[9px]">Verified Memory</span>
-                    </div>
-
-                    {/* Anuj Bubble 1 */}
-                    <div className="flex items-start gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#202c33] border border-[#3b4a54] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
-                        A
-                      </div>
-                      <div className="flex flex-col items-start max-w-[82%]">
-                        <div className="px-3 py-1.5 rounded-2xl rounded-tl-xs bg-[#202c33] text-[#e9edef] text-xs font-sans shadow-xs">
-                          Heyy
-                        </div>
-                        <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 ml-1 flex items-center gap-1">
-                          Anuj • 5:47 AM <span className="text-[#53bdeb] text-[10px]">✓✓</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Contact Bubble 1 */}
-                    <div className="flex items-start justify-end gap-2">
-                      <div className="flex flex-col items-end max-w-[82%]">
-                        <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
-                          Hlo
-                        </div>
-                        <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
-                          You • 9:56 AM
-                        </span>
-                      </div>
-                      <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[11px] shrink-0 mt-1">
-                        🌸
-                      </div>
-                    </div>
-
-                    {/* Anuj Bubble 2 */}
-                    <div className="flex items-start gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#202c33] border border-[#3b4a54] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
-                        A
-                      </div>
-                      <div className="flex flex-col items-start max-w-[82%]">
-                        <div className="px-3 py-1.5 rounded-2xl rounded-tl-xs bg-[#202c33] text-[#e9edef] text-xs font-sans shadow-xs">
-                          ek random question thaa 😅 aap mere classmate the na?
-                        </div>
-                        <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 ml-1 flex items-center gap-1">
-                          Anuj • 11:06 AM <span className="text-[#53bdeb] text-[10px]">✓✓</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Contact Bubble 2 */}
-                    <div className="flex items-start justify-end gap-2">
-                      <div className="flex flex-col items-end max-w-[82%]">
-                        <div className="px-3 py-1.5 rounded-2xl rounded-tr-xs bg-[#005c4b] text-[#e9edef] text-xs font-sans font-medium shadow-xs">
-                          Haan ,Right
-                        </div>
-                        <span className="text-[8.5px] text-[#8696a0] font-sans mt-0.5 mr-1">
-                          You • 11:06 AM
-                        </span>
-                      </div>
-                      <div className="w-6 h-6 rounded-full bg-[#005c4b] border border-[#059669] flex items-center justify-center text-[11px] shrink-0 mt-1">
-                        🌸
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="font-sans text-xs text-[#fecdd3] pt-1 leading-relaxed">
-                    Siren permanently silenced! It was all just a little prank by Anuj! 😂🌷
-                  </p>
-
-                  {/* NOW AND ONLY NOW: The button to redirect to countdown card appears! */}
-                  <div className="flex flex-col gap-2.5 pt-2">
-                    <button
-                      onClick={() => {
-                        stopSiren();
-                        setShowPrankRevealModal(false);
-                        setShowHackerLayer(false);
-                      }}
-                      className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#10b981] via-[#059669] to-[#047857] hover:brightness-110 text-white font-sans font-bold text-sm shadow-[0_4px_24px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 hover:shadow-[0_6px_28px_rgba(16,185,129,0.55)]"
-                    >
-                      <span>🌷 Open Countdown Card</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-
-                    <a
-                      href={whatsappUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-2.5 px-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-[#fecdd3] font-sans font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5 text-[#22c55e]" />
-                      <span>Send Anuj a reaction on WhatsApp 😂</span>
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                /* ── ACTIVE GAME: GIVEN ONLY WHEN SHE TRIES TO BACK OR CLOSE TAB ── */
-                <div>
-                  {/* Animated Floating Emojis */}
-                  <div className="flex items-center justify-center gap-3 text-3xl sm:text-4xl mb-2 animate-bounce">
-                    <span>🙈</span>
-                    <span>🌷</span>
-                    <span>😂</span>
-                  </div>
-
-                  {/* Header Badge */}
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f43f5e]/20 border border-[#f43f5e]/40 text-[#fda4af] text-[11px] font-sans font-bold uppercase tracking-wider mb-2">
-                    <Sparkles className="w-3.5 h-3.5 text-[#fb7185]" />
-                    <span>Prank Caught! Tried to Exit?</span>
-                  </div>
-
-                  <h3 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#fff1f2] tracking-tight mb-1">
-                    WAIT WAIT WAIT! 😂
-                  </h3>
-
-                  <p className="font-sans text-sm sm:text-base font-bold text-[#fda4af] mb-1">
-                    It&apos;s just a little prank by Anuj! 🙈🌷
-                  </p>
-
-                  <p className="font-sans text-xs text-[#fecdd3]/90 leading-relaxed max-w-sm mx-auto mb-3">
-                    Did you actually try to close or go back?! 😭 Your phone is 100% safe...
-                    <span className="block font-bold text-white mt-0.5">
-                      BUT to stop this blaring siren &amp; reach the countdown card, solve this:
-                    </span>
-                  </p>
-
-                  {/* Question Card with Holographic Keys HUD */}
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-[#180816] border border-[#5c1c39] mb-3 text-left shadow-inner">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-mono font-bold text-[#f43f5e] uppercase tracking-wider flex items-center gap-1">
-                        <Radio className="w-3 h-3 animate-ping text-[#ef4444]" />
-                        SECURITY QUESTION:
-                      </span>
-
-                      {/* Holographic Keys Counter */}
-                      <div className="flex items-center gap-1.5 bg-black/60 px-2.5 py-1 rounded-full border border-[#ef4444]/40">
-                        <span className="text-[9.5px] font-mono font-bold text-[#fca5a5] flex items-center gap-0.5">
-                          <Shield className="w-3 h-3 text-[#f43f5e]" /> KEYS:
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {[1, 2].map((att) => {
-                            const active = att <= disarmAttemptsLeft;
-                            return (
-                              <span
-                                key={att}
-                                className={`px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold tracking-wider ${
-                                  active
-                                    ? "bg-[#ef4444]/30 text-[#fecaca] border border-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.8)] animate-pulse"
-                                    : "bg-black text-[#6b7280] border border-[#374151] line-through opacity-40"
-                                }`}
-                              >
-                                {active ? "🔑 ACTIVE" : "💥 LOST"}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="font-serif text-sm sm:text-base font-bold text-white mb-1">
-                      When did we talk for the first time? 💬
-                    </p>
-                    <p className="font-sans text-[11px] text-[#fda4af]/80 italic">
-                      Humne pehli baar kis date ko baat ki thi? (Sirf 2 attempts hai!)
-                    </p>
-                  </div>
-
-                  {/* Feedback Toast / Warning */}
-                  <AnimatePresence>
-                    {disarmMessage && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        className={`mb-3 p-2.5 rounded-xl border text-xs font-sans font-bold flex items-center gap-2 text-left leading-snug ${
-                          disarmAttemptsLeft === 0
-                            ? "bg-[#450a0a] border-[#ef4444] text-[#fecaca]"
-                            : disarmAttemptsLeft === 1
-                            ? "bg-[#451a03] border-[#f59e0b] text-[#fef3c7]"
-                            : "bg-[#18181b] border-[#52525b] text-[#e4e4e7]"
-                        }`}
-                      >
-                        <Flame className="w-4 h-4 shrink-0 text-[#f87171] animate-bounce" />
-                        <span>{disarmMessage}</span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* 4 Date Options Grid (Holographic Cyber Tiles) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3.5">
-                    {FIRST_TALK_OPTIONS.map((opt, idx) => {
-                      const isWrong = disarmWrongSelected.includes(opt.id);
-                      const letters = ["A", "B", "C", "D"];
-                      return (
-                        <button
-                          key={opt.id}
-                          disabled={isWrong || disarmAttemptsLeft <= 0}
-                          onClick={() => handleSelectFirstTalkDate(opt.id)}
-                          className={`group relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between active:scale-95 ${
-                            isWrong
-                              ? "bg-[#250b13]/80 border-[#ef4444]/45 opacity-55 cursor-not-allowed text-[#9ca3af]"
-                              : disarmAttemptsLeft <= 0
-                              ? "bg-[#140816]/60 border-[#3b172a] opacity-50 cursor-not-allowed text-[#6b7280]"
-                              : "bg-gradient-to-r from-[#210c22] via-[#2c112f] to-[#1c081e] hover:from-[#351538] hover:to-[#280c2b] border-[#5c1c39] hover:border-[#f43f5e] text-white shadow-sm hover:shadow-[0_0_18px_rgba(244,63,94,0.3)] hover:-translate-y-0.5"
-                          }`}
-                        >
-                          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className={`w-6.5 h-6.5 rounded-xl flex items-center justify-center text-xs font-bold font-mono transition-all ${
-                                isWrong
-                                  ? "bg-[#ef4444]/30 text-[#fca5a5] border border-[#ef4444]/50"
-                                  : "bg-[#f43f5e]/20 text-[#fda4af] border border-[#f43f5e]/40 group-hover:bg-[#f43f5e] group-hover:text-white group-hover:shadow-[0_0_10px_rgba(244,63,94,0.8)]"
-                              }`}
-                            >
-                              {letters[idx]}
-                            </span>
-                            <div>
-                              <div className="text-sm font-bold font-sans tracking-wide text-white group-hover:text-[#ffe4e6]">
-                                {opt.date}
-                              </div>
-                              <div className="text-[10px] text-[#9ca3af] font-mono">
-                                {opt.fullDate}
-                              </div>
-                            </div>
-                          </div>
-
-                          {isWrong ? (
-                            <span className="text-[10px] font-bold text-[#ef4444] flex items-center gap-1 font-mono bg-red-950/60 px-2 py-0.5 rounded-full border border-red-500/40">
-                              <X className="w-3 h-3" /> WRONG
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-mono text-[#fda4af]/60 group-hover:text-white transition-colors">
-                              SELECT &gt;
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* If 2 attempts failed (Lockout state with WhatsApp hint & countdown) */}
-                  {disarmAttemptsLeft <= 0 && (
-                    <div className="p-3.5 rounded-2xl bg-[#3f080e] border-2 border-[#ef4444] text-center mb-1">
-                      <p className="font-sans text-xs text-[#fca5a5] font-bold mb-2.5 leading-relaxed">
-                        🚨 2 failed attempts! Siren will NOT stop! How could you forget?! 😭
-                      </p>
-                      <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                        <a
-                          href="https://wa.me/918278710552?text=Anuj%20please%20siren%20band%20karo%20%F0%9F%98%AD%20Mujhe%20pehli%20baar%20baat%20karne%20ki%20date%20yaad%20nahi%20aa%20rahi%2C%20hint%20do!%20%F0%9F%98%82"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-bold font-sans flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span>Ask Anuj for a hint on WhatsApp 💬</span>
-                        </a>
-                        <div className="w-full sm:w-auto px-3 py-2 rounded-xl bg-black/40 border border-[#ef4444]/40 text-xs text-[#fca5a5] font-mono">
-                          Retry in: <strong className="text-white">{disarmCooldown}s</strong>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* NO OPTION TO REDIRECT TO COUNTDOWN WINDOW! NOTICE: ZERO REDIRECT BUTTONS HERE! */}
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
     </div>
   );
 }
