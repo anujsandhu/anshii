@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Sparkles, X, MessageCircleHeart } from "lucide-react";
+import {
+  Heart,
+  Sparkles,
+  X,
+  MessageCircleHeart,
+  Mic,
+  Play,
+  Pause,
+  RotateCcw,
+  Volume2,
+} from "lucide-react";
 
 interface LiveMessage {
   id: string;
@@ -10,6 +20,8 @@ interface LiveMessage {
   emojis: string[];
   sender: string;
   timestamp: number;
+  audioUrl?: string;
+  audioDuration?: number;
 }
 
 interface FloatingParticle {
@@ -60,6 +72,92 @@ export default function LiveMessageOverlay() {
   const processedMessageIdsRef = useRef<Set<string>>(new Set());
   const dismissTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // ── Voice note audio player state ──
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [isVoicePlaying, setIsVoicePlaying] = useState<boolean>(false);
+  const [voiceCurrentTime, setVoiceCurrentTime] = useState<number>(0);
+  const [voiceDuration, setVoiceDuration] = useState<number>(0);
+
+  const cleanupVoiceAudio = () => {
+    if (voiceAudioRef.current) {
+      voiceAudioRef.current.pause();
+      voiceAudioRef.current.src = "";
+      voiceAudioRef.current = null;
+    }
+    setIsVoicePlaying(false);
+    setVoiceCurrentTime(0);
+    setVoiceDuration(0);
+    window.dispatchEvent(new CustomEvent("anshii_restore_music"));
+  };
+
+  const handleDismiss = () => {
+    cleanupVoiceAudio();
+    setActiveMessage(null);
+  };
+
+  const playVoiceNote = (url: string, durationSec = 0) => {
+    try {
+      cleanupVoiceAudio();
+
+      const audio = new Audio(url);
+      voiceAudioRef.current = audio;
+      audio.volume = 1.0;
+
+      // Lower background music volume while Anuj speaks
+      window.dispatchEvent(new CustomEvent("anshii_duck_music"));
+
+      audio.onloadedmetadata = () => {
+        if (audio.duration && !isNaN(audio.duration)) {
+          setVoiceDuration(audio.duration);
+        } else if (durationSec > 0) {
+          setVoiceDuration(durationSec);
+        }
+      };
+
+      audio.ontimeupdate = () => {
+        setVoiceCurrentTime(audio.currentTime);
+      };
+
+      audio.onplay = () => {
+        setIsVoicePlaying(true);
+        window.dispatchEvent(new CustomEvent("anshii_duck_music"));
+      };
+
+      audio.onpause = () => {
+        setIsVoicePlaying(false);
+        window.dispatchEvent(new CustomEvent("anshii_restore_music"));
+      };
+
+      audio.onended = () => {
+        setIsVoicePlaying(false);
+        setVoiceCurrentTime(0);
+        window.dispatchEvent(new CustomEvent("anshii_restore_music"));
+      };
+
+      audio.play().catch((err) => {
+        console.warn("Auto-play voice note blocked by browser, waiting for tap:", err);
+      });
+    } catch (e) {
+      console.warn("Could not start voice note:", e);
+    }
+  };
+
+  const toggleVoicePlayback = () => {
+    const audio = voiceAudioRef.current;
+    if (!audio) {
+      if (activeMessage?.audioUrl) {
+        playVoiceNote(activeMessage.audioUrl, activeMessage.audioDuration || 0);
+      }
+      return;
+    }
+
+    if (audio.paused) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  };
+
   // Poll for incoming live messages every 1.4s
   useEffect(() => {
     let isFetching = false;
@@ -95,11 +193,20 @@ export default function LiveMessageOverlay() {
                 // Set active message toast
                 setActiveMessage(msg);
 
-                // Clear previous dismiss timer and set new one (7.5 seconds)
+                // If voice note attached, play audio automatically
+                if (msg.audioUrl) {
+                  playVoiceNote(msg.audioUrl, msg.audioDuration || 0);
+                }
+
+                // Voice note stays longer (duration + 8s) so she can listen and replay
+                const stayDuration = msg.audioUrl
+                  ? Math.max(12000, ((msg.audioDuration || 6) + 8) * 1000)
+                  : 7500;
+
                 if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
                 dismissTimerRef.current = setTimeout(() => {
-                  setActiveMessage(null);
-                }, 7500);
+                  handleDismiss();
+                }, stayDuration);
 
                 // Trigger celebratory floating emoji burst
                 const emojiPool =
@@ -148,8 +255,16 @@ export default function LiveMessageOverlay() {
     return () => {
       clearInterval(interval);
       if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+      cleanupVoiceAudio();
     };
   }, []);
+
+  const formatSecs = (sec: number) => {
+    const s = Math.floor(sec);
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${m}:${rem < 10 ? "0" : ""}${rem}`;
+  };
 
   return (
     <>
@@ -190,7 +305,7 @@ export default function LiveMessageOverlay() {
         ))}
       </div>
 
-      {/* ── 2. ROMANTIC SCRAPBOOK LIVE MESSAGE POPUP CARD ── */}
+      {/* ── 2. ROMANTIC SCRAPBOOK LIVE MESSAGE & VOICE POPUP CARD ── */}
       <div className="fixed top-6 left-0 right-0 z-[99999] pointer-events-none flex justify-center px-4">
         <AnimatePresence>
           {activeMessage && (
@@ -209,15 +324,19 @@ export default function LiveMessageOverlay() {
               <div className="flex items-center justify-between gap-2 mb-2.5">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-[#ffe4e6] flex items-center justify-center text-[#e11d48] shadow-xs">
-                    <MessageCircleHeart className="w-4 h-4 fill-[#f43f5e] text-[#f43f5e] animate-pulse" />
+                    {activeMessage.audioUrl ? (
+                      <Mic className="w-4 h-4 text-[#e11d48] animate-pulse" />
+                    ) : (
+                      <MessageCircleHeart className="w-4 h-4 fill-[#f43f5e] text-[#f43f5e] animate-pulse" />
+                    )}
                   </div>
                   <div>
                     <span className="text-xs font-serif font-bold text-[#881337] flex items-center gap-1.5">
-                      <span>Message from {activeMessage.sender}</span>
+                      <span>{activeMessage.audioUrl ? `Voice from ${activeMessage.sender}` : `Message from ${activeMessage.sender}`}</span>
                       <Sparkles className="w-3.5 h-3.5 text-[#fb7185] fill-[#fb7185]" />
                     </span>
                     <span className="text-[10px] font-mono text-[#be185d]/80 block">
-                      Live on your screen
+                      {activeMessage.audioUrl ? (isVoicePlaying ? "🎙️ Playing right now..." : "Click to play voice note") : "Live on your screen"}
                     </span>
                   </div>
                 </div>
@@ -225,7 +344,7 @@ export default function LiveMessageOverlay() {
                 {/* Dismiss Button */}
                 <button
                   type="button"
-                  onClick={() => setActiveMessage(null)}
+                  onClick={handleDismiss}
                   className="w-7 h-7 rounded-full bg-[#faf7f2] hover:bg-[#ffe4e6] text-[#8c7465] hover:text-[#881337] flex items-center justify-center transition-all cursor-pointer border border-[#ebdcd0]"
                   title="Close message"
                 >
@@ -233,8 +352,60 @@ export default function LiveMessageOverlay() {
                 </button>
               </div>
 
-              {/* Message Content */}
-              {activeMessage.text && (
+              {/* ── 🎙️ VOICE NOTE AUDIO PLAYER & SOUNDWAVE BUBBLE ── */}
+              {activeMessage.audioUrl && (
+                <div className="my-3 p-3.5 rounded-2xl bg-gradient-to-tr from-[#fff0f3] to-[#fdf2f8] border border-[#fbcfe8] flex items-center gap-3.5 shadow-xs">
+                  {/* Play / Pause Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={toggleVoicePlayback}
+                    className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#e11d48] to-[#f43f5e] hover:from-[#be185d] hover:to-[#e11d48] text-white flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
+                    title={isVoicePlaying ? "Pause voice" : "Play voice"}
+                  >
+                    {isVoicePlaying ? (
+                      <Pause className="w-5 h-5 fill-white text-white" />
+                    ) : (
+                      <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+                    )}
+                  </button>
+
+                  {/* Waveform Equalizer & Timing */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-xs font-serif font-bold text-[#881337] mb-1.5">
+                      <span className="flex items-center gap-1.5">
+                        <Volume2 className="w-3.5 h-3.5 text-[#e11d48]" />
+                        <span>{isVoicePlaying ? "Speaking to you..." : "Voice note received"}</span>
+                      </span>
+                      <span className="font-mono text-[10px] text-[#9f1239]">
+                        {formatSecs(voiceCurrentTime)} / {formatSecs(voiceDuration || activeMessage.audioDuration || 0)}
+                      </span>
+                    </div>
+
+                    {/* Animated Sound Wave Bars */}
+                    <div className="flex items-center gap-1 h-6">
+                      {[18, 45, 80, 50, 95, 75, 40, 85, 60, 90, 70, 35, 80, 100, 65, 45, 25].map((h, i) => (
+                        <motion.div
+                          key={i}
+                          animate={{
+                            height: isVoicePlaying
+                              ? [`${Math.max(4, h * 0.22)}px`, `${h * 0.25}px`, `${Math.max(4, h * 0.18)}px`]
+                              : "4px",
+                          }}
+                          transition={{
+                            duration: 0.35 + (i % 5) * 0.12,
+                            repeat: isVoicePlaying ? Infinity : 0,
+                            ease: "easeInOut",
+                          }}
+                          className="flex-1 bg-gradient-to-t from-[#e11d48] to-[#fda4af] rounded-full"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Message Content Text (if any) */}
+              {activeMessage.text && activeMessage.text !== "🎙️ Voice message from Anuj" && (
                 <p className="text-sm sm:text-base font-serif text-[#3f2e24] leading-relaxed my-2 pl-1 select-text">
                   {activeMessage.text}
                 </p>

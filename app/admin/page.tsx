@@ -47,6 +47,9 @@ import {
   Send,
   Smile,
   MessageSquare,
+  Mic,
+  MicOff,
+  Square,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -177,6 +180,19 @@ export default function AdminAnalyticsDashboard() {
   const [isSendingLiveMsg, setIsSendingLiveMsg] = useState<boolean>(false);
   const [liveMsgNotice, setLiveMsgNotice] = useState<string | null>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState<boolean>(false);
+
+  // ── Voice Dispatcher & Live Intercom State ──
+  const [isRecordingVoice, setIsRecordingVoice] = useState<boolean>(false);
+  const [voiceSeconds, setVoiceSeconds] = useState<number>(0);
+  const [recordedVoiceBlob, setRecordedVoiceBlob] = useState<Blob | null>(null);
+  const [recordedVoiceUrl, setRecordedVoiceUrl] = useState<string | null>(null);
+  const [isSendingVoice, setIsSendingVoice] = useState<boolean>(false);
+  const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
+  const [isLiveIntercomOn, setIsLiveIntercomOn] = useState<boolean>(false);
+  const voiceRecorderRef = useRef<MediaRecorder | null>(null);
+  const voiceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const voiceChunksRef = useRef<Blob[]>([]);
+  const intercomStreamRef = useRef<MediaStream | null>(null);
 
   // ── 1. Enable full scrolling on admin page ──
   useEffect(() => {
@@ -596,6 +612,160 @@ export default function AdminAnalyticsDashboard() {
       setLiveMsgNotice("Network hiccup sending message");
     } finally {
       setIsSendingLiveMsg(false);
+    }
+  };
+
+  // ── 4c. Voice Note Recording & Live Intercom Handlers ──
+  const startRecordingVoice = async () => {
+    try {
+      if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+        setVoiceNotice("Microphone not supported on this browser");
+        return;
+      }
+      setVoiceNotice(null);
+      setRecordedVoiceBlob(null);
+      if (recordedVoiceUrl) {
+        URL.revokeObjectURL(recordedVoiceUrl);
+        setRecordedVoiceUrl(null);
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      voiceChunksRef.current = [];
+
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/mp4")
+        ? "audio/mp4"
+        : "";
+
+      const options = mimeType ? { mimeType } : undefined;
+      const recorder = new MediaRecorder(stream, options);
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          voiceChunksRef.current.push(e.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const blob = new Blob(voiceChunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+        setRecordedVoiceBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setRecordedVoiceUrl(url);
+      };
+
+      recorder.start(100);
+      voiceRecorderRef.current = recorder;
+      setIsRecordingVoice(true);
+      setVoiceSeconds(0);
+
+      voiceTimerRef.current = setInterval(() => {
+        setVoiceSeconds((prev) => prev + 1);
+      }, 1000);
+    } catch (err: any) {
+      console.warn("Microphone access denied:", err);
+      setVoiceNotice("Mic access denied: " + (err?.message || "Please allow microphone"));
+    }
+  };
+
+  const stopRecordingVoice = () => {
+    if (voiceTimerRef.current) {
+      clearInterval(voiceTimerRef.current);
+      voiceTimerRef.current = null;
+    }
+    if (voiceRecorderRef.current && voiceRecorderRef.current.state === "recording") {
+      voiceRecorderRef.current.stop();
+    }
+    setIsRecordingVoice(false);
+  };
+
+  const cancelRecordingVoice = () => {
+    if (voiceTimerRef.current) {
+      clearInterval(voiceTimerRef.current);
+      voiceTimerRef.current = null;
+    }
+    if (voiceRecorderRef.current && voiceRecorderRef.current.state === "recording") {
+      voiceRecorderRef.current.stop();
+    }
+    setIsRecordingVoice(false);
+    setRecordedVoiceBlob(null);
+    if (recordedVoiceUrl) {
+      URL.revokeObjectURL(recordedVoiceUrl);
+      setRecordedVoiceUrl(null);
+    }
+    setVoiceSeconds(0);
+  };
+
+  const handleSendVoiceNote = async () => {
+    if (!recordedVoiceBlob) return;
+
+    setIsSendingVoice(true);
+    setVoiceNotice(null);
+
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(recordedVoiceBlob);
+      });
+      const base64Audio = await base64Promise;
+
+      const res = await fetch("/api/live-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          audioUrl: base64Audio,
+          audioDuration: voiceSeconds || 5,
+          text: liveMsgText.trim() || "🎙️ Voice message from Anuj",
+          emojis: ["🎙️", "💌", "💖", "✨"],
+          sender: "Anuj",
+          key: adminKey,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVoiceNotice("🎙️ Voice note delivered! Auto-playing on her screen with waveform ✨");
+        cancelRecordingVoice();
+        setTimeout(() => setVoiceNotice(null), 5000);
+      } else {
+        setVoiceNotice(data.error || "Failed to deliver voice note");
+      }
+    } catch (err: any) {
+      setVoiceNotice("Error sending voice note: " + (err?.message || ""));
+    } finally {
+      setIsSendingVoice(false);
+    }
+  };
+
+  const toggleLiveIntercom = async () => {
+    if (isLiveIntercomOn) {
+      if (intercomStreamRef.current) {
+        intercomStreamRef.current.getTracks().forEach((track) => track.stop());
+        intercomStreamRef.current = null;
+      }
+      setIsLiveIntercomOn(false);
+      setVoiceNotice("Live Intercom disconnected");
+      setTimeout(() => setVoiceNotice(null), 3000);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        intercomStreamRef.current = stream;
+
+        if (calleePeerRef.current) {
+          const audioTrack = stream.getAudioTracks()[0];
+          calleePeerRef.current.addTrack(audioTrack, stream);
+        }
+
+        setIsLiveIntercomOn(true);
+        setVoiceNotice("🔴 Live Intercom active! Speaking directly to her headphones.");
+      } catch (err: any) {
+        setVoiceNotice("Could not access mic for Intercom: " + (err?.message || ""));
+      }
     }
   };
 
@@ -1709,6 +1879,163 @@ export default function AdminAnalyticsDashboard() {
                       >
                         <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
                         <span>{liveMsgNotice}</span>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* ── 🎙️ VOICE TO ANSHIKA (VOICE NOTES & LIVE INTERCOM) ── */}
+                  <div className="p-4 rounded-2xl bg-[#faf7f2] border border-[#ebdcd0] shadow-2xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-[#fce7f3] flex items-center justify-center text-[#db2777]">
+                          <Mic className="w-3.5 h-3.5" />
+                        </div>
+                        <h4 className="text-xs font-sans font-bold text-[#3f2e24]">
+                          Send Your Voice to Anshika
+                        </h4>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isLiveIntercomOn ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-[#be185d] text-[10px] font-mono font-bold animate-pulse">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+                            Live Intercom ON
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-[#be185d]">
+                            Auto-plays on her screen ✨
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dual Action Grid: Live Walkie-Talkie & Recorded Voice Note */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* 1. Live Intercom Toggle */}
+                      <button
+                        type="button"
+                        onClick={toggleLiveIntercom}
+                        className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all cursor-pointer text-left ${
+                          isLiveIntercomOn
+                            ? "bg-rose-50 border-rose-300 text-[#be185d] shadow-sm ring-2 ring-rose-200"
+                            : "bg-white hover:bg-rose-50/50 border-[#ebdcd0] text-[#786457]"
+                        }`}
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                            isLiveIntercomOn ? "bg-rose-600 text-white animate-pulse" : "bg-[#f5ede4] text-[#8c7465]"
+                          }`}
+                        >
+                          {isLiveIntercomOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-sans font-bold leading-tight">
+                            {isLiveIntercomOn ? "Speaking Live (Click to Mute)" : "Live Intercom (Speak Now)"}
+                          </p>
+                          <p className="text-[10px] text-[#a89689] truncate">
+                            {isLiveIntercomOn ? "Streams live to her headphones" : "Direct WebRTC live audio"}
+                          </p>
+                        </div>
+                      </button>
+
+                      {/* 2. Voice Note Recorder Trigger */}
+                      {!isRecordingVoice && !recordedVoiceUrl && (
+                        <button
+                          type="button"
+                          onClick={startRecordingVoice}
+                          className="p-3 rounded-xl bg-white hover:bg-[#ffe4e6]/60 border border-[#ebdcd0] text-[#786457] hover:text-[#881337] flex items-center gap-2.5 transition-all cursor-pointer text-left shadow-2xs active:scale-95"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-[#ffe4e6] flex items-center justify-center text-[#e11d48] shrink-0">
+                            <Radio className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-sans font-bold leading-tight">
+                              Record Voice Note
+                            </p>
+                            <p className="text-[10px] text-[#a89689] truncate">
+                              Record, preview &amp; send audio clip
+                            </p>
+                          </div>
+                        </button>
+                      )}
+
+                      {/* Recording in progress */}
+                      {isRecordingVoice && (
+                        <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 flex items-center justify-between gap-2 shadow-inner">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-3 h-3 rounded-full bg-rose-600 animate-ping shrink-0" />
+                            <div>
+                              <span className="text-xs font-mono font-bold text-rose-700 block">
+                                Recording: {Math.floor(voiceSeconds / 60)}:{(voiceSeconds % 60).toString().padStart(2, "0")}
+                              </span>
+                              <span className="text-[10px] text-rose-600/80">Speak your message...</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={cancelRecordingVoice}
+                              className="px-2 py-1 rounded-lg bg-white border border-rose-200 text-rose-700 text-[11px] font-sans font-bold hover:bg-rose-100 cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={stopRecordingVoice}
+                              className="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[11px] font-sans font-bold hover:bg-rose-700 cursor-pointer flex items-center gap-1 shadow-xs"
+                            >
+                              <Square className="w-3 h-3 fill-white" />
+                              <span>Stop</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Recorded Voice Preview & Send */}
+                      {recordedVoiceUrl && !isRecordingVoice && (
+                        <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2 shadow-xs">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <audio src={recordedVoiceUrl} controls className="h-8 max-w-[130px] sm:max-w-[150px]" />
+                            <span className="text-[10px] font-mono font-bold text-emerald-800">
+                              {voiceSeconds}s
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={cancelRecordingVoice}
+                              disabled={isSendingVoice}
+                              className="p-1.5 rounded-lg bg-white border border-emerald-200 text-neutral-600 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                              title="Discard recording"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleSendVoiceNote}
+                              disabled={isSendingVoice}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-sans font-bold flex items-center gap-1 shadow-xs cursor-pointer disabled:opacity-50"
+                            >
+                              {isSendingVoice ? (
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Send className="w-3.5 h-3.5" />
+                              )}
+                              <span>Send</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Voice Delivery Notice Banner */}
+                    {voiceNotice && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 2 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center gap-2"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{voiceNotice}</span>
                       </motion.div>
                     )}
                   </div>

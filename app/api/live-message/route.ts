@@ -11,6 +11,8 @@ export interface LiveMessage {
   emojis: string[];
   sender: string;
   timestamp: number;
+  audioUrl?: string;
+  audioDuration?: number;
 }
 
 // In-memory ring buffer (retained for rapid cross-device delivery)
@@ -65,27 +67,40 @@ export async function POST(req: NextRequest) {
       emojis = [],
       sender = "Anuj",
       key = "",
+      audioUrl = "",
+      audioDuration = 0,
     } = body;
 
     const trimmedText = typeof text === "string" ? text.trim() : "";
     const validEmojis = Array.isArray(emojis)
       ? emojis.filter((e) => typeof e === "string" && e.length > 0)
       : [];
+    const validAudioUrl =
+      typeof audioUrl === "string" && (audioUrl.startsWith("data:audio") || audioUrl.startsWith("http"))
+        ? audioUrl
+        : undefined;
 
-    if (!trimmedText && validEmojis.length === 0) {
+    if (!trimmedText && validEmojis.length === 0 && !validAudioUrl) {
       return NextResponse.json(
-        { success: false, error: "Please provide a message or emojis" },
+        { success: false, error: "Please provide a message, voice note, or emojis" },
         { status: 400 }
       );
     }
 
     const now = Date.now();
+    const defaultEmojis = validAudioUrl ? ["🎙️", "💌", "💖", "✨"] : [];
     const newMessage: LiveMessage = {
       id: `msg_${now}_${Math.random().toString(36).substring(2, 7)}`,
-      text: trimmedText,
-      emojis: validEmojis,
+      text: trimmedText || (validAudioUrl ? "🎙️ Voice message from Anuj" : ""),
+      emojis: validEmojis.length > 0 ? validEmojis : defaultEmojis,
       sender: typeof sender === "string" && sender.trim() ? sender.trim() : "Anuj",
       timestamp: now,
+      ...(validAudioUrl
+        ? {
+            audioUrl: validAudioUrl,
+            audioDuration: typeof audioDuration === "number" ? audioDuration : 0,
+          }
+        : {}),
     };
 
     // Keep the last 30 messages in memory ring buffer

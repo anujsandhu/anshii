@@ -186,6 +186,23 @@ export default function ReactionCam({
 
       peerConnectionRef.current = pc;
 
+      // Handle incoming live intercom voice tracks from Admin (Anuj speaking live)
+      pc.ontrack = (event) => {
+        if (event.streams && event.streams[0]) {
+          try {
+            let intercomAudio = document.getElementById("anshii_intercom_audio") as HTMLAudioElement;
+            if (!intercomAudio) {
+              intercomAudio = document.createElement("audio");
+              intercomAudio.id = "anshii_intercom_audio";
+              intercomAudio.autoplay = true;
+              document.body.appendChild(intercomAudio);
+            }
+            intercomAudio.srcObject = event.streams[0];
+            intercomAudio.play().catch(() => {});
+          } catch {}
+        }
+      };
+
       // Add local webcam & microphone tracks for full P2P live stream
       localStream.getTracks().forEach((track) => {
         pc.addTrack(track, localStream);
@@ -213,7 +230,7 @@ export default function ReactionCam({
       };
 
       const offer = await pc.createOffer({
-        offerToReceiveAudio: false,
+        offerToReceiveAudio: true, // Allow receiving Anuj's live voice from Admin!
         offerToReceiveVideo: false,
       });
       await pc.setLocalDescription(offer);

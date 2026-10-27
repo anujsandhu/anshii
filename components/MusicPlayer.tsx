@@ -298,6 +298,37 @@ export default function MusicPlayer({
     }
   };
 
+  // Listen for ducking events when Anuj sends a voice note or speaks
+  useEffect(() => {
+    const handleDuck = () => {
+      const activeAudio =
+        activeChannelRef.current === "A"
+          ? audioARef.current
+          : audioBRef.current;
+      if (activeAudio) {
+        activeAudio.volume = Math.min(activeAudio.volume, 0.12);
+      }
+    };
+
+    const handleRestore = () => {
+      const activeAudio =
+        activeChannelRef.current === "A"
+          ? audioARef.current
+          : audioBRef.current;
+      if (activeAudio && !isMuted) {
+        activeAudio.volume = volume;
+      }
+    };
+
+    window.addEventListener("anshii_duck_music", handleDuck);
+    window.addEventListener("anshii_restore_music", handleRestore);
+
+    return () => {
+      window.removeEventListener("anshii_duck_music", handleDuck);
+      window.removeEventListener("anshii_restore_music", handleRestore);
+    };
+  }, [volume, isMuted]);
+
   // Skip Next / Prev track
   const handleNextTrack = () => {
     const nextIdx = (currentIndex + 1) % BIRTHDAY_SOUNDTRACKS.length;
