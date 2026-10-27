@@ -35,14 +35,12 @@ const CANDIDATE_MAP: Record<string, string[]> = {
     "/music/heeriye.mp3",
   ],
   kho_gaye_hum_kahan: [
-    "/music/Kho_Gaye_Hum_Kahan.mp3",
-    "/music/kho-gaye-hum-kahan.mp3",
     "/music/Sanjay_S_Yadav_Slickmusix_-_Kalank_Lofi_Reverb_(mp3.pm).mp3",
+    "/music/Kho_Gaye_Hum_Kahan.mp3",
   ],
   apna_bana_le: [
-    "/music/Apna_Bana_Le.mp3",
-    "/music/apna-bana-le.mp3",
     "/music/song.mp3",
+    "/music/Apna_Bana_Le.mp3",
   ],
   kalank: [
     "/music/Sanjay_S_Yadav_Slickmusix_-_Kalank_Lofi_Reverb_(mp3.pm).mp3",

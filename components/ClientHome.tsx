@@ -74,20 +74,20 @@ export default function ClientHome({
         return;
       }
 
-      // No explicit bypass URL parameter: strictly enforce the 28 Oct date lock countdown!
-      // Clear any persistent tester keys and old test answers so nobody gets early access or sees test gibberish.
-      localStorage.removeItem("anshii_tester_bypass");
-      localStorage.removeItem("anshii_user_role");
-      localStorage.removeItem("anshii_completed_frames");
-      localStorage.removeItem("anshii_madam_ji_answers");
-      localStorage.removeItem("anshii_madam_ji_keepsake_v2");
-      localStorage.removeItem("anshii_gift_snaps_v4");
-      localStorage.removeItem("anshii_gift_slots_v5");
-      localStorage.removeItem("anshii_wishes_key_v2");
-      sessionStorage.removeItem("anshii_tester_bypass");
-      sessionStorage.removeItem("anshii_user_role");
-      sessionStorage.removeItem("anshii_auth_session");
-      setIsLocked(initialIsLocked);
+      // No explicit bypass URL parameter:
+      if (initialIsLocked) {
+        // Date is locked (before 28 Oct): strictly enforce the countdown!
+        // Clear any persistent tester keys so nobody gets unauthorized early access.
+        localStorage.removeItem("anshii_tester_bypass");
+        localStorage.removeItem("anshii_user_role");
+        sessionStorage.removeItem("anshii_tester_bypass");
+        sessionStorage.removeItem("anshii_user_role");
+        sessionStorage.removeItem("anshii_auth_session");
+        setIsLocked(true);
+      } else {
+        // Date is unlocked (28 Oct birthday): keep user session and saved scrapbook progress intact
+        setIsLocked(false);
+      }
     } catch {}
   }, [initialIsLocked]);
 

@@ -21,7 +21,9 @@ export async function GET(req: NextRequest) {
       try {
         const doc = await db.collection(COLLECTION_NAME).doc(sessionId).get();
         if (doc.exists) {
-          return NextResponse.json({ success: true, answers: doc.data() });
+          const docData = doc.data();
+          const actualAnswers = docData?.answers || docData;
+          return NextResponse.json({ success: true, answers: actualAnswers });
         }
       } catch (dbErr) {
         console.warn("Firestore note fetch error, falling back to localStore:", dbErr);

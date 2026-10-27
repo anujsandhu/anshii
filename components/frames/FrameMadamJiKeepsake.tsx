@@ -103,22 +103,6 @@ export default function FrameMadamJiKeepsake({
 
   // Load existing answers on mount
   useEffect(() => {
-    // If not completed, always start fresh on Step 1 with empty answers (no old test gibberish)
-    if (!isCompleted) {
-      setShowSummary(false);
-      setCurrentStepIndex(0);
-      setAnswers({
-        memory: "",
-        bond: "",
-        futureMessage: "",
-        anythingSecret: "",
-      });
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch {}
-      return;
-    }
-
     try {
       const local = localStorage.getItem(STORAGE_KEY);
       if (local) {
@@ -128,9 +112,12 @@ export default function FrameMadamJiKeepsake({
         const allDone = QUESTIONS.every(
           (q) => Boolean(parsed[q.id]?.trim()?.length >= 2)
         );
-        if (allDone) {
+        if (allDone || isCompleted) {
           setShowSummary(true);
         }
+      } else if (!isCompleted) {
+        setShowSummary(false);
+        setCurrentStepIndex(0);
       }
     } catch {}
   }, [isCompleted]);

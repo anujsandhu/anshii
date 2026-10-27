@@ -45,8 +45,9 @@ export default function Frame7Final({ onReplay }: Frame7FinalProps) {
       fetch(`/api/madam-ji-note?sessionId=${encodeURIComponent(sessionId)}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data.success && data.answers?.answers) {
-            setAnswers(data.answers.answers);
+          if (data.success && data.answers) {
+            const actualAnswers = data.answers.answers || data.answers;
+            setAnswers(actualAnswers);
           }
         })
         .catch(() => {});
