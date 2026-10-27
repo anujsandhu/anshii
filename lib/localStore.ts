@@ -63,6 +63,7 @@ interface LocalStoreSchema {
   logins: LocalLogin[];
   notes: Record<string, any>;
   giftSnaps: Record<string, any>;
+  giftApprovals?: Record<string, boolean>;
   liveMonitor: {
     sessionId?: string;
     activeNow?: boolean;
@@ -127,6 +128,7 @@ function readStore(): LocalStoreSchema {
       logins: parsed.logins || [],
       notes: parsed.notes || {},
       giftSnaps: parsed.giftSnaps || {},
+      giftApprovals: parsed.giftApprovals || {},
       liveMonitor: parsed.liveMonitor || null,
     };
   } catch (err) {
@@ -137,6 +139,7 @@ function readStore(): LocalStoreSchema {
       logins: [],
       notes: {},
       giftSnaps: {},
+      giftApprovals: {},
       liveMonitor: null,
     };
   }
@@ -336,6 +339,28 @@ export function localGetGiftSnaps(): Record<string, any> {
 export function localDeleteGiftSnap(stepId: string) {
   const store = readStore();
   delete store.giftSnaps[stepId];
+  if (store.giftApprovals) {
+    delete store.giftApprovals[stepId];
+  }
+  writeStore(store);
+}
+
+// ── Gift Approvals (Live Video Verification by Admin) ────────────────────────
+export function localGetGiftApprovals(): Record<string, boolean> {
+  const store = readStore();
+  return store.giftApprovals || {};
+}
+
+export function localSaveGiftApproval(stepId: string, approved: boolean) {
+  const store = readStore();
+  if (!store.giftApprovals) store.giftApprovals = {};
+  store.giftApprovals[stepId] = approved;
+  writeStore(store);
+}
+
+export function localResetGiftApprovals() {
+  const store = readStore();
+  store.giftApprovals = {};
   writeStore(store);
 }
 
@@ -348,6 +373,7 @@ export function localResetAll() {
     logins: [],
     notes: {},
     giftSnaps: {},
+    giftApprovals: {},
     liveMonitor: null,
   };
   writeStore(cleanStore);

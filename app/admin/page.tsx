@@ -51,6 +51,7 @@ import {
   MicOff,
   Square,
   CameraOff,
+  Gift,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -207,6 +208,11 @@ export default function AdminAnalyticsDashboard() {
   isBroadcastingToHerRef.current = isBroadcastingToHer;
   const broadcastHeartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const canvasFrameRef = useRef<HTMLCanvasElement | null>(null);
+
+  // ── Gift Unboxing Live Approval State ──
+  const [giftApprovals, setGiftApprovals] = useState<Record<string, boolean>>({});
+  const [isUpdatingApproval, setIsUpdatingApproval] = useState<string | null>(null);
+  const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
 
   // ── 1. Enable full scrolling on admin page ──
   useEffect(() => {
@@ -477,6 +483,7 @@ export default function AdminAnalyticsDashboard() {
 
     const interval = setInterval(() => {
       fetchDashboardData(adminKey, false);
+      fetchGiftApprovals();
       if (selectedSessionId) {
         refreshSessionTimeline(selectedSessionId, adminKey, false);
       }
@@ -503,6 +510,7 @@ export default function AdminAnalyticsDashboard() {
         setSessions(sessList);
         setRecentUploads(data.recentUploads || []);
         setLastSyncTime(new Date());
+        fetchGiftApprovals();
 
         // Default-select the first session if none is selected
         if (!selectedSessionId && sessList.length > 0) {
@@ -1008,6 +1016,102 @@ export default function AdminAnalyticsDashboard() {
       setIsMyMicActive(audioTrack.enabled);
       setBroadcastNotice(audioTrack.enabled ? "🎙️ Mic unmuted" : "🔇 Mic muted");
       setTimeout(() => setBroadcastNotice(null), 2500);
+    }
+  };
+
+  // ── Gift Unboxing Live Approval Handlers ──
+  const fetchGiftApprovals = async () => {
+    try {
+      const res = await fetch("/api/gift-snaps", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.approvals) {
+          setGiftApprovals(data.approvals);
+        }
+      }
+    } catch {}
+  };
+
+  const handleApproveGiftStep = async (stepId: string, approve: boolean = true) => {
+    setIsUpdatingApproval(stepId);
+    try {
+      setGiftApprovals((prev) => ({ ...prev, [stepId]: approve }));
+      const res = await fetch("/api/gift-snaps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: approve ? "approve" : "unapprove",
+          stepId,
+          key: adminKey,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setGiftApprovals(data.approvals || {});
+        setApprovalNotice(
+          approve
+            ? `✅ ${stepId.replace("step-", "Step ")} approved! Her next step is unlocked.`
+            : `Revoked approval for ${stepId.replace("step-", "Step ")}.`
+        );
+        setTimeout(() => setApprovalNotice(null), 3500);
+      } else {
+        setApprovalNotice("Approval failed: " + (data.error || ""));
+      }
+    } catch (err: any) {
+      setApprovalNotice("Network error: " + (err?.message || ""));
+    } finally {
+      setIsUpdatingApproval(null);
+    }
+  };
+
+  const handleApproveAllGiftSteps = async () => {
+    setIsUpdatingApproval("all");
+    try {
+      setGiftApprovals({ "step-1": true, "step-2": true, "step-3": true, "step-4": true });
+      const res = await fetch("/api/gift-snaps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "approve_all",
+          key: adminKey,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setGiftApprovals(data.approvals || {});
+        setApprovalNotice("🎉 All 4 gift steps approved! Chapter 4 unlocked & complete.");
+        setTimeout(() => setApprovalNotice(null), 4000);
+      }
+    } catch (err: any) {
+      setApprovalNotice("Failed to approve all: " + (err?.message || ""));
+    } finally {
+      setIsUpdatingApproval(null);
+    }
+  };
+
+  const handleResetGiftApprovals = async () => {
+    if (!window.confirm("Reset all gift unboxing approvals back to Step 1?")) return;
+    setIsUpdatingApproval("reset");
+    try {
+      setGiftApprovals({});
+      const res = await fetch("/api/gift-snaps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reset_approvals",
+          key: adminKey,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setGiftApprovals({});
+        setApprovalNotice("All gift approvals reset back to zero.");
+        setTimeout(() => setApprovalNotice(null), 3000);
+      }
+    } catch (err: any) {
+      setApprovalNotice("Reset error: " + (err?.message || ""));
+    } finally {
+      setIsUpdatingApproval(null);
     }
   };
 
@@ -2000,6 +2104,151 @@ export default function AdminAnalyticsDashboard() {
                       </div>
                     </div>
                   )}
+
+                  {/* ── 🎁 GIFT UNBOXING LIVE APPROVAL BY ADMIN ── */}
+                  <div className="p-4 rounded-2xl bg-[#faf7f2] border border-[#ebdcd0] shadow-2xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700">
+                          <Gift className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-sans font-bold text-[#3f2e24]">
+                            Gift Unboxing Live Approval
+                          </h4>
+                          <p className="text-[10px] text-[#8c7465]">
+                            Watch her live video above — click Approve as she shows each gift to unlock her next step
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                          {Object.values(giftApprovals).filter(Boolean).length} / 4 Approved
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 4 Steps Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {[
+                        { id: "step-1", icon: "📦", title: "Step 1: Closed Box", prompt: "Shows sealed box to camera" },
+                        { id: "step-2", icon: "✨", title: "Step 2: Wear Bracelet", prompt: "Opens box & shows bracelet on wrist" },
+                        { id: "step-3", icon: "🧸", title: "Step 3: Fluffy Teddy", prompt: "Finds 2nd gift & shows teddy bear" },
+                        { id: "step-4", icon: "💖", title: "Step 4: All Gifts & Smile", prompt: "Holds all gifts together with big smile" },
+                      ].map((step, idx) => {
+                        const isApproved = Boolean(giftApprovals[step.id]);
+                        const isPrevApproved = idx === 0 || Boolean(giftApprovals[`step-${idx}`]);
+                        const isBusy = isUpdatingApproval === step.id;
+
+                        return (
+                          <div
+                            key={step.id}
+                            className={`p-3 rounded-xl border transition-all flex flex-col justify-between gap-2 ${
+                              isApproved
+                                ? "bg-emerald-50/90 border-emerald-300 shadow-2xs"
+                                : isPrevApproved
+                                ? "bg-white border-amber-300 shadow-2xs ring-1 ring-amber-200"
+                                : "bg-[#f5ede4]/40 border-[#ebdcd0] opacity-65"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl shrink-0">{step.icon}</span>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-sans font-bold text-[#3f2e24] leading-tight truncate">
+                                    {step.title}
+                                  </p>
+                                  <p className="text-[10px] text-[#8c7465] leading-tight mt-0.5">
+                                    {step.prompt}
+                                  </p>
+                                </div>
+                              </div>
+                              {isApproved ? (
+                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-mono font-bold shrink-0">
+                                  <Check className="w-2.5 h-2.5" />
+                                  Approved
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-mono font-bold shrink-0 border border-amber-200">
+                                  Pending
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-black/5">
+                              {!isApproved ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleApproveGiftStep(step.id, true)}
+                                  disabled={isBusy}
+                                  className="w-full py-1.5 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[11px] font-sans font-bold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 transition-all"
+                                >
+                                  {isBusy ? (
+                                    <RefreshCw className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Check className="w-3 h-3" />
+                                  )}
+                                  <span>Approve {step.title.split(":")[0]}</span>
+                                </button>
+                              ) : (
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-[10px] text-emerald-800 font-mono font-semibold flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                    Verified on Live Cam
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApproveGiftStep(step.id, false)}
+                                    disabled={isBusy}
+                                    className="text-[10px] text-neutral-400 hover:text-rose-600 underline cursor-pointer"
+                                  >
+                                    Revoke
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Quick action footer */}
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#ebdcd0]/60">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleApproveAllGiftSteps}
+                          disabled={isUpdatingApproval !== null}
+                          className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-50 border border-amber-300 text-amber-900 text-[10px] font-mono font-bold cursor-pointer transition-colors shadow-2xs"
+                        >
+                          Approve All 4 Steps ✨
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleResetGiftApprovals}
+                          disabled={isUpdatingApproval !== null}
+                          className="px-2.5 py-1 rounded-lg bg-white hover:bg-rose-50 border border-[#ebdcd0] text-[#8c7465] hover:text-rose-700 text-[10px] font-mono font-bold cursor-pointer transition-colors"
+                        >
+                          Reset Approvals 🔄
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-[#a89689] font-mono">
+                        Instant live unlock on her window &lt;1.5s
+                      </span>
+                    </div>
+
+                    {/* Approval Notice */}
+                    {approvalNotice && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 2 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-[11px] font-mono font-bold text-amber-900 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-2"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                        <span>{approvalNotice}</span>
+                      </motion.div>
+                    )}
+                  </div>
 
                   {/* ── 💬 LIVE MESSAGE & FLOATING EMOJI DISPATCHER ── */}
                   <div className="p-4 rounded-2xl bg-[#faf7f2] border border-[#ebdcd0] shadow-2xs space-y-3">

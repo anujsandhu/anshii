@@ -218,14 +218,24 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
     } catch {}
   }, [completedFrames, isTester]);
 
-  // On mount, also check if Firestore has all 4 gift snaps uploaded
+  // On mount, also check if Firestore has all 4 gift snaps or approvals
   useEffect(() => {
     fetch("/api/gift-snaps")
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.snaps) {
+        if (data.success) {
           const presetKeys = ["step-1", "step-2", "step-3", "step-4"];
-          if (presetKeys.every((k) => Boolean(data.snaps[k]?.imageUrl))) {
+          const isDone =
+            data.allApproved ||
+            presetKeys.every(
+              (k) =>
+                Boolean(
+                  data.approvals?.[k] ||
+                    data.snaps?.[k]?.approved ||
+                    data.snaps?.[k]?.imageUrl
+                )
+            );
+          if (isDone) {
             setCompletedFrames((prev) => {
               if (prev.has(3)) return prev;
               const next = new Set(prev);

@@ -52,6 +52,8 @@ export interface UploadedGiftSnap {
   cloudinaryUrl?: string;
   caption: string;
   timestamp: string;
+  approved?: boolean;
+  verifiedOnLiveVideo?: boolean;
   sharedToWhatsApp?: boolean;
   syncStatus?: "local" | "syncing" | "synced";
 }
@@ -176,6 +178,7 @@ export default function FrameGiftSnaps({
   const [slots, setSlots] = useState<GiftSlot[]>(DEFAULT_GIFT_SLOTS);
   const [activeSlotIndex, setActiveSlotIndex] = useState(0);
   const [snaps, setSnaps] = useState<Record<string, UploadedGiftSnap>>({});
+  const [approvals, setApprovals] = useState<Record<string, boolean>>({});
   const [taskDone, setTaskDone] = useState(isCompleted);
   const [isEditingCaption, setIsEditingCaption] = useState(false);
   const [captionInput, setCaptionInput] = useState("");
@@ -192,11 +195,23 @@ export default function FrameGiftSnaps({
   const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check if a slot is unlocked based on previous step having an uploaded photo
+  // Check if a slot is unlocked based on previous step having approval or uploaded photo
   const isSlotUnlocked = (index: number): boolean => {
     if (index === 0) return true;
     const prevSlot = slots[index - 1];
-    return Boolean(snaps[prevSlot.id]?.imageUrl);
+    return Boolean(
+      approvals[prevSlot.id] ||
+      snaps[prevSlot.id]?.approved ||
+      snaps[prevSlot.id]?.imageUrl
+    );
+  };
+
+  const isSlotApproved = (slotId: string): boolean => {
+    return Boolean(
+      approvals[slotId] ||
+      snaps[slotId]?.approved ||
+      snaps[slotId]?.imageUrl
+    );
   };
 
   useEffect(() => {
@@ -263,6 +278,41 @@ export default function FrameGiftSnaps({
   useEffect(() => {
     onCompleteTaskRef.current = onCompleteTask;
   });
+
+  // 3. Live Polling for Admin Approval every 1.5s while on gifts frame
+  useEffect(() => {
+    let isFetching = false;
+    const pollApprovals = async () => {
+      if (isFetching) return;
+      isFetching = true;
+      try {
+        const res = await fetch("/api/gift-snaps", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success) {
+            if (data.approvals) {
+              setApprovals(data.approvals);
+            }
+            if (data.snaps && Object.keys(data.snaps).length > 0) {
+              setSnaps((prev) => ({ ...prev, ...data.snaps }));
+            }
+            if (data.allApproved) {
+              setTaskDone(true);
+              if (onCompleteTaskRef.current) {
+                onCompleteTaskRef.current();
+              }
+            }
+          }
+        }
+      } catch {} finally {
+        isFetching = false;
+      }
+    };
+
+    pollApprovals();
+    const interval = setInterval(pollApprovals, 1500);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (isCompleted) {
@@ -667,14 +717,42 @@ export default function FrameGiftSnaps({
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
+
+                    {/* Quick navigation when approved */}
+                    {activeSlotIndex < slots.length - 1 ? (
+                      <motion.button
+                        type="button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setActiveSlotIndex(activeSlotIndex + 1);
+                          setIsEditingCaption(false);
+                        }}
+                        className="w-full mt-2.5 py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-sans font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span>Approved! Next Step</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        type="button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={onNext}
+                        className="w-full mt-2.5 py-2 px-3 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-sans font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span>All Gifts Unboxed! Next Chapter</span>
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </motion.button>
+                    )}
                   </div>
                 </div>
               ) : (
-                /* ── EMPTY SCRAPBOOK UPLOAD PLACEHOLDER ── */
-                <div className="w-full max-w-[300px] sm:max-w-[330px] p-6 sm:p-7 rounded-3xl bg-[#fffdfa] border-2 border-dashed border-[#e2d5c5] shadow-[0_16px_45px_-8px_rgba(80,50,30,0.14)] flex flex-col items-center text-center relative overflow-hidden">
+                /* ── STEP AWAITING ANUJ'S LIVE APPROVAL ── */
+                <div className="w-full max-w-[300px] sm:max-w-[330px] p-5 sm:p-6 rounded-3xl bg-[#fffdfa] border-2 border-dashed border-[#e2d5c5] shadow-[0_16px_45px_-8px_rgba(80,50,30,0.14)] flex flex-col items-center text-center relative overflow-hidden">
                   <div className={currentSlot.tapeClass} />
 
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#fef3c7] via-[#fff0f3] to-[#f0fdf4] border border-[#fde68a] flex items-center justify-center text-2xl mb-2 shadow-inner animate-soft-pulse mt-1">
+                  <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#fef3c7] via-[#fff0f3] to-[#f0fdf4] border border-[#fde68a] flex items-center justify-center text-2xl mb-1.5 shadow-inner animate-soft-pulse mt-1">
                     {currentSlot.icon}
                   </div>
 
@@ -688,26 +766,30 @@ export default function FrameGiftSnaps({
                     {currentSlot.prompt}
                   </p>
 
-                  <motion.button
+                  {/* Live Video Sharing Approval Box */}
+                  <div className="w-full p-3 rounded-2xl bg-rose-50/90 border border-rose-200 flex flex-col items-center gap-1.5 mb-2.5 shadow-inner">
+                    <div className="flex items-center gap-1.5 text-[#be185d] text-xs font-sans font-bold">
+                      <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
+                      <span>Show to Anuj on Live Video</span>
+                    </div>
+                    <p className="text-[10px] text-[#8c7465] font-sans">
+                      Anuj is watching your camera live! Hold this gift up to your camera for him to verify.
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-rose-700 bg-white px-2.5 py-0.5 rounded-full border border-rose-200 shadow-2xs">
+                      ⏳ Awaiting Anuj&apos;s Approval...
+                    </span>
+                  </div>
+
+                  {/* Optional Photo Upload */}
+                  <button
                     type="button"
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
                     disabled={isUploading}
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer btn-cute disabled:opacity-50"
+                    className="text-[11px] font-sans font-medium text-[#8c7465] hover:text-[#be185d] underline flex items-center gap-1 cursor-pointer transition-colors"
                   >
-                    {isUploading ? (
-                      <>
-                        <RotateCw className="w-4 h-4 animate-spin" />
-                        <span>{uploadStatus || "Processing Photo..."}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="w-4 h-4" />
-                        <span>Upload Photo</span>
-                      </>
-                    )}
-                  </motion.button>
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>{isUploading ? "Uploading..." : "Snap a keepsake photo? (Optional)"}</span>
+                  </button>
                 </div>
               )}
             </motion.div>
@@ -752,7 +834,7 @@ export default function FrameGiftSnaps({
           {/* 4 Milestones Cards (2x2 Grid) */}
           <div className="grid grid-cols-2 gap-2 my-2">
             {slots.map((slot, idx) => {
-              const isFilled = Boolean(snaps[slot.id]?.imageUrl);
+              const isFilled = isSlotApproved(slot.id);
               const isActive = activeSlotIndex === idx;
               const isUnlocked = isSlotUnlocked(idx);
 
