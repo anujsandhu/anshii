@@ -50,6 +50,7 @@ import {
   Mic,
   MicOff,
   Square,
+  CameraOff,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -193,6 +194,19 @@ export default function AdminAnalyticsDashboard() {
   const voiceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const voiceChunksRef = useRef<Blob[]>([]);
   const intercomStreamRef = useRef<MediaStream | null>(null);
+
+  // ── Anuj's Live Camera & Voice Stream State (Preview & Broadcast) ──
+  const [isMyCamActive, setIsMyCamActive] = useState<boolean>(false);
+  const [isMyMicActive, setIsMyMicActive] = useState<boolean>(true);
+  const [isBroadcastingToHer, setIsBroadcastingToHer] = useState<boolean>(false);
+  const [broadcastNotice, setBroadcastNotice] = useState<string | null>(null);
+
+  const myStreamRef = useRef<MediaStream | null>(null);
+  const myCamPreviewRef = useRef<HTMLVideoElement | null>(null);
+  const isBroadcastingToHerRef = useRef<boolean>(false);
+  isBroadcastingToHerRef.current = isBroadcastingToHer;
+  const broadcastHeartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  const canvasFrameRef = useRef<HTMLCanvasElement | null>(null);
 
   // ── 1. Enable full scrolling on admin page ──
   useEffect(() => {
@@ -387,6 +401,15 @@ export default function AdminAnalyticsDashboard() {
             }
           }
 
+          // If Anuj is broadcasting his cam/voice, add his tracks to pc before creating answer
+          if (myStreamRef.current && isBroadcastingToHerRef.current) {
+            myStreamRef.current.getTracks().forEach((track) => {
+              try {
+                pc.addTrack(track, myStreamRef.current!);
+              } catch {}
+            });
+          }
+
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
 
@@ -417,6 +440,14 @@ export default function AdminAnalyticsDashboard() {
       if (calleePeerRef.current) {
         calleePeerRef.current.close();
         calleePeerRef.current = null;
+      }
+      if (broadcastHeartbeatRef.current) {
+        clearInterval(broadcastHeartbeatRef.current);
+        broadcastHeartbeatRef.current = null;
+      }
+      if (myStreamRef.current) {
+        myStreamRef.current.getTracks().forEach((track) => track.stop());
+        myStreamRef.current = null;
       }
       setWebRtcConnected(false);
       setWebRtcStream(null);
@@ -767,6 +798,163 @@ export default function AdminAnalyticsDashboard() {
         setVoiceNotice("Could not access mic for Intercom: " + (err?.message || ""));
       }
     }
+  };
+
+  // ── Anuj Live Camera & Voice Handlers (Preview & Stream to Her) ──
+  const toggleMyCamPreview = async () => {
+    if (isMyCamActive) {
+      if (isBroadcastingToHer) {
+        await stopCamBroadcast();
+      }
+      if (myStreamRef.current) {
+        myStreamRef.current.getTracks().forEach((track) => track.stop());
+        myStreamRef.current = null;
+      }
+      if (myCamPreviewRef.current) {
+        myCamPreviewRef.current.srcObject = null;
+      }
+      setIsMyCamActive(false);
+      setBroadcastNotice("Camera preview turned off");
+      setTimeout(() => setBroadcastNotice(null), 2500);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480, frameRate: 30 },
+          audio: true,
+        });
+        myStreamRef.current = stream;
+        setIsMyCamActive(true);
+        setIsMyMicActive(true);
+        if (myCamPreviewRef.current) {
+          myCamPreviewRef.current.srcObject = stream;
+          myCamPreviewRef.current.play().catch(() => {});
+        }
+        setBroadcastNotice("📷 Camera ready! Self preview active.");
+        setTimeout(() => setBroadcastNotice(null), 3000);
+      } catch (err: any) {
+        setBroadcastNotice("Camera permission denied: " + (err?.message || ""));
+      }
+    }
+  };
+
+  const toggleMyMic = () => {
+    if (!myStreamRef.current) return;
+    const audioTrack = myStreamRef.current.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = !audioTrack.enabled;
+      setIsMyMicActive(audioTrack.enabled);
+      setBroadcastNotice(audioTrack.enabled ? "🎙️ Mic unmuted" : "🔇 Mic muted");
+      setTimeout(() => setBroadcastNotice(null), 2500);
+    }
+  };
+
+  const startCamBroadcast = async () => {
+    try {
+      let stream = myStreamRef.current;
+      if (!stream || !stream.active) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480, frameRate: 30 },
+          audio: true,
+        });
+        myStreamRef.current = stream;
+        setIsMyCamActive(true);
+        setIsMyMicActive(true);
+        if (myCamPreviewRef.current) {
+          myCamPreviewRef.current.srcObject = stream;
+          myCamPreviewRef.current.play().catch(() => {});
+        }
+      }
+
+      // Add tracks to callee peer connection
+      if (calleePeerRef.current && stream) {
+        const senders = calleePeerRef.current.getSenders();
+        stream.getTracks().forEach((track) => {
+          try {
+            const existingSender = senders.find((s) => s.track && s.track.kind === track.kind);
+            if (existingSender) {
+              existingSender.replaceTrack(track);
+            } else {
+              calleePeerRef.current!.addTrack(track, stream!);
+            }
+          } catch {}
+        });
+      }
+
+      // Signal renegotiation so her browser immediately sends fresh offer and connects
+      fetch("/api/webrtc-signal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "request_offer",
+          role: "admin",
+        }),
+      }).catch(() => {});
+
+      setIsBroadcastingToHer(true);
+      isBroadcastingToHerRef.current = true;
+      setBroadcastNotice("🔴 Live stream active! Popping up on the side of her window ✨");
+
+      // Start turbo frame capture & heartbeat loop
+      if (broadcastHeartbeatRef.current) clearInterval(broadcastHeartbeatRef.current);
+
+      const sendHeartbeatAndFrame = async () => {
+        let frameBase64: string | null = null;
+        if (myCamPreviewRef.current && canvasFrameRef.current) {
+          try {
+            const video = myCamPreviewRef.current;
+            const canvas = canvasFrameRef.current;
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+              canvas.width = 320;
+              canvas.height = 240;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                ctx.drawImage(video, 0, 0, 320, 240);
+                frameBase64 = canvas.toDataURL("image/jpeg", 0.55);
+              }
+            }
+          } catch {}
+        }
+
+        await fetch("/api/live-broadcast", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            isBroadcasting: true,
+            hasVideo: true,
+            hasAudio: isMyMicActive,
+            liveFrame: frameBase64,
+            key: adminKey,
+          }),
+        }).catch(() => {});
+      };
+
+      sendHeartbeatAndFrame();
+      broadcastHeartbeatRef.current = setInterval(sendHeartbeatAndFrame, 350);
+    } catch (err: any) {
+      console.warn("Could not start cam broadcast:", err);
+      setBroadcastNotice("Could not access camera/mic: " + (err?.message || "Check permissions"));
+    }
+  };
+
+  const stopCamBroadcast = async () => {
+    if (broadcastHeartbeatRef.current) {
+      clearInterval(broadcastHeartbeatRef.current);
+      broadcastHeartbeatRef.current = null;
+    }
+
+    setIsBroadcastingToHer(false);
+    isBroadcastingToHerRef.current = false;
+    setBroadcastNotice("Live stream stopped. Bubble closed on her window.");
+    setTimeout(() => setBroadcastNotice(null), 3500);
+
+    await fetch("/api/live-broadcast", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        isBroadcasting: false,
+        key: adminKey,
+      }),
+    }).catch(() => {});
   };
 
   // ── 5. Authentication Handlers ──
@@ -2036,6 +2224,205 @@ export default function AdminAnalyticsDashboard() {
                       >
                         <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                         <span>{voiceNotice}</span>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* ── 📹 MY CAMERA & VOICE BROADCAST (PREVIEW & STREAM TO HER) ── */}
+                  <div className="p-4 rounded-2xl bg-[#faf7f2] border border-[#ebdcd0] shadow-2xs space-y-3">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600">
+                          <Video className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-sans font-bold text-[#3f2e24]">
+                            My Camera &amp; Live Video Stream
+                          </h4>
+                          <p className="text-[10px] text-[#8c7465]">
+                            Preview yourself and share live video &amp; voice to her window
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isBroadcastingToHer ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-mono font-bold animate-pulse shadow-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                            BROADCASTING LIVE
+                          </span>
+                        ) : isMyCamActive ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Camera Ready (Preview)
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-[#be185d]">
+                            Small side popup on her screen ✨
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Main Grid: Preview Window (Left) + Stream Controls (Right) */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 bg-white p-3 rounded-xl border border-[#ebdcd0]">
+                      {/* Left (5 cols): Local Preview Box */}
+                      <div className="md:col-span-5 flex flex-col gap-1.5">
+                        <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-neutral-950 border border-neutral-800 flex items-center justify-center shadow-inner group">
+                          {/* Mirrored Local Webcam Video */}
+                          <video
+                            ref={myCamPreviewRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${
+                              isMyCamActive ? "opacity-100" : "opacity-0 absolute"
+                            }`}
+                          />
+
+                          {/* Offline Placeholder */}
+                          {!isMyCamActive && (
+                            <div className="flex flex-col items-center justify-center p-3 text-center">
+                              <CameraOff className="w-6 h-6 text-neutral-600 mb-1" />
+                              <span className="text-[11px] font-sans font-medium text-neutral-400">
+                                Camera is off
+                              </span>
+                              <button
+                                type="button"
+                                onClick={toggleMyCamPreview}
+                                className="mt-2 px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-[10px] font-mono font-bold transition-all cursor-pointer"
+                              >
+                                Turn On Preview
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Status badges over preview */}
+                          {isMyCamActive && (
+                            <div className="absolute top-2 left-2 flex items-center gap-1">
+                              <span className="bg-black/80 backdrop-blur-sm text-[9px] font-mono font-bold text-emerald-300 px-2 py-0.5 rounded-md border border-white/10 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                YOU (SELF PREVIEW)
+                              </span>
+                            </div>
+                          )}
+
+                          {isBroadcastingToHer && (
+                            <div className="absolute bottom-2 inset-x-2 bg-rose-600/90 backdrop-blur-sm text-white text-[9px] font-mono font-bold px-2 py-1 rounded-md text-center flex items-center justify-center gap-1.5 border border-white/20">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                              LIVE ON HER SCREEN
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Hidden canvas for turbo frame fallback capture */}
+                        <canvas ref={canvasFrameRef} className="hidden" />
+
+                        {/* Mic Status Indicator under preview */}
+                        <div className="flex items-center justify-between text-[10px] px-1 text-[#8c7465]">
+                          <span>Self-view (mirrored)</span>
+                          <span className={isMyMicActive ? "text-emerald-700 font-bold" : "text-neutral-500"}>
+                            {isMyMicActive ? "🎙️ Mic Unmuted" : "🔇 Mic Muted"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right (7 cols): Controls & Broadcast Actions */}
+                      <div className="md:col-span-7 flex flex-col justify-between gap-2.5">
+                        {/* Toggles */}
+                        <div className="space-y-2">
+                          <p className="text-[11px] font-sans text-[#786457]">
+                            Turn on your camera to preview yourself, then hit broadcast. Your video will smoothly pop up as a <strong>small rectangle on the side of her window</strong> without blocking her scrapbook.
+                          </p>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            {/* Cam Toggle */}
+                            <button
+                              type="button"
+                              onClick={toggleMyCamPreview}
+                              className={`p-2.5 rounded-xl border flex items-center gap-2 text-left transition-all cursor-pointer ${
+                                isMyCamActive
+                                  ? "bg-emerald-50 border-emerald-300 text-emerald-800 shadow-2xs"
+                                  : "bg-white hover:bg-neutral-50 border-[#ebdcd0] text-[#786457]"
+                              }`}
+                            >
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                                isMyCamActive ? "bg-emerald-600 text-white" : "bg-[#f5ede4] text-[#8c7465]"
+                              }`}>
+                                {isMyCamActive ? <Camera className="w-3.5 h-3.5" /> : <CameraOff className="w-3.5 h-3.5" />}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-sans font-bold leading-tight truncate">
+                                  {isMyCamActive ? "Cam On" : "Turn On Cam"}
+                                </p>
+                                <p className="text-[9px] text-[#a89689] truncate">
+                                  {isMyCamActive ? "Click to disable" : "Preview webcam"}
+                                </p>
+                              </div>
+                            </button>
+
+                            {/* Mic Toggle */}
+                            <button
+                              type="button"
+                              onClick={toggleMyMic}
+                              disabled={!isMyCamActive}
+                              className={`p-2.5 rounded-xl border flex items-center gap-2 text-left transition-all cursor-pointer disabled:opacity-50 ${
+                                isMyMicActive && isMyCamActive
+                                  ? "bg-rose-50 border-rose-300 text-[#be185d] shadow-2xs"
+                                  : "bg-white hover:bg-neutral-50 border-[#ebdcd0] text-[#786457]"
+                              }`}
+                            >
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                                isMyMicActive && isMyCamActive ? "bg-rose-600 text-white" : "bg-[#f5ede4] text-[#8c7465]"
+                              }`}>
+                                {isMyMicActive ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-sans font-bold leading-tight truncate">
+                                  {isMyMicActive ? "Mic On" : "Mic Muted"}
+                                </p>
+                                <p className="text-[9px] text-[#a89689] truncate">
+                                  {isMyMicActive ? "Voice streaming" : "Click to unmute"}
+                                </p>
+                              </div>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Main Broadcast Trigger Button */}
+                        <div>
+                          {!isBroadcastingToHer ? (
+                            <button
+                              type="button"
+                              onClick={startCamBroadcast}
+                              className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white text-xs font-sans font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-98"
+                            >
+                              <Radio className="w-4 h-4 animate-pulse" />
+                              <span>Share My Cam &amp; Voice to Her Window</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={stopCamBroadcast}
+                              className="w-full py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-black text-rose-300 border border-rose-500/40 text-xs font-sans font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-98"
+                            >
+                              <Square className="w-3.5 h-3.5 fill-rose-400" />
+                              <span>Stop Sharing Cam (Close Bubble)</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status Notice */}
+                    {broadcastNotice && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 2 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-[11px] font-mono font-bold text-rose-700 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-xl flex items-center gap-2"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                        <span>{broadcastNotice}</span>
                       </motion.div>
                     )}
                   </div>

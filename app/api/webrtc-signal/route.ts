@@ -10,6 +10,7 @@ interface SignalState {
   answer: any | null;
   callerCandidates: any[];
   adminCandidates: any[];
+  requestOffer?: boolean;
   updatedAt: number;
 }
 
@@ -18,6 +19,7 @@ let inMemorySignal: SignalState = {
   answer: null,
   callerCandidates: [],
   adminCandidates: [],
+  requestOffer: false,
   updatedAt: 0,
 };
 
@@ -50,6 +52,7 @@ export async function GET(req: NextRequest) {
     answer: state.answer,
     callerCandidates: state.callerCandidates,
     adminCandidates: state.adminCandidates,
+    requestOffer: Boolean(state.requestOffer),
     updatedAt: state.updatedAt,
   });
 }
@@ -59,7 +62,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const {
-      type, // "offer" | "answer" | "candidate" | "reset"
+      type, // "offer" | "answer" | "candidate" | "reset" | "request_offer"
       role, // "caller" (her device) | "admin" (your device)
       sdp,
       candidate,
@@ -67,12 +70,23 @@ export async function POST(req: NextRequest) {
 
     const now = Date.now();
 
+    if (type === "request_offer") {
+      inMemorySignal.requestOffer = true;
+      inMemorySignal.offer = null;
+      inMemorySignal.answer = null;
+      inMemorySignal.callerCandidates = [];
+      inMemorySignal.adminCandidates = [];
+      inMemorySignal.updatedAt = now;
+      return NextResponse.json({ success: true, requestOffer: true });
+    }
+
     if (type === "reset") {
       inMemorySignal = {
         offer: null,
         answer: null,
         callerCandidates: [],
         adminCandidates: [],
+        requestOffer: false,
         updatedAt: now,
       };
       return NextResponse.json({ success: true, reset: true });
@@ -83,6 +97,7 @@ export async function POST(req: NextRequest) {
       inMemorySignal.callerCandidates = [];
       inMemorySignal.answer = null;
       inMemorySignal.adminCandidates = [];
+      inMemorySignal.requestOffer = false;
       inMemorySignal.updatedAt = now;
     } else if (type === "answer" && sdp) {
       inMemorySignal.answer = sdp;

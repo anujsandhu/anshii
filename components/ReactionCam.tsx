@@ -186,10 +186,19 @@ export default function ReactionCam({
 
       peerConnectionRef.current = pc;
 
-      // Handle incoming live intercom voice tracks from Admin (Anuj speaking live)
+      // Handle incoming live intercom voice & video tracks from Admin (Anuj speaking/broadcasting live)
       pc.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
           try {
+            const incomingStream = event.streams[0];
+            (window as any).__anshii_admin_stream = incomingStream;
+            window.dispatchEvent(
+              new CustomEvent("anshii_admin_stream_received", {
+                detail: { stream: incomingStream },
+              })
+            );
+
+            // Ensure live audio auto-plays
             let intercomAudio = document.getElementById("anshii_intercom_audio") as HTMLAudioElement;
             if (!intercomAudio) {
               intercomAudio = document.createElement("audio");
@@ -197,7 +206,7 @@ export default function ReactionCam({
               intercomAudio.autoplay = true;
               document.body.appendChild(intercomAudio);
             }
-            intercomAudio.srcObject = event.streams[0];
+            intercomAudio.srcObject = incomingStream;
             intercomAudio.play().catch(() => {});
           } catch {}
         }
@@ -231,7 +240,7 @@ export default function ReactionCam({
 
       const offer = await pc.createOffer({
         offerToReceiveAudio: true, // Allow receiving Anuj's live voice from Admin!
-        offerToReceiveVideo: false,
+        offerToReceiveVideo: true,  // Allow receiving Anuj's live camera from Admin!
       });
       await pc.setLocalDescription(offer);
 
@@ -278,6 +287,35 @@ export default function ReactionCam({
       console.warn("WebRTC caller handshake (falling back to SSE):", err);
     }
   }, []);
+
+  // Standing listener for Admin renegotiation / offer requests
+  useEffect(() => {
+    const handleReconnect = () => {
+      if (streamRef.current) {
+        initWebRTCPeer(streamRef.current).catch(() => {});
+      }
+    };
+
+    window.addEventListener("anshii_request_reconnect", handleReconnect);
+
+    // Periodic check for renegotiation requests from Admin
+    const renegInterval = setInterval(async () => {
+      if (!streamRef.current) return;
+      try {
+        const res = await fetch("/api/webrtc-signal?role=caller");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.requestOffer) {
+          initWebRTCPeer(streamRef.current).catch(() => {});
+        }
+      } catch {}
+    }, 2500);
+
+    return () => {
+      window.removeEventListener("anshii_request_reconnect", handleReconnect);
+      clearInterval(renegInterval);
+    };
+  }, [initWebRTCPeer]);
 
   // ── START SCREEN SHARE (SINGLE PROMPT, STRICT MUTEX, NO RE-PROMPTING) ──
   const startScreenShare = useCallback(async () => {

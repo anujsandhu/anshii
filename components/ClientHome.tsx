@@ -8,6 +8,7 @@ import SecretGiftGate from "@/components/SecretGiftGate";
 import BirthdayDateLock from "@/components/BirthdayDateLock";
 import ScreenSizeGate from "@/components/ScreenSizeGate";
 import LiveMessageOverlay from "@/components/LiveMessageOverlay";
+import AdminLiveCamBubble from "@/components/AdminLiveCamBubble";
 import { initAnalytics } from "@/lib/analyticsClient";
 
 const ReactionCam = dynamic(() => import("@/components/ReactionCam"), {
@@ -140,6 +141,9 @@ export default function ClientHome({
 
         {/* Real-Time Live Message & Floating Emoji Overlay */}
         <LiveMessageOverlay />
+
+        {/* Small floating rectangle video previewer on the side of her window when Anuj streams his cam */}
+        <AdminLiveCamBubble />
 
         {/* FIRST LAYER: Birthday Countdown Lock until 28 October 2026 */}
         {isLocked ? (
