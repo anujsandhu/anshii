@@ -773,95 +773,44 @@ export default function AdminAnalyticsDashboard() {
     }
   };
 
-  const toggleLiveIntercom = async () => {
-    if (isLiveIntercomOn) {
-      if (intercomStreamRef.current) {
-        intercomStreamRef.current.getTracks().forEach((track) => track.stop());
-        intercomStreamRef.current = null;
-      }
-      setIsLiveIntercomOn(false);
-      setVoiceNotice("Live Intercom disconnected");
-      setTimeout(() => setVoiceNotice(null), 3000);
-    } else {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        intercomStreamRef.current = stream;
-
-        if (calleePeerRef.current) {
-          const audioTrack = stream.getAudioTracks()[0];
-          calleePeerRef.current.addTrack(audioTrack, stream);
-        }
-
-        setIsLiveIntercomOn(true);
-        setVoiceNotice("🔴 Live Intercom active! Speaking directly to her headphones.");
-      } catch (err: any) {
-        setVoiceNotice("Could not access mic for Intercom: " + (err?.message || ""));
-      }
-    }
-  };
-
-  // ── Anuj Live Camera & Voice Handlers (Preview & Stream to Her) ──
-  const toggleMyCamPreview = async () => {
-    if (isMyCamActive) {
-      if (isBroadcastingToHer) {
-        await stopCamBroadcast();
-      }
-      if (myStreamRef.current) {
-        myStreamRef.current.getTracks().forEach((track) => track.stop());
-        myStreamRef.current = null;
-      }
-      if (myCamPreviewRef.current) {
-        myCamPreviewRef.current.srcObject = null;
-      }
-      setIsMyCamActive(false);
-      setBroadcastNotice("Camera preview turned off");
-      setTimeout(() => setBroadcastNotice(null), 2500);
-    } else {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480, frameRate: 30 },
-          audio: true,
-        });
-        myStreamRef.current = stream;
-        setIsMyCamActive(true);
-        setIsMyMicActive(true);
-        if (myCamPreviewRef.current) {
-          myCamPreviewRef.current.srcObject = stream;
-          myCamPreviewRef.current.play().catch(() => {});
-        }
-        setBroadcastNotice("📷 Camera ready! Self preview active.");
-        setTimeout(() => setBroadcastNotice(null), 3000);
-      } catch (err: any) {
-        setBroadcastNotice("Camera permission denied: " + (err?.message || ""));
-      }
-    }
-  };
-
-  const toggleMyMic = () => {
-    if (!myStreamRef.current) return;
-    const audioTrack = myStreamRef.current.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      setIsMyMicActive(audioTrack.enabled);
-      setBroadcastNotice(audioTrack.enabled ? "🎙️ Mic unmuted" : "🔇 Mic muted");
-      setTimeout(() => setBroadcastNotice(null), 2500);
-    }
-  };
-
-  const startCamBroadcast = async () => {
+  // ── Unified Live Broadcast & Voice Intercom Handlers (Video & Voice-Only) ──
+  const startBroadcast = async (withVideo: boolean = true) => {
     try {
       let stream = myStreamRef.current;
-      if (!stream || !stream.active) {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480, frameRate: 30 },
-          audio: true,
-        });
-        myStreamRef.current = stream;
+
+      if (withVideo) {
+        if (!stream || !stream.active || stream.getVideoTracks().length === 0) {
+          if (stream) {
+            stream.getTracks().forEach((t) => t.stop());
+          }
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480, frameRate: 30 },
+            audio: true,
+          });
+          myStreamRef.current = stream;
+        }
         setIsMyCamActive(true);
         setIsMyMicActive(true);
         if (myCamPreviewRef.current) {
           myCamPreviewRef.current.srcObject = stream;
           myCamPreviewRef.current.play().catch(() => {});
+        }
+      } else {
+        // Voice Only: no camera requested or needed
+        if (!stream || !stream.active || stream.getAudioTracks().length === 0) {
+          if (stream) {
+            stream.getTracks().forEach((t) => t.stop());
+          }
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: false,
+          });
+          myStreamRef.current = stream;
+        }
+        setIsMyCamActive(false);
+        setIsMyMicActive(true);
+        if (myCamPreviewRef.current) {
+          myCamPreviewRef.current.srcObject = null;
         }
       }
 
@@ -892,14 +841,26 @@ export default function AdminAnalyticsDashboard() {
 
       setIsBroadcastingToHer(true);
       isBroadcastingToHerRef.current = true;
-      setBroadcastNotice("🔴 Live stream active! Popping up on the side of her window ✨");
+      setIsLiveIntercomOn(true);
+      setBroadcastNotice(
+        withVideo
+          ? "🔴 Live Cam & Voice broadcasting to her window!"
+          : "🎙️ Live Voice broadcasting to her window (no video)!"
+      );
 
-      // Start turbo frame capture & heartbeat loop
+      // Start turbo frame capture (if video) & heartbeat loop
       if (broadcastHeartbeatRef.current) clearInterval(broadcastHeartbeatRef.current);
 
       const sendHeartbeatAndFrame = async () => {
         let frameBase64: string | null = null;
-        if (myCamPreviewRef.current && canvasFrameRef.current) {
+        const currentCamActive = Boolean(
+          myStreamRef.current &&
+          myStreamRef.current.getVideoTracks().length > 0 &&
+          myStreamRef.current.getVideoTracks()[0].readyState === "live" &&
+          myStreamRef.current.getVideoTracks()[0].enabled
+        );
+
+        if (currentCamActive && myCamPreviewRef.current && canvasFrameRef.current) {
           try {
             const video = myCamPreviewRef.current;
             const canvas = canvasFrameRef.current;
@@ -920,7 +881,7 @@ export default function AdminAnalyticsDashboard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             isBroadcasting: true,
-            hasVideo: true,
+            hasVideo: currentCamActive,
             hasAudio: isMyMicActive,
             liveFrame: frameBase64,
             key: adminKey,
@@ -931,12 +892,12 @@ export default function AdminAnalyticsDashboard() {
       sendHeartbeatAndFrame();
       broadcastHeartbeatRef.current = setInterval(sendHeartbeatAndFrame, 350);
     } catch (err: any) {
-      console.warn("Could not start cam broadcast:", err);
-      setBroadcastNotice("Could not access camera/mic: " + (err?.message || "Check permissions"));
+      console.warn("Could not start broadcast:", err);
+      setBroadcastNotice("Could not access microphone: " + (err?.message || "Check permissions"));
     }
   };
 
-  const stopCamBroadcast = async () => {
+  const stopBroadcast = async () => {
     if (broadcastHeartbeatRef.current) {
       clearInterval(broadcastHeartbeatRef.current);
       broadcastHeartbeatRef.current = null;
@@ -944,6 +905,7 @@ export default function AdminAnalyticsDashboard() {
 
     setIsBroadcastingToHer(false);
     isBroadcastingToHerRef.current = false;
+    setIsLiveIntercomOn(false);
     setBroadcastNotice("Live stream stopped. Bubble closed on her window.");
     setTimeout(() => setBroadcastNotice(null), 3500);
 
@@ -955,6 +917,98 @@ export default function AdminAnalyticsDashboard() {
         key: adminKey,
       }),
     }).catch(() => {});
+  };
+
+  const toggleLiveIntercom = async () => {
+    if (isBroadcastingToHer || isLiveIntercomOn) {
+      await stopBroadcast();
+      setVoiceNotice("Live Intercom stopped");
+      setTimeout(() => setVoiceNotice(null), 2500);
+    } else {
+      await startBroadcast(false); // Voice only!
+      setVoiceNotice("🔴 Live Intercom active! Speaking directly to her headphones.");
+    }
+  };
+
+  const toggleMyCamPreview = async () => {
+    if (isMyCamActive) {
+      // Turn off camera: if broadcasting, keep audio alive in voice-only mode!
+      if (myStreamRef.current) {
+        myStreamRef.current.getVideoTracks().forEach((track) => {
+          track.stop();
+          myStreamRef.current?.removeTrack(track);
+        });
+      }
+      if (myCamPreviewRef.current) {
+        myCamPreviewRef.current.srcObject = null;
+      }
+      setIsMyCamActive(false);
+
+      if (isBroadcastingToHer) {
+        setBroadcastNotice("Switched to Voice Only mode (Cam off)");
+      } else {
+        setBroadcastNotice("Camera preview off");
+      }
+      setTimeout(() => setBroadcastNotice(null), 2500);
+    } else {
+      // Turn on camera
+      try {
+        const videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480, frameRate: 30 },
+          audio: !myStreamRef.current || myStreamRef.current.getAudioTracks().length === 0,
+        });
+
+        if (!myStreamRef.current) {
+          myStreamRef.current = videoStream;
+        } else {
+          videoStream.getVideoTracks().forEach((track) => {
+            myStreamRef.current!.addTrack(track);
+          });
+        }
+
+        setIsMyCamActive(true);
+        if (myCamPreviewRef.current) {
+          myCamPreviewRef.current.srcObject = myStreamRef.current;
+          myCamPreviewRef.current.play().catch(() => {});
+        }
+
+        // If broadcasting, add video track to peer connection & trigger re-offer
+        if (isBroadcastingToHer && calleePeerRef.current) {
+          const videoTrack = myStreamRef.current.getVideoTracks()[0];
+          if (videoTrack) {
+            const senders = calleePeerRef.current.getSenders();
+            const existingSender = senders.find((s) => s.track && s.track.kind === "video");
+            if (existingSender) {
+              existingSender.replaceTrack(videoTrack);
+            } else {
+              calleePeerRef.current.addTrack(videoTrack, myStreamRef.current);
+            }
+          }
+          fetch("/api/webrtc-signal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "request_offer", role: "admin" }),
+          }).catch(() => {});
+          setBroadcastNotice("🔴 Cam activated! Streaming video & voice to her.");
+        } else {
+          setBroadcastNotice("📷 Camera ready! Self preview active.");
+        }
+        setTimeout(() => setBroadcastNotice(null), 3000);
+      } catch (err: any) {
+        setBroadcastNotice("Camera permission denied: " + (err?.message || ""));
+      }
+    }
+  };
+
+  const toggleMyMic = () => {
+    if (!myStreamRef.current) return;
+    const audioTrack = myStreamRef.current.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = !audioTrack.enabled;
+      setIsMyMicActive(audioTrack.enabled);
+      setBroadcastNotice(audioTrack.enabled ? "🎙️ Mic unmuted" : "🔇 Mic muted");
+      setTimeout(() => setBroadcastNotice(null), 2500);
+    }
   };
 
   // ── 5. Authentication Handlers ──
@@ -2249,7 +2303,7 @@ export default function AdminAnalyticsDashboard() {
                         {isBroadcastingToHer ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-mono font-bold animate-pulse shadow-xs">
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                            BROADCASTING LIVE
+                            {isMyCamActive ? "BROADCASTING CAM & VOICE" : "BROADCASTING VOICE ONLY"}
                           </span>
                         ) : isMyCamActive ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
@@ -2310,7 +2364,7 @@ export default function AdminAnalyticsDashboard() {
                           {isBroadcastingToHer && (
                             <div className="absolute bottom-2 inset-x-2 bg-rose-600/90 backdrop-blur-sm text-white text-[9px] font-mono font-bold px-2 py-1 rounded-md text-center flex items-center justify-center gap-1.5 border border-white/20">
                               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                              LIVE ON HER SCREEN
+                              {isMyCamActive ? "LIVE CAM & VOICE" : "LIVE VOICE (NO VIDEO)"}
                             </div>
                           )}
                         </div>
@@ -2332,7 +2386,7 @@ export default function AdminAnalyticsDashboard() {
                         {/* Toggles */}
                         <div className="space-y-2">
                           <p className="text-[11px] font-sans text-[#786457]">
-                            Turn on your camera to preview yourself, then hit broadcast. Your video will smoothly pop up as a <strong>small rectangle on the side of her window</strong> without blocking her scrapbook.
+                            Share your <strong>live video &amp; voice</strong> or stream <strong>voice only</strong> without camera. A small rectangle or glowing soundwave card pops up smoothly on the side of her window.
                           </p>
 
                           <div className="grid grid-cols-2 gap-2">
@@ -2356,7 +2410,7 @@ export default function AdminAnalyticsDashboard() {
                                   {isMyCamActive ? "Cam On" : "Turn On Cam"}
                                 </p>
                                 <p className="text-[9px] text-[#a89689] truncate">
-                                  {isMyCamActive ? "Click to disable" : "Preview webcam"}
+                                  {isMyCamActive ? "Click to turn off" : "Preview webcam"}
                                 </p>
                               </div>
                             </button>
@@ -2365,15 +2419,15 @@ export default function AdminAnalyticsDashboard() {
                             <button
                               type="button"
                               onClick={toggleMyMic}
-                              disabled={!isMyCamActive}
+                              disabled={!myStreamRef.current}
                               className={`p-2.5 rounded-xl border flex items-center gap-2 text-left transition-all cursor-pointer disabled:opacity-50 ${
-                                isMyMicActive && isMyCamActive
+                                isMyMicActive && myStreamRef.current
                                   ? "bg-rose-50 border-rose-300 text-[#be185d] shadow-2xs"
                                   : "bg-white hover:bg-neutral-50 border-[#ebdcd0] text-[#786457]"
                               }`}
                             >
                               <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                                isMyMicActive && isMyCamActive ? "bg-rose-600 text-white" : "bg-[#f5ede4] text-[#8c7465]"
+                                isMyMicActive && myStreamRef.current ? "bg-rose-600 text-white" : "bg-[#f5ede4] text-[#8c7465]"
                               }`}>
                                 {isMyMicActive ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
                               </div>
@@ -2389,25 +2443,35 @@ export default function AdminAnalyticsDashboard() {
                           </div>
                         </div>
 
-                        {/* Main Broadcast Trigger Button */}
+                        {/* Main Broadcast Trigger Buttons */}
                         <div>
                           {!isBroadcastingToHer ? (
-                            <button
-                              type="button"
-                              onClick={startCamBroadcast}
-                              className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white text-xs font-sans font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-98"
-                            >
-                              <Radio className="w-4 h-4 animate-pulse" />
-                              <span>Share My Cam &amp; Voice to Her Window</span>
-                            </button>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => startBroadcast(true)}
+                                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white text-xs font-sans font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-98"
+                              >
+                                <Radio className="w-4 h-4 animate-pulse" />
+                                <span>Share Cam &amp; Voice</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => startBroadcast(false)}
+                                className="py-2.5 px-3 rounded-xl bg-white hover:bg-rose-50/80 border border-rose-300 text-[#be185d] text-xs font-sans font-bold flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer active:scale-98"
+                              >
+                                <Mic className="w-4 h-4 text-rose-600" />
+                                <span>Stream Voice Only</span>
+                              </button>
+                            </div>
                           ) : (
                             <button
                               type="button"
-                              onClick={stopCamBroadcast}
+                              onClick={stopBroadcast}
                               className="w-full py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-black text-rose-300 border border-rose-500/40 text-xs font-sans font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-98"
                             >
                               <Square className="w-3.5 h-3.5 fill-rose-400" />
-                              <span>Stop Sharing Cam (Close Bubble)</span>
+                              <span>Stop Live Broadcast ({isMyCamActive ? "Cam & Voice" : "Voice Only"})</span>
                             </button>
                           )}
                         </div>
