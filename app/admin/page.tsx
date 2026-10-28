@@ -474,8 +474,13 @@ export default function AdminAnalyticsDashboard() {
 
   // ── 2. Check cached admin key on mount ──
   useEffect(() => {
-    const cachedKey = sessionStorage.getItem("anshii_admin_key");
+    const cachedKey = sessionStorage.getItem("anshii_admin_key")?.trim();
     if (cachedKey) {
+      if (cachedKey.toLowerCase() !== "@ritusandhu1983") {
+        sessionStorage.removeItem("anshii_admin_key");
+        setAdminKey("");
+        return;
+      }
       setAdminKey(cachedKey);
       fetchDashboardData(cachedKey, true);
     }
@@ -505,6 +510,12 @@ export default function AdminAnalyticsDashboard() {
       const res = await fetch(
         `/api/analytics/admin?key=${encodeURIComponent(key)}`
       );
+      if (res.status === 401) {
+        setAdminKey("");
+        sessionStorage.removeItem("anshii_admin_key");
+        setAuthError("Unauthorized. Please login with @Ritusandhu1983.");
+        return;
+      }
       const data = await res.json();
       if (res.ok && data.success) {
         setStats(data.stats);
@@ -544,6 +555,11 @@ export default function AdminAnalyticsDashboard() {
           key
         )}&sessionId=${encodeURIComponent(sess.sessionId)}`
       );
+      if (res.status === 401) {
+        setAdminKey("");
+        sessionStorage.removeItem("anshii_admin_key");
+        return;
+      }
       if (!res.ok) return;
       const data = await res.json();
       if (data && data.success) {
@@ -574,6 +590,11 @@ export default function AdminAnalyticsDashboard() {
           key
         )}&sessionId=${encodeURIComponent(sessionId)}`
       );
+      if (res.status === 401) {
+        setAdminKey("");
+        sessionStorage.removeItem("anshii_admin_key");
+        return;
+      }
       if (!res.ok) return;
       const data = await res.json();
       if (data && data.success) {
