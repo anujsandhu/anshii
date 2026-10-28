@@ -93,22 +93,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const timestamp = Date.now();
     const cleanSession = (sessionId || "session").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const cleanSlide = (slide || "reaction").replace(/[^a-zA-Z0-9_-]/g, "_");
     const ext = file.type.includes("mp4") ? "mp4" : "webm";
 
-    // ── 1. GUARANTEED DISK BACKUP: Permanently save full video to server disk ──
-    // Even if Cloudinary or external network experiences issues, the recording is 100% safe!
+    // ── 1. GUARANTEED DISK BACKUP: Permanently save EVERY unique reaction video to server disk ──
+    // Every video clip recorded at every chapter and checkpoint is kept forever without being overwritten!
     const recordingsDir = getRecordingsDir();
-    const localDiskFileName = `full_reaction_${cleanSession}.${ext}`;
+    const localDiskFileName = `reaction_${cleanSession}_${cleanSlide}_${timestamp}.${ext}`;
     const localDiskFilePath = path.join(recordingsDir, localDiskFileName);
     try {
       fs.writeFileSync(localDiskFilePath, buffer);
+      // Also update latest contiguous pointer file for the session
+      const latestPointerPath = path.join(recordingsDir, `full_reaction_${cleanSession}.${ext}`);
+      try {
+        fs.writeFileSync(latestPointerPath, buffer);
+      } catch {}
     } catch (diskErr) {
       console.warn("Could not write to local disk backup:", diskErr);
     }
 
-    // ── 2. Cloudinary Permanent Master Upload ──
-    const customPublicId = `full_reaction_${cleanSession}`;
+    // ── 2. Cloudinary Permanent Upload (Unique public ID ensures NO past video is ever overwritten) ──
+    const customPublicId = `anshii_reaction_${cleanSession}_${cleanSlide}_${timestamp}`;
     let cloudRes: CloudinaryUploadResult | null = null;
     let cloudinaryError: string | null = null;
 
@@ -124,14 +131,17 @@ export async function POST(req: NextRequest) {
     }
 
     const uploadedAt = new Date().toISOString();
-    const uploadId = `vid_full_reaction_${cleanSession}`;
+    const uploadId = `vid_${cleanSession}_${cleanSlide}_${timestamp}`;
     const durationSeconds = Math.round(durationMs / 1000);
-    const finalCaption = `Full Reaction Video (${Math.floor(durationSeconds / 60)}m ${durationSeconds % 60}s) - Entry to Exit`;
+    const mins = Math.floor(durationSeconds / 60);
+    const secs = durationSeconds % 60;
+    const readableSlide = slide.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const finalCaption = `Reaction Video [${readableSlide}] (${mins}m ${secs < 10 ? "0" : ""}${secs}s)`;
 
     // Local stream fallback URL if Cloudinary was unreachable due to network outage
-    const localStreamUrl = `/api/reaction-recording?sessionId=${encodeURIComponent(cleanSession)}&stream=true`;
+    const localStreamUrl = `/api/reaction-recording?fileName=${encodeURIComponent(localDiskFileName)}&sessionId=${encodeURIComponent(cleanSession)}&stream=true`;
     const finalVideoUrl = cloudRes?.url || localStreamUrl;
-    const finalPublicId = cloudRes?.publicId || `local_disk_${cleanSession}`;
+    const finalPublicId = cloudRes?.publicId || `local_disk_${cleanSession}_${timestamp}`;
 
     // ── 3. Persist to Local Store (Guaranteed Zero Data Loss) ──
     try {
@@ -154,6 +164,7 @@ export async function POST(req: NextRequest) {
           durationMs,
           isContiguous: true,
           localDiskPath: localDiskFilePath,
+          localFileName: localDiskFileName,
           cloudinarySynced: Boolean(cloudRes?.url),
           cloudinaryError,
         },
@@ -202,7 +213,7 @@ export async function POST(req: NextRequest) {
           { merge: true }
         );
 
-        // Update session document with master contiguous video
+        // Update session document with master contiguous video and increment uploadCount
         if (sessionId && sessionId !== "anonymous") {
           await db
             .collection("sessions")
@@ -215,6 +226,7 @@ export async function POST(req: NextRequest) {
                 latestLiveVideo: finalVideoUrl,
                 contiguousVideoUrl: finalVideoUrl,
                 contiguousDurationMs: durationMs,
+                uploadCount: FieldValue.increment(1),
               },
               { merge: true }
             );
@@ -250,39 +262,71 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+    const fileName = searchParams.get("fileName");
     const sessionId = searchParams.get("sessionId");
     const stream = searchParams.get("stream") === "true";
     const download = searchParams.get("download") === "true";
 
-    if (!sessionId) {
+    if (!fileName && !sessionId) {
       return NextResponse.json(
-        { success: false, error: "Missing sessionId parameter." },
+        { success: false, error: "Missing fileName or sessionId parameter." },
         { status: 400 }
       );
     }
 
-    const cleanSession = sessionId.replace(/[^a-zA-Z0-9_-]/g, "_");
-    const searchDirs = [getRecordingsDir(), path.join(process.cwd(), "data", "recordings")];
+    const cleanSession = (sessionId || "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const primaryDir = path.join(process.cwd(), "data", "recordings");
+    const fallbackDir = path.join(os.tmpdir(), "anshii_recordings");
+    const searchDirs = [primaryDir, fallbackDir];
 
-    const possibleExts = ["mp4", "webm"];
     let targetFilePath: string | null = null;
     let foundExt = "mp4";
 
-    for (const dir of searchDirs) {
-      for (const ext of possibleExts) {
-        const p = path.join(dir, `full_reaction_${cleanSession}.${ext}`);
-        if (fs.existsSync(p)) {
-          targetFilePath = p;
-          foundExt = ext;
+    // 1. Direct search by specific requested file name
+    if (fileName) {
+      const sanitizedFile = path.basename(fileName);
+      for (const dir of searchDirs) {
+        if (!fs.existsSync(dir)) continue;
+        const candidate = path.join(dir, sanitizedFile);
+        if (fs.existsSync(candidate)) {
+          targetFilePath = candidate;
+          foundExt = sanitizedFile.endsWith(".webm") ? "webm" : "mp4";
           break;
         }
       }
-      if (targetFilePath) break;
+    }
+
+    // 2. Fall back to finding newest recorded file for session
+    if (!targetFilePath && cleanSession) {
+      for (const dir of searchDirs) {
+        if (!fs.existsSync(dir)) continue;
+        try {
+          const files = fs.readdirSync(dir);
+          const matching = files
+            .filter(
+              (f) =>
+                (f.startsWith(`reaction_${cleanSession}_`) ||
+                  f.startsWith(`full_reaction_${cleanSession}`)) &&
+                (f.endsWith(".webm") || f.endsWith(".mp4"))
+            )
+            .sort((a, b) => {
+              const statA = fs.statSync(path.join(dir, a)).mtimeMs;
+              const statB = fs.statSync(path.join(dir, b)).mtimeMs;
+              return statB - statA;
+            });
+
+          if (matching.length > 0) {
+            targetFilePath = path.join(dir, matching[0]);
+            foundExt = matching[0].endsWith(".webm") ? "webm" : "mp4";
+            break;
+          }
+        } catch {}
+      }
     }
 
     if (!targetFilePath || !fs.existsSync(targetFilePath)) {
       return NextResponse.json(
-        { success: false, error: "No recorded video found on disk for this session." },
+        { success: false, error: "No recorded video found on disk for this query." },
         { status: 404 }
       );
     }

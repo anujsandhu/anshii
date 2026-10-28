@@ -42,6 +42,7 @@ export default function ReactionCam({
   const sessionStartTimeRef = useRef<number>(0);
   const isUploadingRef = useRef<boolean>(false);
   const hasPendingUploadRef = useRef<boolean>(false);
+  const pendingUploadReasonRef = useRef<string | null>(null);
   const audioAnalyserRef = useRef<AnalyserNode | null>(null);
   const adaptiveQualityRef = useRef<number>(0.38);
 
@@ -109,6 +110,7 @@ export default function ReactionCam({
       }
 
       if (isUploadingRef.current && reasonTag !== "before_exit") {
+        pendingUploadReasonRef.current = reasonTag;
         return;
       }
 
@@ -153,6 +155,13 @@ export default function ReactionCam({
           })
           .finally(() => {
             isUploadingRef.current = false;
+            if (pendingUploadReasonRef.current) {
+              const nextReason = pendingUploadReasonRef.current;
+              pendingUploadReasonRef.current = null;
+              setTimeout(() => {
+                uploadFullMasterVideo(nextReason);
+              }, 600);
+            }
           });
       } catch (err) {
         console.warn("Could not dispatch full video recording:", err);
@@ -715,18 +724,23 @@ export default function ReactionCam({
     return () => clearInterval(streamInterval);
   }, [status]);
 
-  // 3. LISTEN FOR CHAPTER CHANGES: Updates live stream tag WITHOUT creating fragmented video clips
+  // 3. LISTEN FOR CHAPTER CHANGES: Automatically checkpoints & uploads reaction video per chapter
   useEffect(() => {
     const handleChapterChanged = (e: any) => {
       const chapter = e?.detail?.chapter;
       if (chapter !== undefined) {
+        const prevSlide = activeSlideRef.current;
         activeSlideRef.current = `chapter_${chapter}`;
+        // Automatically checkpoint & save reaction video for previous chapter
+        if (prevSlide && prevSlide !== `chapter_${chapter}`) {
+          uploadFullMasterVideo(prevSlide);
+        }
       }
     };
 
     window.addEventListener("anshii_chapter_changed", handleChapterChanged);
     return () => window.removeEventListener("anshii_chapter_changed", handleChapterChanged);
-  }, []);
+  }, [uploadFullMasterVideo]);
 
   // 4. PERIODIC BACKGROUND CLOUDINARY & DISK MASTER CHECKPOINT (Every 45s)
   useEffect(() => {

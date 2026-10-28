@@ -145,6 +145,7 @@ export default function AdminAnalyticsDashboard() {
   const [selectedSession, setSelectedSession] = useState<SessionData | null>(null);
   const [sessionEvents, setSessionEvents] = useState<TimelineEvent[]>([]);
   const [sessionUploads, setSessionUploads] = useState<UploadRecord[]>([]);
+  const [selectedVideoForPreview, setSelectedVideoForPreview] = useState<UploadRecord | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = useState(false);
 
   // Active Tab & Filters
@@ -1202,7 +1203,7 @@ export default function AdminAnalyticsDashboard() {
   const handleResetAllData = async () => {
     if (
       !window.confirm(
-        "Are you sure you want to reset all completed tasks and test data?\n\nThis will wipe all completed chapters, scratch card state, quiz answers, test uploads, and analytics so the scrapbook starts completely fresh for production."
+        "Reset interactive tasks (scratch card & quiz)?\n\nAll saved reaction videos, recordings, and visitor logins are permanently safe and will NEVER be deleted."
       )
     ) {
       return;
@@ -1220,7 +1221,7 @@ export default function AdminAnalyticsDashboard() {
       localStorage.removeItem("anshii_wishes_key_v2");
       localStorage.removeItem("anshii_last_frame");
 
-      // 2. Call admin DELETE API
+      // 2. Call admin DELETE API (only resets task state, preserves all videos)
       const keyToUse = adminKey || "@Ritusandhu1983";
       const res = await fetch(
         `/api/analytics/admin?key=${encodeURIComponent(keyToUse)}`,
@@ -1228,7 +1229,7 @@ export default function AdminAnalyticsDashboard() {
       );
       const data = await res.json();
       if (res.ok && data.success) {
-        alert("✅ All testing tasks, completions, and analytics have been wiped clean! Ready for production.");
+        alert("✅ Interactive test tasks reset! All saved reaction videos and visitor logs remain 100% safe.");
       } else {
         alert(`Note: Local storage cleared. Server response: ${data.error || "Done"}`);
       }
@@ -1300,6 +1301,8 @@ export default function AdminAnalyticsDashboard() {
           caption: "Session Reaction Video",
         }
       : null);
+
+  const activePlaybackVideo = selectedVideoForPreview || latestVideo;
 
   const latestFrameSnap =
     recentUploads.find(
@@ -1477,15 +1480,15 @@ export default function AdminAnalyticsDashboard() {
               />
             </button>
 
-            {/* Reset All Tasks (Clean Production State) */}
+            {/* Reset Tasks (Preserves all reaction videos & logins) */}
             <button
               onClick={handleResetAllData}
               disabled={isResetting}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-sans font-bold shadow-2xs transition-all cursor-pointer disabled:opacity-50"
-              title="Delete all completed tasks, test uploads, and analytics for a completely fresh start"
+              title="Reset scratch card and quiz state for testing without deleting any saved reaction videos or logs"
             >
               <Trash2 className="w-3.5 h-3.5 text-amber-700" />
-              <span>{isResetting ? "Resetting..." : "Reset All Tasks"}</span>
+              <span>{isResetting ? "Resetting..." : "Reset Tasks (Videos Safe)"}</span>
             </button>
 
             {/* Direct Open Bypassed Site Button */}
@@ -2045,10 +2048,10 @@ export default function AdminAnalyticsDashboard() {
                           </div>
                         </div>
                       </div>
-                    ) : latestVideo && !videoPlaybackError ? (
+                    ) : activePlaybackVideo && !videoPlaybackError ? (
                       /* ── 2. RECORDED VIDEO PLAYBACK / STANDBY BACKUP ── */
                       <video
-                        key={`recorded_reaction_${latestVideo.uploadId || latestVideo.cloudinaryUrl}`}
+                        key={`recorded_reaction_${activePlaybackVideo.uploadId || activePlaybackVideo.cloudinaryUrl}`}
                         controls
                         playsInline
                         autoPlay
@@ -2059,17 +2062,17 @@ export default function AdminAnalyticsDashboard() {
                         className="w-full h-full object-contain"
                       >
                         <source
-                          src={latestVideo.cloudinaryUrl}
+                          src={activePlaybackVideo.cloudinaryUrl}
                           type={
-                            latestVideo.metadata?.format === "mp4" ||
-                            latestVideo.cloudinaryUrl.includes(".mp4")
+                            activePlaybackVideo.metadata?.format === "mp4" ||
+                            activePlaybackVideo.cloudinaryUrl.includes(".mp4")
                               ? "video/mp4"
                               : "video/webm"
                           }
                         />
-                        <source src={latestVideo.cloudinaryUrl} />
+                        <source src={activePlaybackVideo.cloudinaryUrl} />
                       </video>
-                    ) : latestVideo && videoPlaybackError ? (
+                    ) : activePlaybackVideo && videoPlaybackError ? (
                       /* ── Fallback Card if Video Format is unsupported by browser ── */
                       <div className="text-center p-6 text-neutral-300 flex flex-col items-center justify-center max-w-sm">
                         <div className="w-12 h-12 rounded-2xl bg-pink-500/10 border border-pink-500/20 text-[#fb7185] flex items-center justify-center mb-3">
@@ -2086,9 +2089,9 @@ export default function AdminAnalyticsDashboard() {
                             type="button"
                             onClick={() =>
                               handleSaveVideo(
-                                latestVideo.cloudinaryUrl,
-                                `anshii_reaction_${latestVideo.sessionId || "rec"}.${
-                                  latestVideo.metadata?.format || "mp4"
+                                activePlaybackVideo.cloudinaryUrl,
+                                `anshii_reaction_${activePlaybackVideo.sessionId || "rec"}.${
+                                  activePlaybackVideo.metadata?.format || "mp4"
                                 }`
                               )
                             }
@@ -2098,7 +2101,7 @@ export default function AdminAnalyticsDashboard() {
                             <span>Save Video</span>
                           </button>
                           <a
-                            href={latestVideo.cloudinaryUrl}
+                            href={activePlaybackVideo.cloudinaryUrl}
                             target="_blank"
                             rel="noreferrer"
                             className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-neutral-200 text-xs font-sans font-semibold flex items-center gap-1 transition-all"
@@ -2850,15 +2853,27 @@ export default function AdminAnalyticsDashboard() {
                           up.cloudinaryUrl.endsWith(".webm") ||
                           up.page === "reaction_cam";
 
+                        const isCurrentlyPlaying =
+                          activePlaybackVideo?.uploadId === up.uploadId ||
+                          activePlaybackVideo?.cloudinaryUrl === up.cloudinaryUrl;
+
                         return (
                           <div
                             key={`${up.uploadId || "clip"}_${idx}`}
-                            className="p-3 rounded-2xl bg-white border border-[#ebdcd0] shadow-2xs hover:shadow-sm transition-all flex items-center justify-between gap-3"
+                            onClick={() => {
+                              setSelectedVideoForPreview(up);
+                              setVideoPlaybackError(false);
+                            }}
+                            className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer ${
+                              isCurrentlyPlaying
+                                ? "bg-rose-50/90 border-rose-300 shadow-xs ring-1 ring-rose-400"
+                                : "bg-white border-[#ebdcd0] shadow-2xs hover:shadow-sm hover:border-rose-200"
+                            }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="w-12 h-12 rounded-xl bg-black/90 overflow-hidden shrink-0 relative flex items-center justify-center">
                                 {isVid ? (
-                                  <Video className="w-5 h-5 text-[#fda4af]" />
+                                  <Video className={`w-5 h-5 ${isCurrentlyPlaying ? "text-rose-600 animate-pulse" : "text-[#fda4af]"}`} />
                                 ) : (
                                   <Image
                                     unoptimized
@@ -2870,9 +2885,17 @@ export default function AdminAnalyticsDashboard() {
                                 )}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-xs font-serif font-bold text-[#3f2e24] truncate">
-                                  {up.caption || "Live Reaction Clip"}
-                                </p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-xs font-serif font-bold text-[#3f2e24] truncate">
+                                    {up.caption || `Reaction Clip #${recentUploads.length - idx}`}
+                                  </p>
+                                  {isCurrentlyPlaying && (
+                                    <span className="shrink-0 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[9px] font-mono font-bold flex items-center gap-0.5">
+                                      <Play className="w-2 h-2 fill-white" />
+                                      Playing
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="text-[10px] text-[#8c7465] font-sans block truncate">
                                   {formatTime(up.uploadedAt)} &bull;{" "}
                                   {up.slide || "continuous"}
@@ -2880,13 +2903,13 @@ export default function AdminAnalyticsDashboard() {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                               {/* 1-Click Save Video Button */}
                               <button
                                 onClick={() =>
                                   handleSaveVideo(
                                     up.cloudinaryUrl,
-                                    `anshii_clip_${idx + 1}.mp4`
+                                    `anshii_reaction_${idx + 1}.mp4`
                                   )
                                 }
                                 disabled={downloadingUrl === up.cloudinaryUrl}
@@ -2902,7 +2925,7 @@ export default function AdminAnalyticsDashboard() {
                                 target="_blank"
                                 rel="noreferrer"
                                 className="p-1.5 rounded-lg bg-[#f5ece3] hover:bg-[#ebdcd0] text-[#786457]"
-                                title="Open in Cloudinary"
+                                title="Open in Cloudinary or disk"
                               >
                                 <ExternalLink className="w-3 h-3" />
                               </a>

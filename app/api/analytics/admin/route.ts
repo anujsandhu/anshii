@@ -297,7 +297,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ── DELETE: Purge all testing data, recordings, and task progress ───────────
+// ── DELETE: Reset interactive test tasks (Guarantees ALL REACTION VIDEOS ARE SAVED & NEVER DELETED) ──
 export async function DELETE(req: NextRequest) {
   if (!isAuthorized(req)) {
     return NextResponse.json(
@@ -307,69 +307,35 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    // 1. Reset local analytics and task store
+    // 1. Reset interactive task state (keeps all uploads & logins safe)
     localResetAll();
 
-    // 2. Clean local recordings folder
-    const recordingsDir = path.resolve(process.cwd(), "data", "recordings");
-    if (fs.existsSync(recordingsDir)) {
-      try {
-        const files = fs.readdirSync(recordingsDir);
-        for (const file of files) {
-          if (
-            file.endsWith(".webm") ||
-            file.endsWith(".mp4") ||
-            file.startsWith("full_reaction_")
-          ) {
-            try {
-              fs.unlinkSync(path.join(recordingsDir, file));
-            } catch {}
-          }
-        }
-      } catch {}
-    }
-
-    // 3. Purge Firestore collections if available
+    // 2. Clear ONLY temporary task cache in Firestore (NEVER delete uploads, reaction videos, or logins)
     const db = getAdminFirestore();
-    let firestorePurged = false;
+    let firestoreCleaned = false;
     if (db) {
       try {
-        const collections = [
-          "sessions",
-          "uploads",
-          "logins",
-          "system",
-          "gift_snaps",
-          "madam_ji_notes",
-        ];
-        for (const col of collections) {
+        const taskCollections = ["gift_snaps", "madam_ji_notes"];
+        for (const col of taskCollections) {
           const snap = await db.collection(col).get();
           for (const doc of snap.docs) {
-            if (col === "sessions") {
-              try {
-                const evSnap = await doc.ref.collection("events").get();
-                for (const evDoc of evSnap.docs) {
-                  await evDoc.ref.delete();
-                }
-              } catch {}
-            }
             await doc.ref.delete();
           }
         }
-        firestorePurged = true;
+        firestoreCleaned = true;
       } catch (dbErr: any) {
-        handleFirestoreError(dbErr, "admin purge");
+        handleFirestoreError(dbErr, "admin task reset");
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: "All testing data, recordings, and task progress have been wiped clean.",
-      firestorePurged,
+      message: "Interactive tasks reset. All reaction videos, logins, and recordings are permanently preserved.",
+      firestoreCleaned,
     });
   } catch (err: any) {
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to purge data" },
+      { success: false, error: err.message || "Failed to reset tasks" },
       { status: 500 }
     );
   }

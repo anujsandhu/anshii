@@ -230,17 +230,19 @@ export function localGetSessionEvents(sessionId: string): LocalEvent[] {
 // ── Uploads (Videos) ─────────────────────────────────────────────────────────
 export function localSaveUpload(upload: LocalUpload) {
   const store = readStore();
-  // Filter duplicate uploadId AND remove older fragmented clips for the same session
-  // This ensures ONE single master contiguous video (from entry to exit) per session
-  store.uploads = store.uploads.filter(
-    (u) => u.uploadId !== upload.uploadId && u.sessionId !== upload.sessionId
-  );
+  // Filter only exact duplicate uploadId: NEVER delete or overwrite earlier reaction clips!
+  // Every reaction video recorded throughout her visit is permanently preserved.
+  store.uploads = store.uploads.filter((u) => u.uploadId !== upload.uploadId);
   store.uploads.unshift(upload);
 
   if (store.sessions[upload.sessionId]) {
-    store.sessions[upload.sessionId].uploadCount = 1;
+    store.sessions[upload.sessionId].uploadCount =
+      (store.sessions[upload.sessionId].uploadCount || 0) + 1;
     store.sessions[upload.sessionId].latestLiveVideo = upload.cloudinaryUrl;
     store.sessions[upload.sessionId].lastSeenAt = upload.uploadedAt;
+    if (upload.slide) {
+      store.sessions[upload.sessionId].latestSlide = upload.slide;
+    }
   }
 
   writeStore(store);
@@ -349,17 +351,18 @@ export function localResetGiftApprovals() {
   writeStore(store);
 }
 
-// ── Reset All Data (Production Clean State) ─────────────────────────────────
+// ── Reset Interactive Task State (Guarantees Reaction Videos & Logins are NEVER Deleted) ──
 export function localResetAll() {
+  const current = readStore();
   const cleanStore: LocalStoreSchema = {
-    sessions: {},
-    events: {},
-    uploads: [],
-    logins: [],
+    sessions: current.sessions || {},
+    events: current.events || {},
+    uploads: current.uploads || [], // PERMANENT: NEVER delete reaction recordings!
+    logins: current.logins || [],   // PERMANENT: NEVER delete visitor audit logs!
     notes: {},
     giftSnaps: {},
     giftApprovals: {},
-    liveMonitor: null,
+    liveMonitor: current.liveMonitor,
   };
   writeStore(cleanStore);
 }
