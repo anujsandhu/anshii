@@ -68,6 +68,10 @@ interface SessionData {
   uploadCount?: number;
   loginCount?: number;
   isUnlocked?: boolean;
+  role?: string;
+  userName?: string;
+  isTester?: boolean;
+  passwordUsed?: string;
   latestSlide?: string;
   latestLiveFrame?: string;
   latestLiveVideo?: string;
@@ -148,7 +152,7 @@ export default function AdminAnalyticsDashboard() {
     "live" | "footprints" | "logins" | "gallery"
   >("live");
   const [activityFilter, setActivityFilter] = useState<string>("all");
-  const [loginFilter, setLoginFilter] = useState<"all" | "anshii" | "anuj">("all");
+  const [loginFilter, setLoginFilter] = useState<"all" | "anshii" | "anuj">("anshii");
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
 
   // ── Real-Time Live Feed State (< 120ms delay) ──
@@ -512,9 +516,14 @@ export default function AdminAnalyticsDashboard() {
         setLastSyncTime(new Date());
         fetchGiftApprovals();
 
-        // Default-select the first session if none is selected
+        // Default-select Anshii session if available, else first session
         if (!selectedSessionId && sessList.length > 0) {
-          handleSelectSession(sessList[0], key);
+          const anshiiSess = sessList.find(
+            (s) =>
+              s.role === "anshii" ||
+              (!s.isTester && s.userName !== "Anuj (Tester)")
+          );
+          handleSelectSession(anshiiSess || sessList[0], key);
         }
       }
     } catch (err) {
@@ -1492,91 +1501,130 @@ export default function AdminAnalyticsDashboard() {
 
       {/* ── Main Content Area ── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 space-y-6">
-        {/* ── Metric Summary Cards ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          {/* Card 1: Total Logins */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#ebdcd0] shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[#8c7465] mb-2">
-              <span className="text-[11px] font-sans font-bold uppercase tracking-wider">
-                Total Logins
-              </span>
-              <div className="p-1.5 rounded-lg bg-[#fff0f3] text-[#fb7185]">
-                <KeyIcon className="w-4 h-4" />
-              </div>
-            </div>
-            <div>
-              <div className="font-serif text-2xl sm:text-3xl font-bold text-[#3f2e24]">
-                {stats?.totalLogins || logins.length || sessions.length || 0}
-              </div>
-              <span className="text-[11px] text-[#786457] font-sans">
-                {sessions.length} unique visitor sessions
-              </span>
-            </div>
-          </div>
+        {/* Derive Anshika-specific data so her metrics are accurately isolated */}
+        {(() => {
+          const isAnujRecord = (item: any) =>
+            item.role === "anuj" ||
+            item.passwordUsed === "@Ritusandhu1983" ||
+            item.passwordUsed === "ANUJ88" ||
+            item.passwordUsed === "ANUJ19" ||
+            item.userName?.includes("Anuj") ||
+            item.isTester === true;
 
-          {/* Card 2: Cumulative Duration */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#ebdcd0] shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[#8c7465] mb-2">
-              <span className="text-[11px] font-sans font-bold uppercase tracking-wider">
-                Total Time on Site
-              </span>
-              <div className="p-1.5 rounded-lg bg-[#f0fdf4] text-[#15803d]">
-                <Clock className="w-4 h-4" />
-              </div>
-            </div>
-            <div>
-              <div className="font-serif text-2xl sm:text-3xl font-bold text-[#3f2e24]">
-                {formatDuration(
-                  sessions.reduce((acc, s) => acc + (s.duration || 0), 0)
-                )}
-              </div>
-              <span className="text-[11px] text-[#786457] font-sans">
-                Avg: {formatDuration(stats?.avgDurationSeconds || 0)} / visit
-              </span>
-            </div>
-          </div>
+          const anshiiSessions = sessions.filter((s) => !isAnujRecord(s));
+          const anshiiLogins = logins.filter((l) => !isAnujRecord(l));
+          const anshiiUploads = recentUploads.filter(
+            (u) => !isAnujRecord(u) && u.type === "video"
+          );
+          const anshiiDuration = anshiiSessions.reduce(
+            (acc, s) => acc + (s.duration || 0),
+            0
+          );
+          const anshiiEvents = anshiiSessions.reduce(
+            (acc, s) => acc + (s.eventCount || 0),
+            0
+          );
+          const avgDuration =
+            anshiiSessions.length > 0
+              ? Math.round(anshiiDuration / anshiiSessions.length)
+              : 0;
 
-          {/* Card 3: Footprint Actions */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#ebdcd0] shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[#8c7465] mb-2">
-              <span className="text-[11px] font-sans font-bold uppercase tracking-wider">
-                Total Footprints
-              </span>
-              <div className="p-1.5 rounded-lg bg-[#eff6ff] text-[#2563eb]">
-                <MousePointerClick className="w-4 h-4" />
+          return (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              {/* Card 1: Total Logins */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#ebdcd0] shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between text-[#8c7465] mb-2">
+                  <span className="text-[11px] font-sans font-bold uppercase tracking-wider">
+                    Total Logins
+                  </span>
+                  <div className="p-1.5 rounded-lg bg-[#fff0f3] text-[#fb7185]">
+                    <KeyIcon className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <div className="font-serif text-2xl sm:text-3xl font-bold text-[#3f2e24]">
+                    {anshiiLogins.length || anshiiSessions.length || 0}
+                  </div>
+                  <span className="text-[11px] text-[#786457] font-sans">
+                    {anshiiSessions.length === 0
+                      ? "Awaiting her login with 'anshii19'"
+                      : `${anshiiSessions.length} visit${
+                          anshiiSessions.length === 1 ? "" : "s"
+                        } by Anshika`}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="font-serif text-2xl sm:text-3xl font-bold text-[#3f2e24]">
-                {stats?.totalEvents || 0}
-              </div>
-              <span className="text-[11px] text-[#786457] font-sans">
-                Clicks, songs, quiz &amp; notes
-              </span>
-            </div>
-          </div>
 
-          {/* Card 4: Reaction Recordings */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#ebdcd0] shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[#8c7465] mb-2">
-              <span className="text-[11px] font-sans font-bold uppercase tracking-wider">
-                Reaction Videos
-              </span>
-              <div className="p-1.5 rounded-lg bg-[#fff1f2] text-[#e11d48]">
-                <Video className="w-4 h-4" />
+              {/* Card 2: Cumulative Duration */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#ebdcd0] shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between text-[#8c7465] mb-2">
+                  <span className="text-[11px] font-sans font-bold uppercase tracking-wider">
+                    Total Time on Site
+                  </span>
+                  <div className="p-1.5 rounded-lg bg-[#f0fdf4] text-[#15803d]">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <div className="font-serif text-2xl sm:text-3xl font-bold text-[#3f2e24]">
+                    {formatDuration(anshiiDuration)}
+                  </div>
+                  <span className="text-[11px] text-[#786457] font-sans">
+                    {anshiiSessions.length === 0
+                      ? "0s active"
+                      : `Avg: ${formatDuration(avgDuration)} / visit`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 3: Footprint Actions */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#ebdcd0] shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between text-[#8c7465] mb-2">
+                  <span className="text-[11px] font-sans font-bold uppercase tracking-wider">
+                    Total Footprints
+                  </span>
+                  <div className="p-1.5 rounded-lg bg-[#eff6ff] text-[#2563eb]">
+                    <MousePointerClick className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <div className="font-serif text-2xl sm:text-3xl font-bold text-[#3f2e24]">
+                    {anshiiEvents}
+                  </div>
+                  <span className="text-[11px] text-[#786457] font-sans">
+                    {anshiiSessions.length === 0
+                      ? "Clicks, songs, quiz & notes"
+                      : "Footprints left by Anshika"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 4: Reaction Recordings */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#ebdcd0] shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between text-[#8c7465] mb-2">
+                  <span className="text-[11px] font-sans font-bold uppercase tracking-wider">
+                    Reaction Videos
+                  </span>
+                  <div className="p-1.5 rounded-lg bg-[#fff1f2] text-[#e11d48]">
+                    <Video className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <div className="font-serif text-2xl sm:text-3xl font-bold text-[#3f2e24]">
+                    {anshiiUploads.length}
+                  </div>
+                  <span className="text-[11px] text-[#786457] font-sans">
+                    {anshiiUploads.length === 0
+                      ? "Awaiting her live opening"
+                      : `${anshiiUploads.length} reaction video${
+                          anshiiUploads.length === 1 ? "" : "s"
+                        }`}
+                  </span>
+                </div>
               </div>
             </div>
-            <div>
-              <div className="font-serif text-2xl sm:text-3xl font-bold text-[#3f2e24]">
-                {recentUploads.filter((u) => u.type === "video").length ||
-                  recentUploads.length}
-              </div>
-              <span className="text-[11px] text-[#786457] font-sans">
-                Auto-saved live to Cloudinary
-              </span>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* ── Navigation Tabs ── */}
         <div className="flex items-center gap-2 border-b border-[#ebdcd0] pb-2 overflow-x-auto">
@@ -2857,8 +2905,21 @@ export default function AdminAnalyticsDashboard() {
                 </h3>
                 <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
                   {sessions.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-[#8c7465]">
-                      No sessions recorded yet.
+                    <div className="p-6 text-center text-xs text-[#8c7465] flex flex-col items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-[#fff0f3] flex items-center justify-center text-[#fb7185] text-lg">
+                        🌸
+                      </div>
+                      <p className="font-serif font-bold text-sm text-[#3f2e24]">
+                        Awaiting Anshika&apos;s Login
+                      </p>
+                      <p className="text-[11px] text-[#a89080]">
+                        When Anshika logs in with password{" "}
+                        <span className="font-mono text-[#fb7185] font-bold">
+                          anshii19
+                        </span>
+                        , her session timeline, live device, and journey
+                        milestones will appear here in real time.
+                      </p>
                     </div>
                   ) : (
                     sessions.map((sess, idx) => {
@@ -3112,27 +3173,49 @@ export default function AdminAnalyticsDashboard() {
             </div>
 
             <div className="space-y-3">
-              {(logins.length > 0 ? logins : sessions)
-                .filter((item: any) => {
-                  const isAnuj =
-                    item.role === "anuj" ||
-                    item.passwordUsed === "ANUJ19" ||
-                    item.userName?.includes("Anuj") ||
-                    item.isTester === true;
+              {(() => {
+                const isAnujItem = (item: any) =>
+                  item.role === "anuj" ||
+                  item.passwordUsed === "@Ritusandhu1983" ||
+                  item.passwordUsed === "ANUJ88" ||
+                  item.passwordUsed === "ANUJ19" ||
+                  item.userName?.includes("Anuj") ||
+                  item.isTester === true;
+
+                const candidateList = logins.length > 0 ? logins : sessions;
+                const filteredList = candidateList.filter((item: any) => {
+                  const isAnuj = isAnujItem(item);
                   if (loginFilter === "anuj") return isAnuj;
                   if (loginFilter === "anshii") return !isAnuj;
                   return true;
-                })
-                .map((item: any, idx) => {
+                });
+
+                if (filteredList.length === 0) {
+                  return (
+                    <div className="p-8 text-center rounded-2xl bg-white border border-[#ebdcd0] flex flex-col items-center justify-center gap-2">
+                      <div className="w-12 h-12 rounded-2xl bg-[#fff0f3] flex items-center justify-center text-[#fb7185] text-xl">
+                        🌸
+                      </div>
+                      <h3 className="font-serif font-bold text-base text-[#3f2e24]">
+                        {loginFilter === "anshii"
+                          ? "Awaiting Anshika's Login"
+                          : "No Logins Recorded"}
+                      </h3>
+                      <p className="text-xs text-[#786457] max-w-sm">
+                        {loginFilter === "anshii"
+                          ? "No logins yet from Anshika. When she logs in with password 'anshii19', her exact timing, device, and footprints will be tracked here in real time."
+                          : "No activity recorded yet for this view."}
+                      </p>
+                    </div>
+                  );
+                }
+
+                return filteredList.map((item: any, idx) => {
                   const timestamp = item.timestamp || item.startedAt;
                   const duration = item.duration || 0;
                   const device = item.device || "Desktop";
                   const browser = item.browser || "Browser";
-                  const isAnuj =
-                    item.role === "anuj" ||
-                    item.passwordUsed === "ANUJ19" ||
-                    item.userName?.includes("Anuj") ||
-                    item.isTester === true;
+                  const isAnuj = isAnujItem(item);
 
                   return (
                     <div
@@ -3216,7 +3299,8 @@ export default function AdminAnalyticsDashboard() {
                       </div>
                     </div>
                   );
-                })}
+                });
+              })()}
             </div>
           </div>
         )}
