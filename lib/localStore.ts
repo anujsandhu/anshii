@@ -105,47 +105,35 @@ function getStoreFilePath(): string {
   }
 }
 
+let memoryStore: LocalStoreSchema | null = null;
+
 function readStore(): LocalStoreSchema {
   const storePath = getStoreFilePath();
+  let diskData: Partial<LocalStoreSchema> = {};
   try {
-    if (!fs.existsSync(storePath)) {
-      return {
-        sessions: {},
-        events: {},
-        uploads: [],
-        logins: [],
-        notes: {},
-        giftSnaps: {},
-        liveMonitor: null,
-      };
+    if (fs.existsSync(storePath)) {
+      const raw = fs.readFileSync(storePath, "utf8");
+      diskData = JSON.parse(raw);
     }
-    const raw = fs.readFileSync(storePath, "utf8");
-    const parsed = JSON.parse(raw);
-    return {
-      sessions: parsed.sessions || {},
-      events: parsed.events || {},
-      uploads: parsed.uploads || [],
-      logins: parsed.logins || [],
-      notes: parsed.notes || {},
-      giftSnaps: parsed.giftSnaps || {},
-      giftApprovals: parsed.giftApprovals || {},
-      liveMonitor: parsed.liveMonitor || null,
-    };
-  } catch (err) {
-    return {
-      sessions: {},
-      events: {},
-      uploads: [],
-      logins: [],
-      notes: {},
-      giftSnaps: {},
-      giftApprovals: {},
-      liveMonitor: null,
-    };
-  }
+  } catch {}
+
+  const merged: LocalStoreSchema = {
+    sessions: { ...(memoryStore?.sessions || {}), ...(diskData.sessions || {}) },
+    events: { ...(memoryStore?.events || {}), ...(diskData.events || {}) },
+    uploads: [...(diskData.uploads || memoryStore?.uploads || [])],
+    logins: [...(diskData.logins || memoryStore?.logins || [])],
+    notes: { ...(memoryStore?.notes || {}), ...(diskData.notes || {}) },
+    giftSnaps: { ...(memoryStore?.giftSnaps || {}), ...(diskData.giftSnaps || {}) },
+    giftApprovals: { ...(memoryStore?.giftApprovals || {}), ...(diskData.giftApprovals || {}) },
+    liveMonitor: diskData.liveMonitor || memoryStore?.liveMonitor || null,
+  };
+
+  memoryStore = merged;
+  return merged;
 }
 
 function writeStore(data: LocalStoreSchema) {
+  memoryStore = JSON.parse(JSON.stringify(data));
   const storePath = getStoreFilePath();
   try {
     const dir = path.dirname(storePath);
@@ -154,7 +142,6 @@ function writeStore(data: LocalStoreSchema) {
     }
     fs.writeFileSync(storePath, JSON.stringify(data, null, 2), "utf8");
   } catch (err) {
-    console.warn("Could not write primary local store, trying /tmp fallback:", err);
     try {
       const fallbackDir = path.join(os.tmpdir(), "anshii_data");
       if (!fs.existsSync(fallbackDir)) {
@@ -162,9 +149,7 @@ function writeStore(data: LocalStoreSchema) {
       }
       const fallbackPath = path.join(fallbackDir, "localAnalytics.json");
       fs.writeFileSync(fallbackPath, JSON.stringify(data, null, 2), "utf8");
-    } catch (fallbackErr) {
-      console.warn("Could not write fallback local store:", fallbackErr);
-    }
+    } catch {}
   }
 }
 

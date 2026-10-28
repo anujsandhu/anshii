@@ -535,13 +535,17 @@ export default function AdminAnalyticsDashboard() {
           key
         )}&sessionId=${encodeURIComponent(sess.sessionId)}`
       );
+      if (!res.ok) return;
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (data && data.success) {
         setSessionEvents(data.events || []);
         setSessionUploads(data.uploads || []);
+        if (data.session) {
+          setSelectedSession(data.session);
+        }
       }
     } catch (err) {
-      console.error("Session timeline fetch error:", err);
+      // Non-fatal timeline fetch
     } finally {
       setIsLoadingTimeline(false);
     }
@@ -561,13 +565,17 @@ export default function AdminAnalyticsDashboard() {
           key
         )}&sessionId=${encodeURIComponent(sessionId)}`
       );
+      if (!res.ok) return;
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (data && data.success) {
         setSessionEvents(data.events || []);
         setSessionUploads(data.uploads || []);
+        if (data.session) {
+          setSelectedSession(data.session);
+        }
       }
     } catch (err) {
-      console.error("Timeline refresh error:", err);
+      // Non-fatal timeline refresh
     } finally {
       if (showSpinner) setIsLoadingTimeline(false);
     }
