@@ -41,7 +41,7 @@ export default function Frame2Birthday({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
+    <div className="relative w-full h-full flex flex-col items-center justify-start sm:justify-center px-3 sm:px-8 select-none overflow-y-auto overflow-x-hidden pt-16 pb-16 sm:py-14">
 
       {/* ── Ambient Background Glow ── */}
       <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-gradient-to-tr from-[#fed7aa]/30 via-[#fbcfe8]/25 to-[#d8b4fe]/20 rounded-full blur-[130px] pointer-events-none" />

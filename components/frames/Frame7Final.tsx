@@ -78,7 +78,7 @@ export default function Frame7Final({ onReplay }: Frame7FinalProps) {
   const [showKeepsakeDrawer, setShowKeepsakeDrawer] = useState(false);
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
+    <div className="relative w-full h-full flex flex-col items-center justify-start sm:justify-center px-3 sm:px-8 select-none overflow-y-auto overflow-x-hidden pt-16 pb-16 sm:py-14">
       {/* Background Soft Sunset/Blush Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[600px] h-[340px] sm:h-[600px] bg-gradient-to-tr from-[#fed7aa]/25 via-[#fbcfe8]/25 to-[#d8b4fe]/20 rounded-full blur-[140px] pointer-events-none" />
 

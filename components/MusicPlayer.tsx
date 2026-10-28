@@ -452,7 +452,7 @@ export default function MusicPlayer({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.92, opacity: 0, y: 15 }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="w-72 sm:w-80 paper-card-warm p-4 rounded-3xl relative shadow-xl border border-[#ebdcd0] z-50 text-left"
+            className="w-[min(300px,calc(100vw-24px))] sm:w-80 paper-card-warm p-3.5 sm:p-4 rounded-3xl relative shadow-xl border border-[#ebdcd0] z-50 text-left"
           >
             {/* Washi Tape Accent */}
             <div className="washi-tape-pink" />

@@ -706,22 +706,22 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
 
       {/* TOP SCRAPBOOK HEADER RIBBON */}
       <header
-        className="fixed top-0 inset-x-0 z-40 px-3 sm:px-6 lg:px-8 py-2 sm:py-3.5 flex items-center justify-between pointer-events-none"
-        style={{ paddingTop: "max(10px, var(--sat))" }}
+        className="fixed top-0 inset-x-0 z-40 px-2 sm:px-6 lg:px-8 py-1.5 sm:py-3.5 flex items-center justify-between pointer-events-none"
+        style={{ paddingTop: "max(8px, var(--sat, 8px))" }}
       >
         {/* Left: Chapter & Title Badge with Handcrafted Stamp */}
-        <div className="pointer-events-auto flex items-center gap-2">
+        <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
           <motion.button
             onClick={handleTitleClick}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-[0_4px_20px_-2px_rgba(90,60,40,0.08)] text-[#3f2e24] cursor-pointer group"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-[0_4px_20px_-2px_rgba(90,60,40,0.08)] text-[#3f2e24] cursor-pointer group"
             title="A handmade digital card by Anuj (click 5x for Easter Egg)"
           >
-            <span className="font-mono text-xs font-bold text-[#be185d] bg-[#fdf2f4] px-2 py-0.5 rounded-md border border-[#fbcfe8]">
+            <span className="font-mono text-[10px] sm:text-xs font-bold text-[#be185d] bg-[#fdf2f4] px-1.5 sm:px-2 py-0.5 rounded-md border border-[#fbcfe8]">
               {activeFrameMeta.chapter} / {SCRAPBOOK_FRAMES.length.toString().padStart(2, "0")}
             </span>
-            <span className="font-handwriting text-lg lg:text-xl font-bold text-[#3f2e24] group-hover:text-[#be185d] transition-colors">
+            <span className="font-handwriting text-base sm:text-lg lg:text-xl font-bold text-[#3f2e24] group-hover:text-[#be185d] transition-colors truncate max-w-[120px] xs:max-w-[160px] sm:max-w-none">
               {activeFrameMeta.title}
             </span>
             <span className="hidden xl:inline text-xs text-[#8c7465] font-sans border-l border-[#ebdcd0] pl-2">
@@ -730,13 +730,40 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           </motion.button>
         </div>
 
-        {/* Center: 9 Botanical Progress Flowers (Desktop Scrapbook Tabs) */}
-        <div className="pointer-events-auto flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-[0_4px_20px_-2px_rgba(90,60,40,0.08)]">
+        {/* Center: Mobile Compact Dots Pill (< md) */}
+        <div className="flex md:hidden pointer-events-auto items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-xs">
+          {SCRAPBOOK_FRAMES.map((frame) => {
+            const isCompleted = completedFrames.has(frame.id);
+            const isCurrent = currentFrame === frame.id;
+            return (
+              <button
+                key={frame.id}
+                onClick={() => {
+                  if (isCompleted || isCurrent) {
+                    navigateToFrame(frame.id);
+                  } else {
+                    triggerLockedAlert();
+                  }
+                }}
+                className={`transition-all rounded-full ${
+                  isCurrent
+                    ? "w-2.5 h-1.5 bg-[#be185d]"
+                    : isCompleted
+                    ? "w-1.5 h-1.5 bg-[#10b981]"
+                    : "w-1.5 h-1.5 bg-[#d1c5b8]"
+                }`}
+                title={`Ch ${frame.chapter}: ${frame.title}`}
+              />
+            );
+          })}
+        </div>
+
+        {/* Center: 9 Botanical Progress Flowers (Desktop & Tablet Scrapbook Tabs) */}
+        <div className="hidden md:flex pointer-events-auto items-center gap-1 lg:gap-1.5 px-2 lg:px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-[0_4px_20px_-2px_rgba(90,60,40,0.08)]">
           {SCRAPBOOK_FRAMES.map((frame) => {
             const isCompleted = completedFrames.has(frame.id);
             const isCurrent = currentFrame === frame.id;
             const isAccessible = isCompleted || isCurrent;
-            const isLocked = !isAccessible;
 
             return (
               <button
@@ -796,17 +823,18 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
             <span className="text-[#8c7465]">to flip</span>
           </div>
 
-          {/* Equalizer Visualizer */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-xs text-xs font-sans text-[#786457]">
+          {/* Equalizer Visualizer (Responsive for phones) */}
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#e8ded1] shadow-xs text-xs font-sans text-[#786457]">
             <div className="flex items-end gap-0.5 h-3">
               <span className="w-0.5 h-3 bg-[#f43f5e] rounded-full animate-pulse" />
               <span className="w-0.5 h-2 bg-[#fda4af] rounded-full animate-bounce" />
               <span className="w-0.5 h-3.5 bg-[#f43f5e] rounded-full animate-pulse delay-75" />
               <span className="w-0.5 h-1.5 bg-[#fda4af] rounded-full animate-bounce delay-100" />
             </div>
-            <span className="text-[11px] font-sans font-medium text-[#be185d]">
+            <span className="text-[11px] font-sans font-medium text-[#be185d] hidden sm:inline">
               Music Playing 🎵
             </span>
+            <span className="text-[11px] sm:hidden">🎵</span>
           </div>
         </div>
       </header>
@@ -1088,13 +1116,15 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           >
             {isCurrentTaskDone ? (
               <>
-                <span>Next Chapter</span>
+                <span className="hidden xs:inline">Next Chapter</span>
+                <span className="xs:hidden">Next</span>
                 <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
               </>
             ) : (
               <>
                 <Lock className="w-3.5 h-3.5 text-[#f43f5e]" />
-                <span>Task Locked</span>
+                <span className="hidden xs:inline">Task Locked</span>
+                <span className="xs:hidden">Locked</span>
               </>
             )}
           </motion.button>

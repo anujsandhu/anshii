@@ -216,17 +216,17 @@ export default function FrameMadamJiKeepsake({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
+    <div className="relative w-full h-full flex flex-col items-center justify-start sm:justify-center px-3 sm:px-8 select-none overflow-y-auto overflow-x-hidden pt-16 pb-16 sm:py-14">
       {/* Background Soft Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[680px] h-[340px] sm:h-[680px] bg-gradient-to-tr from-[#fed7aa]/25 via-[#fbcfe8]/25 to-[#d8b4fe]/20 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* ── UNIFIED KEEPSAKE CARD (LARGE SCREEN OPTIMIZED) ── */}
+      {/* ── UNIFIED KEEPSAKE CARD (PHONE & DESKTOP OPTIMIZED) ── */}
       <motion.div
         data-card="true"
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-2xl lg:max-w-3xl paper-card-warm rounded-3xl border-2 border-[#ebdcd0] shadow-2xl flex flex-col my-auto p-6 sm:p-8"
+        className="relative z-10 w-full max-w-2xl lg:max-w-3xl paper-card-warm rounded-3xl border-2 border-[#ebdcd0] shadow-2xl flex flex-col my-auto p-4 sm:p-8"
       >
         <div className="washi-tape-pink shrink-0 !top-1" />
 

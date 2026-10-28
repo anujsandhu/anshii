@@ -51,7 +51,7 @@ export default function Frame1Welcome({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
+    <div className="relative w-full h-full flex flex-col items-center justify-start sm:justify-center px-3 sm:px-8 select-none overflow-y-auto overflow-x-hidden pt-16 pb-16 sm:py-14">
       {/* Background Soft Doodles & Pastel Polka Dots */}
       <div
         className="absolute inset-0 opacity-40 pointer-events-none"

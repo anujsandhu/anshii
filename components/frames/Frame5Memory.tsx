@@ -164,7 +164,7 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
   // ── Completed state ─────────────────────────────────────────────────
   if (gameOver) {
     return (
-      <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
+      <div className="relative w-full h-full flex flex-col items-center justify-start sm:justify-center px-3 sm:px-8 select-none overflow-y-auto overflow-x-hidden pt-16 pb-16 sm:py-14">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-[#fed7aa]/20 via-[#fbcfe8]/20 to-transparent rounded-full blur-[130px] pointer-events-none" />
 
         <motion.div
@@ -256,7 +256,7 @@ export default function Frame5Memory({ isCompleted, onCompleteTask, onNext }: Fr
 
   // ── Active quiz ─────────────────────────────────────────────────────
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 select-none overflow-hidden pt-12 pb-14">
+    <div className="relative w-full h-full flex flex-col items-center justify-start sm:justify-center px-3 sm:px-8 select-none overflow-y-auto overflow-x-hidden pt-16 pb-16 sm:py-14">
       {/* Ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-[#fed7aa]/20 via-[#fbcfe8]/20 to-transparent rounded-full blur-[130px] pointer-events-none" />
 

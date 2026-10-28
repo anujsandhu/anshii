@@ -572,7 +572,7 @@ export default function FrameGiftSnaps({
   const uploadedCount = Object.keys(snaps).length;
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-6 select-none overflow-hidden pt-[max(56px,calc(var(--sat)+44px))] pb-[max(56px,calc(var(--sab)+44px))]">
+    <div className="relative w-full h-full flex flex-col items-center justify-start lg:justify-center px-3 sm:px-6 select-none overflow-y-auto overflow-x-hidden pt-[max(56px,calc(var(--sat)+44px))] pb-[max(56px,calc(var(--sab)+44px))]">
       {/* Background Soft Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[680px] h-[340px] sm:h-[680px] bg-gradient-to-tr from-[#fed7aa]/25 via-[#fbcfe8]/25 to-[#bae6fd]/20 rounded-full blur-[140px] pointer-events-none" />
 

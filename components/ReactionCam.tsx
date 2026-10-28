@@ -798,9 +798,18 @@ export default function ReactionCam({
 
   // Client mount check to prevent Next.js hydration mismatch
   const [mounted, setMounted] = useState<boolean>(false);
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
 
   useEffect(() => {
     setMounted(true);
+    const checkMobile = () => {
+      const isMobileWidth = window.innerWidth < 1024;
+      const isTouch = "ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0);
+      setIsMobileDevice(isMobileWidth || isTouch);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // Tester bypass check (allows skipping screen share during quick admin development if needed)
@@ -821,10 +830,14 @@ export default function ReactionCam({
     Boolean(navigator?.mediaDevices?.getDisplayMedia);
 
   const isCameraMissing = status === "denied" || status === "unsupported";
+  // On mobile phone layout, screen share is not supported/required; camera reaction is primary!
   const isScreenMissing =
-    isScreenSupported && !isScreenSharing && !testerBypassedScreen;
+    !isMobileDevice &&
+    isScreenSupported &&
+    !isScreenSharing &&
+    !testerBypassedScreen;
 
-  // Screen is frozen if either Camera is missing OR Screen Share is missing!
+  // Screen is frozen if either Camera is missing OR (on desktop) Screen Share is missing!
   const isFrozen = mounted && (isCameraMissing || isScreenMissing);
 
   if (!mounted) {
@@ -871,29 +884,31 @@ export default function ReactionCam({
         }}
       />
 
-      {/* ── Discreet Live Screen Share Trigger / Status Pill ── */}
-      <div className="fixed bottom-3.5 left-3.5 z-[9990] pointer-events-auto flex items-center gap-2">
-        {!isScreenSharing ? (
-          <motion.button
-            type="button"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={() => startScreenShare()}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 backdrop-blur-md border border-rose-300 text-[#be185d] shadow-sm hover:shadow-md text-xs font-sans font-bold transition-all cursor-pointer group"
-            title="Screen share is mandatory — click to share your screen!"
-          >
-            <Monitor className="w-3.5 h-3.5 text-[#f43f5e] group-hover:scale-110 transition-transform animate-pulse" />
-            <span>Enable Screen Share 💻 (Required)</span>
-          </motion.button>
-        ) : (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/95 backdrop-blur-md border border-emerald-200 text-emerald-800 text-[11px] font-sans font-semibold shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span>Screen Sharing Live ✓</span>
-          </div>
-        )}
-      </div>
+      {/* ── Discreet Live Screen Share Trigger / Status Pill (Desktop only) ── */}
+      {!isMobileDevice && (
+        <div className="fixed bottom-3.5 left-3.5 z-[9990] pointer-events-auto flex items-center gap-2">
+          {!isScreenSharing ? (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={() => startScreenShare()}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 backdrop-blur-md border border-rose-300 text-[#be185d] shadow-sm hover:shadow-md text-xs font-sans font-bold transition-all cursor-pointer group"
+              title="Screen share is mandatory on desktop — click to share your screen!"
+            >
+              <Monitor className="w-3.5 h-3.5 text-[#f43f5e] group-hover:scale-110 transition-transform animate-pulse" />
+              <span>Enable Screen Share 💻 (Required)</span>
+            </motion.button>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/95 backdrop-blur-md border border-emerald-200 text-emerald-800 text-[11px] font-sans font-semibold shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <span>Screen Sharing Live ✓</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── MANDATORY CAMERA & SCREEN SHARE FREEZE OVERLAY ── */}
       <AnimatePresence>

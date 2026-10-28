@@ -422,7 +422,7 @@ export default function BirthdayDateLock({
 
   return (
     <div
-      className="relative min-h-[100dvh] w-screen flex flex-col justify-between items-center bg-[#FAF7F2] text-[#3F2E24] overflow-hidden select-none p-3 sm:p-6"
+      className="relative min-h-[100dvh] w-screen flex flex-col justify-between items-center bg-[#FAF7F2] text-[#3F2E24] overflow-y-auto overflow-x-hidden select-none p-2.5 sm:p-6"
       style={{
         backgroundImage: `radial-gradient(circle at 50% 30%, rgba(253, 164, 175, 0.16) 0%, transparent 65%),
                           radial-gradient(circle at 80% 80%, rgba(254, 215, 170, 0.14) 0%, transparent 55%)`,
@@ -585,7 +585,7 @@ export default function BirthdayDateLock({
         <motion.div
           animate={lockWiggle ? { x: [-6, 6, -5, 5, -2, 2, 0] } : {}}
           transition={{ duration: 0.4 }}
-          className="relative w-full rounded-[36px] bg-gradient-to-b from-[#ffffff] via-[#fffcf9] to-[#fff6f7] border-2 border-[#eeddd3] ring-1 ring-[#f59e0b]/20 shadow-[0_25px_80px_-15px_rgba(244,63,94,0.18),0_0_0_1px_rgba(255,255,255,0.95)_inset,0_10px_35px_rgba(251,113,133,0.12)] p-6 sm:p-9 text-center overflow-hidden"
+          className="relative w-full rounded-[28px] sm:rounded-[36px] bg-gradient-to-b from-[#ffffff] via-[#fffcf9] to-[#fff6f7] border-2 border-[#eeddd3] ring-1 ring-[#f59e0b]/20 shadow-[0_25px_80px_-15px_rgba(244,63,94,0.18),0_0_0_1px_rgba(255,255,255,0.95)_inset,0_10px_35px_rgba(251,113,133,0.12)] p-4 sm:p-9 text-center overflow-hidden"
         >
           {/* Top Decorative Gold-Foil Floral Washi Tape */}
           <div

@@ -131,7 +131,7 @@ export default function AdminLiveCamBubble() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 30 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-6 right-6 z-[80] pointer-events-auto select-none"
+          className="fixed top-14 right-3 sm:top-auto sm:bottom-6 sm:right-6 z-[80] pointer-events-auto select-none"
         >
           {isMinimized ? (
             /* ── MINIMIZED PILL: Compact floating live badge ── */
@@ -140,16 +140,16 @@ export default function AdminLiveCamBubble() {
               onClick={() => setIsMinimized(false)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 backdrop-blur-md border-2 border-rose-400 shadow-xl shadow-rose-950/20 text-[#be185d] font-sans font-bold text-xs cursor-pointer group"
+              className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-white/95 backdrop-blur-md border-2 border-rose-400 shadow-xl shadow-rose-950/20 text-[#be185d] font-sans font-bold text-[11px] sm:text-xs cursor-pointer group"
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping" />
+              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-rose-600 animate-ping" />
               <span>Anuj Live</span>
-              <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500 animate-pulse" />
-              <Maximize2 className="w-3.5 h-3.5 text-[#a89689] group-hover:text-rose-600 transition-colors ml-1" />
+              <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-rose-500 text-rose-500 animate-pulse" />
+              <Maximize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#a89689] group-hover:text-rose-600 transition-colors ml-0.5 sm:ml-1" />
             </motion.button>
           ) : hasVideo && (hasWebRtcVideo || liveFrame) ? (
             /* ── MODE A: VIDEO + VOICE (RECTANGLE VIDEO PREVIEWER) ── */
-            <div className="w-[210px] sm:w-[240px] rounded-2xl overflow-hidden bg-neutral-950 border-2 border-rose-300/80 shadow-2xl shadow-rose-950/30 flex flex-col">
+            <div className="w-[165px] xs:w-[195px] sm:w-[240px] rounded-2xl overflow-hidden bg-neutral-950 border-2 border-rose-300/80 shadow-2xl shadow-rose-950/30 flex flex-col">
               {/* Header Bar */}
               <div className="bg-gradient-to-r from-rose-900/90 to-neutral-900/95 px-3 py-1.5 flex items-center justify-between border-b border-white/10 text-white">
                 <div className="flex items-center gap-1.5">
@@ -218,7 +218,7 @@ export default function AdminLiveCamBubble() {
             </div>
           ) : (
             /* ── MODE B: VOICE ONLY (ELEGANT FLOATING SOUNDWAVE CARD) ── */
-            <div className="w-[220px] sm:w-[250px] rounded-2xl bg-white/95 backdrop-blur-md border-2 border-rose-400 shadow-2xl shadow-rose-950/20 p-3.5 flex flex-col gap-2.5">
+            <div className="w-[185px] xs:w-[220px] sm:w-[250px] rounded-2xl bg-white/95 backdrop-blur-md border-2 border-rose-400 shadow-2xl shadow-rose-950/20 p-2.5 sm:p-3.5 flex flex-col gap-2">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

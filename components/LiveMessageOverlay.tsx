@@ -315,7 +315,7 @@ export default function LiveMessageOverlay() {
               animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, y: -30, scale: 0.92, transition: { duration: 0.3 } }}
               transition={{ type: "spring", stiffness: 380, damping: 24 }}
-              className="pointer-events-auto relative max-w-md w-full bg-white/95 backdrop-blur-xl rounded-3xl p-5 border-2 border-[#fda4af] shadow-[0_22px_65px_-12px_rgba(244,63,94,0.35)] overflow-hidden group"
+              className="pointer-events-auto relative max-w-md w-full bg-white/95 backdrop-blur-xl rounded-3xl p-3.5 sm:p-5 border-2 border-[#fda4af] shadow-[0_22px_65px_-12px_rgba(244,63,94,0.35)] overflow-hidden group"
             >
               {/* Shimmering Rose Gold Top Accent Bar */}
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#fda4af] via-[#fb7185] to-[#f43f5e]" />

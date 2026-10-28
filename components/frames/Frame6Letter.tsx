@@ -95,7 +95,7 @@ export default function Frame6Letter({
   return (
     /* Fills the section precisely — absolute inset so transforms don't affect measurement */
     <div
-      className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6"
+      className="absolute inset-0 flex flex-col items-center justify-start sm:justify-center overflow-y-auto overflow-x-hidden px-3 sm:px-6"
       style={{
         paddingTop: "max(52px, calc(var(--sat, 0px) + 44px))",
         paddingBottom: "max(52px, calc(var(--sab, 0px) + 44px))",
