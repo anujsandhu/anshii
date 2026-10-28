@@ -194,6 +194,8 @@ export default function EasterEgg({
                   onChange={(e) => setInputVal(e.target.value)}
                   placeholder="type a command..."
                   autoFocus
+                  autoComplete="off"
+                  data-lpignore="true"
                   className="flex-1 bg-transparent text-white outline-none font-mono text-xs sm:text-sm border-none focus:ring-0"
                 />
                 <button

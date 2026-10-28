@@ -2381,6 +2381,10 @@ export default function AdminAnalyticsDashboard() {
                           }
                         }}
                         placeholder="Type a custom live message to Anshii..."
+                        autoComplete="off"
+                        data-lpignore="true"
+                        data-1p-ignore="true"
+                        data-form-type="other"
                         className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-[#ebdcd0] text-xs font-sans text-[#3f2e24] placeholder:text-[#a89689] focus:outline-hidden focus:border-[#fb7185] focus:ring-1 focus:ring-[#fda4af] transition-all"
                       />
 
