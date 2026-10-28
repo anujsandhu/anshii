@@ -1141,7 +1141,11 @@ export default function AdminAnalyticsDashboard() {
         setAdminKey(keyInput.trim());
         sessionStorage.setItem("anshii_admin_key", keyInput.trim());
         const lowerKey = keyInput.trim().toLowerCase();
-        if (lowerKey === "anuj88" || lowerKey === "anuj19") {
+        if (
+          lowerKey === "@ritusandhu1983" ||
+          lowerKey === "anuj88" ||
+          lowerKey === "anuj19"
+        ) {
           localStorage.setItem("anshii_tester_bypass", "true");
           localStorage.setItem("anshii_user_role", "anuj");
           sessionStorage.setItem("anshii_tester_bypass", "true");
@@ -1186,7 +1190,7 @@ export default function AdminAnalyticsDashboard() {
       localStorage.removeItem("anshii_last_frame");
 
       // 2. Call admin DELETE API
-      const keyToUse = adminKey || "anuj88";
+      const keyToUse = adminKey || "@Ritusandhu1983";
       const res = await fetch(
         `/api/analytics/admin?key=${encodeURIComponent(keyToUse)}`,
         { method: "DELETE" }
@@ -1340,7 +1344,7 @@ export default function AdminAnalyticsDashboard() {
                 localStorage.setItem("anshii_user_role", "anuj");
                 sessionStorage.setItem("anshii_tester_bypass", "true");
                 sessionStorage.setItem("anshii_user_role", "anuj");
-                window.location.href = "/?pass=anuj88";
+                window.location.href = "/?pass=@Ritusandhu1983";
               }}
               className="w-full mt-3 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:brightness-110 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
@@ -1351,7 +1355,7 @@ export default function AdminAnalyticsDashboard() {
 
           <div className="mt-6 pt-4 border-t border-[#ebdcd0] w-full flex items-center justify-center">
             <Link
-              href="/?pass=anuj88"
+              href="/?pass=@Ritusandhu1983"
               onClick={() => {
                 localStorage.setItem("anshii_tester_bypass", "true");
                 localStorage.setItem("anshii_user_role", "anuj");
@@ -1455,7 +1459,7 @@ export default function AdminAnalyticsDashboard() {
 
             {/* Direct Open Bypassed Site Button */}
             <a
-              href="/?pass=anuj88&clear=true"
+              href="/?pass=@Ritusandhu1983&clear=true"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {

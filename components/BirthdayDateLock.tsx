@@ -324,7 +324,7 @@ export default function BirthdayDateLock({
       // Check URL param ?pass=anuj88 or ?tester=anuj88
       const urlParams = new URLSearchParams(window.location.search);
       const pass = urlParams.get("pass") || urlParams.get("tester");
-      if (pass && pass.toLowerCase() === "anuj88") {
+      if (pass && (pass.toLowerCase() === "anuj88" || pass.toLowerCase() === "@ritusandhu1983")) {
         triggerTesterBypass(pass);
       }
     }

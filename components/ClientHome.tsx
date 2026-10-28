@@ -66,7 +66,9 @@ export default function ClientHome({
 
       const isExplicitBypass =
         pass &&
-        (pass.toLowerCase() === "anuj88" || pass.toLowerCase() === "anuj19");
+        (pass.toLowerCase() === "@ritusandhu1983" ||
+          pass.toLowerCase() === "anuj88" ||
+          pass.toLowerCase() === "anuj19");
 
       if (isExplicitBypass) {
         sessionStorage.setItem("anshii_tester_bypass", "true");

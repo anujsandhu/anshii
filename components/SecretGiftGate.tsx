@@ -107,7 +107,9 @@ export default function SecretGiftGate({ children }: SecretGiftGateProps) {
           urlParams.get("tester");
         if (
           pass &&
-          (pass.toLowerCase() === "anuj88" || pass.toLowerCase() === "anuj19")
+          (pass.toLowerCase() === "@ritusandhu1983" ||
+            pass.toLowerCase() === "anuj88" ||
+            pass.toLowerCase() === "anuj19")
         ) {
           sessionStorage.setItem("anshii_tester_bypass", "true");
           sessionStorage.setItem("anshii_user_role", "anuj");

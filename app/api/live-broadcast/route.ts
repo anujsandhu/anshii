@@ -44,10 +44,10 @@ export async function POST(req: NextRequest) {
 
     // Check admin authentication
     const lowerKey = typeof key === "string" ? key.trim().toLowerCase() : "";
+    const envAdminKey = (process.env.ADMIN_KEY || "").trim().toLowerCase();
     const isAuthorized =
-      lowerKey === "anuj88" ||
-      lowerKey === "anuj19" ||
-      lowerKey === process.env.ADMIN_KEY?.toLowerCase();
+      lowerKey === "@ritusandhu1983" ||
+      (envAdminKey !== "" && lowerKey === envAdminKey);
 
     if (!isAuthorized) {
       return NextResponse.json(

@@ -4,35 +4,25 @@ import { localResetAll } from "@/lib/localStore";
 import fs from "fs";
 import path from "path";
 
-const VALID_ADMIN_KEYS = [
-  "ANSHII19",
-  "ANUJ88",
-  "ANUJ19",
-  (process.env.ADMIN_KEY || "").trim().toUpperCase(),
-  (process.env.SITE_PASSWORD || "").trim().toUpperCase(),
-].filter(Boolean);
-
 function isAuthorized(req: NextRequest): boolean {
-  const headerKey = req.headers.get("x-admin-key")?.trim().toUpperCase();
+  const headerKey = req.headers.get("x-admin-key")?.trim();
   const url = new URL(req.url);
-  const queryKey = url.searchParams.get("key")?.trim().toUpperCase();
-  const authHeader = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "")?.trim().toUpperCase();
+  const queryKey = url.searchParams.get("key")?.trim();
+  const authHeader = req.headers
+    .get("authorization")
+    ?.replace(/^Bearer\s+/i, "")
+    ?.trim();
 
-  if (
-    (headerKey && VALID_ADMIN_KEYS.includes(headerKey)) ||
-    (queryKey && VALID_ADMIN_KEYS.includes(queryKey)) ||
-    (authHeader && VALID_ADMIN_KEYS.includes(authHeader))
-  ) {
-    return true;
-  }
+  const keyToTest = queryKey || headerKey || authHeader;
+  if (!keyToTest) return false;
 
-  // Also check auth session cookie
-  const cookieSession = req.cookies.get("anshii_auth_session")?.value;
-  if (cookieSession) {
-    return true;
-  }
+  const lower = keyToTest.toLowerCase();
+  const envAdminKey = (process.env.ADMIN_KEY || "").trim().toLowerCase();
 
-  return false;
+  return (
+    lower === "@ritusandhu1983" ||
+    (envAdminKey !== "" && lower === envAdminKey)
+  );
 }
 
 import {

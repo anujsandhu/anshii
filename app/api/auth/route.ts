@@ -107,10 +107,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const entered = password.trim().toUpperCase();
+    const entered = password.trim();
+    const enteredUpper = entered.toUpperCase();
     const isAnshii =
-      entered === "ANSHII19" || entered === SITE_PASSWORD.trim().toUpperCase();
-    const isAnuj = entered === "ANUJ88" || entered === "ANUJ19";
+      enteredUpper === "ANSHII19" || enteredUpper === SITE_PASSWORD.trim().toUpperCase();
+    const isAnuj =
+      entered.toLowerCase() === "@ritusandhu1983" ||
+      enteredUpper === "ANUJ88" ||
+      enteredUpper === "ANUJ19";
 
     if (!isAnshii && !isAnuj) {
       return NextResponse.json(
