@@ -72,14 +72,24 @@ export default function Frame6Letter({
     setTaskDone(isCompleted);
   }, [isCompleted]);
 
+  // Reading the heartfelt letter auto-completes the chapter after 3.5s so user can advance smoothly
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isCompleted) {
+        onCompleteTask();
+        setTaskDone(true);
+      }
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [isCompleted, onCompleteTask]);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(FULL_TEXT).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleUnlockFinal = () => {
-    if (taskDone) return;
+  const handleUnlockAndNext = () => {
     setTaskDone(true);
     onCompleteTask();
     try {
@@ -90,6 +100,7 @@ export default function Frame6Letter({
         colors: ["#fda4af", "#fbcfe8", "#d8b4fe", "#bae6fd"],
       });
     } catch {}
+    onNext();
   };
 
   return (
@@ -231,13 +242,14 @@ export default function Frame6Letter({
         <div className="shrink-0 pt-2.5 mt-2 border-t border-[#ebdcd0]/70 flex items-center justify-between gap-2">
           {!taskDone ? (
             <motion.button
-              onClick={handleUnlockFinal}
+              onClick={handleUnlockAndNext}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="w-full py-2.5 px-6 rounded-2xl bg-gradient-to-r from-[#fda4af] to-[#fb7185] hover:from-[#fb7185] hover:to-[#f43f5e] text-white font-sans font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 btn-cute"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Unlock Next Chapter 💌</span>
+              <span>Continue to Madam Ji&apos;s Keepsake 🤍</span>
+              <span className="text-sm leading-none">↓</span>
             </motion.button>
           ) : (
             <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2">

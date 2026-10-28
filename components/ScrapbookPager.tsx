@@ -146,6 +146,7 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
   const [completedFrames, setCompletedFrames] = useState<Set<number>>(
     () => new Set<number>()
   );
+  const completedFramesRef = useRef<Set<number>>(new Set<number>());
 
   useEffect(() => {
     // Check if user requested a fresh reset/clear
@@ -164,6 +165,7 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
           localStorage.removeItem("anshii_gift_slots_v5");
           localStorage.removeItem("anshii_wishes_key_v2");
           localStorage.removeItem("anshii_last_frame");
+          completedFramesRef.current = new Set<number>();
           setCompletedFrames(new Set<number>());
         }
       }
@@ -185,7 +187,9 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed)) {
-            setCompletedFrames(new Set<number>(parsed));
+            const set = new Set<number>(parsed);
+            completedFramesRef.current = set;
+            setCompletedFrames(set);
           }
         }
       } catch {}
@@ -371,17 +375,17 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
       if (targetIndex < 0 || targetIndex >= SCRAPBOOK_FRAMES.length) return;
       if (targetIndex === currentFrame) return;
 
-      // Advancing to next frame (strictly linear progression: prior task must be completed)
-      if (targetIndex > currentFrame) {
+      // Advancing to next frame (strictly linear progression: prior task must be completed for real user)
+      if (targetIndex > currentFrame && !isTester) {
         // Must have completed the current frame's task!
-        if (!completedFrames.has(currentFrame)) {
+        if (!completedFramesRef.current.has(currentFrame)) {
           triggerLockedAlert();
           return;
         }
 
         // Also prevent jumping over multiple locked frames if clicked from indicator
         for (let i = currentFrame; i < targetIndex; i++) {
-          if (!completedFrames.has(i)) {
+          if (!completedFramesRef.current.has(i)) {
             triggerLockedAlert();
             return;
           }
@@ -444,6 +448,7 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
   // Complete a task on a specific frame
   const handleTaskComplete = useCallback(
     (frameId: number, customMessage?: string) => {
+      completedFramesRef.current.add(frameId);
       setCompletedFrames((prev) => {
         if (prev.has(frameId)) return prev;
         const next = new Set(prev);
@@ -491,6 +496,7 @@ export default function ScrapbookPager({ autoStartMusic = false }: ScrapbookPage
 
   const handleReplay = useCallback(() => {
     setCurrentFrame(0);
+    completedFramesRef.current = new Set();
     setCompletedFrames(new Set());
     try {
       localStorage.removeItem("anshii_completed_frames");
