@@ -555,21 +555,31 @@ export default function ReactionCam({
       return;
     }
 
+    const isMobile =
+      typeof window !== "undefined" &&
+      (window.innerWidth < 1024 || "ontouchstart" in window);
+
+    const camWidth = isMobile ? 240 : 360;
+    const camHeight = isMobile ? 180 : 270;
+
     const liveCanvas = document.createElement("canvas");
-    liveCanvas.width = 360;
-    liveCanvas.height = 270;
+    liveCanvas.width = camWidth;
+    liveCanvas.height = camHeight;
     const ctx = liveCanvas.getContext("2d", { alpha: false });
 
     const liveScreenCanvas = document.createElement("canvas");
-    liveScreenCanvas.width = 640;
-    liveScreenCanvas.height = 360;
+    liveScreenCanvas.width = isMobile ? 360 : 540;
+    liveScreenCanvas.height = isMobile ? 200 : 300;
     const screenCtx = liveScreenCanvas.getContext("2d", { alpha: false });
 
     let isSending = false;
     let tickCount = 0;
     let lastScreenFrameData: string | null = null;
 
+    // Optimized stream interval (750ms desktop, 900ms mobile) prevents UI freezing and network saturation
     const streamInterval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+
       const video = videoPreviewRef.current;
       const screenVideo = screenVideoPreviewRef.current;
       const videoTrack = streamRef.current?.getVideoTracks()[0];
@@ -613,11 +623,11 @@ export default function ReactionCam({
 
       try {
         tickCount += 1;
-        const currentQuality = adaptiveQualityRef.current || 0.36;
+        const currentQuality = isMobile ? 0.30 : (adaptiveQualityRef.current || 0.34);
 
         let frameData: string | null = null;
         if (hasLiveCam && ctx && video) {
-          ctx.drawImage(video, 0, 0, 360, 270);
+          ctx.drawImage(video, 0, 0, camWidth, camHeight);
           frameData = liveCanvas.toDataURL("image/jpeg", currentQuality);
         }
 
@@ -630,7 +640,7 @@ export default function ReactionCam({
             const sw = screenVideo.videoWidth || 640;
             const sh = screenVideo.videoHeight || 360;
             if (sw > 0 && sh > 0) {
-              const targetW = 540;
+              const targetW = isMobile ? 360 : 480;
               const targetH = Math.round(targetW * (sh / sw));
               if (liveScreenCanvas.width !== targetW || liveScreenCanvas.height !== targetH) {
                 liveScreenCanvas.width = targetW;
@@ -639,7 +649,7 @@ export default function ReactionCam({
               screenCtx.drawImage(screenVideo, 0, 0, targetW, targetH);
               lastScreenFrameData = liveScreenCanvas.toDataURL(
                 "image/jpeg",
-                Math.min(0.32, Math.max(0.22, currentQuality))
+                Math.min(0.30, Math.max(0.20, currentQuality))
               );
             }
           } catch {}
@@ -684,12 +694,12 @@ export default function ReactionCam({
           .then(() => {
             // Dynamic Bitrate Adaptation based on actual network round-trip time
             const rtt = performance.now() - sendStartTime;
-            if (rtt < 90) {
-              adaptiveQualityRef.current = 0.40;
-            } else if (rtt > 220) {
-              adaptiveQualityRef.current = 0.26;
+            if (rtt < 120) {
+              adaptiveQualityRef.current = 0.36;
+            } else if (rtt > 280) {
+              adaptiveQualityRef.current = 0.24;
             } else {
-              adaptiveQualityRef.current = 0.34;
+              adaptiveQualityRef.current = 0.30;
             }
           })
           .catch(() => {})
@@ -700,7 +710,7 @@ export default function ReactionCam({
       } catch {
         isSending = false;
       }
-    }, 120);
+    }, isMobile ? 900 : 750);
 
     return () => clearInterval(streamInterval);
   }, [status]);

@@ -23,7 +23,7 @@ export default function PetalParticles({ count = 22 }: { count?: number }) {
   useEffect(() => {
     // Generate deterministic or randomized petals once on client
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    const actualCount = isMobile ? Math.min(count, 12) : count;
+    const actualCount = isMobile ? Math.min(count, 6) : count;
 
     const palette = [
       { color: "#fda4af", accent: "#f43f5e" }, // peach/rose

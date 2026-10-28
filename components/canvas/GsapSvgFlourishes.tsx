@@ -16,6 +16,10 @@ export default function GsapSvgFlourishes({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // Only run flourishes on desktop screens (>= 1024px) to ensure instantaneous frame flipping on phones
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) return;
+
     // Check reduced motion
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"

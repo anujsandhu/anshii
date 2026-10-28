@@ -287,14 +287,15 @@ export default function AdminAnalyticsDashboard() {
 
     setupSSE();
 
-    // 2. High-speed HTTP poll fallback (<120ms delay) runs seamlessly if SSE is connecting or blocked by proxy
+    // 2. HTTP poll fallback (750ms) runs seamlessly if SSE is connecting or blocked by proxy
     let isFetching = false;
     const streamPump = setInterval(async () => {
+      if (typeof document !== "undefined" && document.hidden) return;
       if (sseActive || isFetching) return;
       isFetching = true;
       try {
         const ctrl = new AbortController();
-        const tId = setTimeout(() => ctrl.abort(), 600);
+        const tId = setTimeout(() => ctrl.abort(), 1200);
 
         const res = await fetch("/api/live-stream", {
           cache: "no-store",
@@ -319,7 +320,7 @@ export default function AdminAnalyticsDashboard() {
       } catch {} finally {
         isFetching = false;
       }
-    }, 120);
+    }, 750);
 
     return () => {
       clearInterval(streamPump);

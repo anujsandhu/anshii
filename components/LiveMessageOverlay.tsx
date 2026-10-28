@@ -251,7 +251,10 @@ export default function LiveMessageOverlay() {
       }
     };
 
-    const interval = setInterval(checkMessages, 1400);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      checkMessages();
+    }, 1800);
     return () => {
       clearInterval(interval);
       if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);

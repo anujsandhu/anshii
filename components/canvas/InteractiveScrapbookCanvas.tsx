@@ -57,6 +57,10 @@ export default function InteractiveScrapbookCanvas() {
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
+    // Only run on desktop screens (>= 768px) to keep mobile devices silky smooth and fast
+    const isMobile = window.innerWidth < 768 || ("ontouchstart" in window && window.innerWidth < 1024);
+    if (isMobile) return;
+
     // Check reduced motion
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"

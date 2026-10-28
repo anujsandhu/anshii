@@ -53,7 +53,10 @@ export default function AdminLiveCamBubble() {
 
     // Check immediately and poll every 1.5s
     checkBroadcast();
-    const interval = setInterval(checkBroadcast, 1500);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      checkBroadcast();
+    }, 1800);
 
     return () => {
       active = false;

@@ -310,7 +310,10 @@ export default function FrameGiftSnaps({
     };
 
     pollApprovals();
-    const interval = setInterval(pollApprovals, 1500);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      pollApprovals();
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 
