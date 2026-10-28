@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Caveat, Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import LeavePageGuard from "@/components/LeavePageGuard";
+import ConsoleNoiseFilter from "@/components/ConsoleNoiseFilter";
 
 const caveat = Caveat({
   variable: "--font-handwriting",
@@ -47,7 +48,30 @@ export default function RootLayout({
       lang="en"
       className={`${caveat.variable} ${plusJakarta.variable} ${playfair.variable} scroll-smooth`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window === 'undefined') return;
+                var noise = ['FrameIsBrowserFrameError', 'FrameDoesNotExistError', 'message port closed', 'Receiving end does not exist', 'background.js', 'DelayedMessageSender'];
+                window.addEventListener('unhandledrejection', function(e) {
+                  var str = String((e && e.reason && (e.reason.message || e.reason.stack || e.reason)) || '');
+                  for (var i = 0; i < noise.length; i++) {
+                    if (str.indexOf(noise[i]) !== -1) {
+                      e.preventDefault();
+                      e.stopImmediatePropagation();
+                      return;
+                    }
+                  }
+                }, true);
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-[#faf7f2] text-[#3f2e24] font-sans selection:bg-[#fda4af]/40 selection:text-[#7f1d1d] antialiased overflow-x-hidden">
+        <ConsoleNoiseFilter />
         <LeavePageGuard />
         {children}
       </body>
